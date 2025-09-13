@@ -1,152 +1,260 @@
-# Project Dhruv — SOTA Parsing Engine
+# Project Dhruv — Data and Mapping README
 
-**Digital Twin + Reasoning Engine** for political landscape analysis with **TDD-first**, **ironclad quality gates**, and **enterprise-grade observability**.
+This repository powers a Next.js dashboard and data pipeline to build and visualize a reliable, verified dataset for Chhattisgarh villages and their electoral/administrative mappings.
 
-[![CI](https://github.com/your-org/Project_Dhruv/actions/workflows/ironclad.yml/badge.svg)](https://github.com/your-org/Project_Dhruv/actions/workflows/ironclad.yml)
-[![Coverage](https://img.shields.io/badge/coverage-95%2B%25-brightgreen)](https://github.com/your-org/Project_Dhruv/actions/workflows/ironclad.yml)
+Focus:
+- Real, official-source data (no simulation for production datasets)
+- Strict multilingual data variant discipline
+- Safe, rate‑limited geocoding with MapmyIndia
+- Reproducible scripts and auditable artifacts
 
-## 📋 Single Sources of Truth (SSOT)
+--------------------------------------------------------------------------------
+Four‑Variant Data Rule (MANDATORY)
+--------------------------------------------------------------------------------
 
-This project implements two complementary brain documents:
+All parsing data, vector data, graph data, scraped data, and fetched data that is saved into datasets MUST be stored in four variants at all times:
 
-### 🧠 [v3.5 TEXT-FIRST Brain](Brains%20🧠/PROJECT_DHRUV_SOTA_BRAIN_v3.5_TEXT_FIRST%20(1).md)
-- **Immediate focus**: Robust text-only parsing + reasoning loop + Story Arcs
-- **Multi-modal provisioned**: Vision/video behind feature flags (disabled by default)
-- **Architecture**: Flask APIs, Neo4j KG, Postgres mirrors, Great Expectations validation
-- **Execution**: TDD-first, atomic PRs, CI-only "done"
+1) Hindi (Devanagari) — example: रायपुर
+2) Nukta-Hindi (Devanagari with diacritics when applicable) — example: ज़िला (if applicable)
+3) English (Roman) — example: Raipur
+4) Transliteration (deterministic Romanization of Hindi) — example: Rāypur
 
-### 🧠 [v4.0 SOTA Brain](Brains%20🧠/PROJECT_DHRUV_SOTA_BRAIN_v4.0_SOTA.md)
-- **End-state vision**: Full multi-modal parsing with foresight, analytics, KBC
-- **Enterprise requirements**: SLOs ≤800ms P95, 99.5% uptime, DPDP compliance
-- **Advanced features**: MLflow experiments, pgvector embeddings, Prefect orchestration
+Requirements:
+- Every record that represents a human‑readable place/entity name must include the fields:
+  - hindi
+  - nukta_hindi
+  - english
+  - transliteration
+- Pipelines must deterministically generate any missing variants (e.g., transliteration) while preserving original fields from the source.
+- Validation must assert presence and non‑empty values for all four variants before a dataset row is accepted into “final” artifacts.
+- Where the source only has English/Hindi, pipelines must still compute the missing variants.
+- Never drop original script forms when normalizing.
 
-## 🎯 Project Goals
+Recommended generation approach:
+- Transliteration: Use a deterministic library (e.g., indic‑transliteration ITRANS/ISO scheme) for repeatable results.
+- Nukta handling: Preserve nukta where present; if source lacks nukta but the canonicalized form requires it, generate the nukta_hindi variant accordingly.
 
-- **Accurate Parsing**: F1 ≥85% on labeled event type, actors, place, time
-- **Reliable Reasoning**: ≥70% approved causal links from auto-suggestions
-- **Strategic Foresight**: Top-1 event forecast accuracy ≥55% on backtests
-- **Production Excellence**: P95 latency within SLO, MTTR <30 min
+--------------------------------------------------------------------------------
+Datasets (paths and intent)
+--------------------------------------------------------------------------------
 
-## 🏗️ Architecture Overview
+Data directory: data/
 
-```
-Ingest (text) → Preprocess (normalize) → Reason (hypothesis loop) → Persist (Neo4j/Postgres) → Serve → Validate → Observe
-```
+Primary artifacts (real data):
+- data/villages_portal_full.json
+  - Output of the portal scraper (SuShasan portal).
+  - Includes normalized rows with, at minimum:
+    - mode: "ग्रामीण" | "शहरी"
+    - district, block, panchayat, village, ward, ulb (as applicable by row)
+    - raw: original header→value map for auditability
+  - Four variants must be present on name‑like fields during downstream processing (e.g., village).
 
-- **APIs**: `/api/sota/parse`, `/api/sota/events/link`, `/api/health`
-- **Knowledge Graph**: Neo4j 5 (system of record) + Postgres (relational mirrors)
-- **Validation**: Great Expectations suites + Pandera DataFrame contracts
-- **Observability**: OpenTelemetry traces, RED metrics, structured logs
-- **Infrastructure**: Docker Compose (dev/CI parity), feature flags for safety
+- data/processed_villages.json
+  - Processed/normalized dataset merged with constituency linkages and validated for four variants.
 
-## 🚀 Implementation Roadmap
+- data/geocoded_villages.json
+  - Geocoding enrichment results (MapmyIndia), appended to records as a “geo” object (e.g., eLoc, lat/lng, admin levels).
+  - Respect rate limits (see Geocoding section).
 
-### Phase 1: Foundation (PR-01 to PR-05) ✅
-- [x] **PR-01**: Feature flags + health exposure (ENABLE_VISION=false, ENABLE_VIDEO=false)
-- [x] **PR-02**: Docker Compose infra (Postgres+PostGIS, Neo4j) + health checks
-- [x] **PR-03**: Text preprocessor (nukta normalization, candidate extraction)
-- [x] **PR-04**: Parse API skeleton (text-only, dry_run) — *In Progress*
-- [x] **PR-05**: Event dataset GE suite + validation harness
+Draft or working artifacts (used during development iteration):
+- data/draft_cg_data.json
+  - Small extracts for limited testing of parsers or selectors (not for production).
 
-### Phase 2: Core Engine (PR-06 to PR-10)
-- [ ] **PR-06**: Neo4j + Postgres idempotent loaders
-- [ ] **PR-07**: Graph retriever (context fetch)
-- [ ] **PR-08**: Reasoning loop (Hypothesize→Retrieve→Re-evaluate→Update)
-- [ ] **PR-09**: Observability (OTel + RED metrics + structlog)
-- [ ] **PR-10**: Story Arc linking (backend first)
+Developer-only (do not use for production):
+- data/full_villages.json
+  - Synthetic generator output used for UI/dev tests only. Do not use or publish as “real” data.
 
-### Phase 3: Advanced Features (PR-11 to PR-15)
-- [ ] **PR-11**: Parser Sandbox (dry-run mode)
-- [ ] **PR-12**: Narrative tagging (topics, text-only)
-- [ ] **PR-13**: KBC stub (deferred orchestration)
-- [ ] **PR-14**: Security/Privacy hardening
-- [ ] **PR-15**: Performance & heavy tests
+Sample minimal record shape (downstream):
+  {
+    "hindi": "रायपुर",
+    "nukta_hindi": "रायपुर",
+    "english": "Raipur",
+    "transliteration": "Rāypur",
+    "district": "रायपुर",
+    "block": "रायपुर",
+    "panchayat": "रायपुर",
+    "village": "रायपुर",
+    "assembly_constituency": "रायपुर शहर उत्तर",
+    "parliamentary_constituency": "रायपुर",
+    "geo": {
+      "eLoc": "XXXXXX",
+      "latitude": 21.2514,
+      "longitude": 81.6296,
+      "geocodeLevel": "village"
+    },
+    "raw": { "...": "source row as scraped for auditability" }
+  }
 
-## 🛡️ Quality Gates (Ironclad)
+--------------------------------------------------------------------------------
+Scripts (data pipeline)
+--------------------------------------------------------------------------------
 
-- **TDD**: Red → Green → Refactor for every change
-- **Coverage**: Unit ≥90%, Integration ≥85%, E2E ≥80%
-- **CI Checks**: lint, typecheck, unit, coverage gate, security, SBOM, a11y, perf, e2e
-- **Data Integrity**: Great Expectations validation + idempotent writes
-- **Security**: PII redaction, secrets via env, DPDP compliant
+All scripts are designed to be run stepwise. Always validate that four variants are present before promoting artifacts.
 
-## 🏃‍♂️ Quick Start
+1) Scrape real data (preferred source)
+   Script: scripts/scrape_cg_portal.js
+   Description:
+   - Launches Chromium via Playwright.
+   - Discovers Districts and iterates both filters: ग्रामीण and शहरी.
+   - Extracts the largest/primary table, supports pagination.
+   - Normalizes core keys: district, block, panchayat, village, ward, ulb.
+   - Saves incrementally for resilience.
 
-### Prerequisites
-- Python 3.11+, Node 18+, Docker + Docker Compose
-- Git worktrees for isolated development
+   Usage (examples):
+   - Install (once):
+     - npm i -D @playwright/test
+     - npx playwright install chromium
+   - Run headless full scrape:
+     - node scripts/scrape_cg_portal.js
+   - Run a quick subset (3 districts) in headful mode:
+     - node scripts/scrape_cg_portal.js --headful true --maxDistricts 3
+   - Custom output:
+     - node scripts/scrape_cg_portal.js --out data/villages_portal_full.json
 
-### Local Development
-```bash
-# Clone and setup worktree
-git clone <repo-url>
-cd Project_Dhruv
-git worktree add ../dhruv-agent-worktree feature/sota-parsing-engine-bootstrap
+   Output: data/villages_portal_full.json
 
-# Start infrastructure
-cd infra
-docker-compose up -d
+2) Geocode enrichment (MapmyIndia)
+   Script: scripts/geocode_villages.py
+   Description:
+   - Authenticates using MapmyIndia OAuth (keys loaded from .env.local).
+   - Geocodes village/admin names (prioritizes english; fallback to transliteration).
+   - Adds geo/copResults to records; rate‑limited with polite delays/retries.
+   - Caches/limits batch size to avoid exceeding quotas.
 
-# Install dependencies
-cd ../api
-pip install -r requirements.txt
+   Env variables (in .env.local):
+   - MAPMYINDIA_CLIENT_ID=...
+   - MAPMYINDIA_CLIENT_SECRET=...
 
-# Run API
-python -m api.src.app
+   Usage:
+   - Ensure your Python venv is active and dependencies installed.
+   - python scripts/geocode_villages.py
+   - Output: data/geocoded_villages.json
 
-# Health check
-curl http://localhost:5000/api/health
-```
+3) Merge / normalize / validate (four variants guaranteed)
+   Script: scripts/process_village_data.py
+   Description:
+   - Loads portal output and geocoded results.
+   - Ensures four variants exist for each name field.
+   - Merges constituency mappings (when provided).
+   - Normalizes district names and logs discrepancies for review.
+   - Validates four variants are present before writing processed output.
 
-### Testing
-```bash
-# Unit tests
-PYTHONPATH=/path/to/api pytest api/tests/unit/
+   Usage:
+   - python scripts/process_village_data.py
+   - Output: data/processed_villages.json
 
-# Integration tests
-PYTHONPATH=/path/to/api pytest api/tests/integration/
+4) Limited/experimental extractor (optional)
+   Script: scripts/extract_cg_data.py
+   Description:
+   - Early prototype for fetching dropdowns and a small data subset.
+   - Use the Playwright scraper as the authoritative approach.
 
-# With real client data
-pytest api/tests/unit/test_normalization_rules.py -v
-```
+5) Developer‑only synthetic generator (do not use for production)
+   Script: scripts/generate_full_dataset.py
+   Description:
+   - Generates 20k synthetic entries for dev/UI testing only.
+   - Not an official data source.
 
-## 📊 Feature Flags
+--------------------------------------------------------------------------------
+MapmyIndia Geocoding (rate limits & safety)
+--------------------------------------------------------------------------------
 
-Central switches for safe deployment:
+- Credentials: Provided via .env.local (never committed).
+- Rate limiting strategy:
+  - Batch requests with a small delay (e.g., 1–2 seconds).
+  - Retry on 429 with exponential backoff.
+  - Cache by normalized address key to avoid re‑queries.
+- Data discipline:
+  - Use english for API requests; fallback to transliteration.
+  - Always preserve/attach the returned eLoc and admin components.
+- Observability:
+  - Log successes/failures and include counts in pipeline output.
 
-```python
-# api/src/config/feature_flags.py
-ENABLE_VISION = os.getenv("ENABLE_VISION", "false").lower() == "true"      # Default: OFF
-ENABLE_VIDEO = os.getenv("ENABLE_VIDEO", "false").lower() == "true"       # Default: OFF  
-ENABLE_EMBEDDINGS = os.getenv("ENABLE_EMBEDDINGS", "true").lower() == "true"  # Default: ON
-```
+--------------------------------------------------------------------------------
+App Integration (API + UI)
+--------------------------------------------------------------------------------
 
-## 📚 Documentation
+API endpoint (Next.js):
+- GET /api/villages
+  - Serves data/processed_villages.json for the UI.
 
-- **[Runbook](runbook.md)**: Operational procedures, flags, monitoring
-- **[Agent Guidelines](AGENTS.md)**: Development workflow and standards
-- **[DevOps Policy](.agent-policy/devops_agent_policy.yaml)**: Quality gates and rules
-- **[PR Template](.github/pull_request_template.md)**: Atomic PR checklist
+UI page:
+- /mapping
+  - Search/filter by village, district, or constituency.
+  - Displays Hindi, English, and Transliteration columns at minimum.
 
-## 🤝 Contributing
+--------------------------------------------------------------------------------
+Validation & Checklist (PR readiness)
+--------------------------------------------------------------------------------
 
-1. **Worktree Isolation**: Create dedicated worktree for your changes
-2. **Atomic PRs**: One concern per PR, TDD-first, CI green required
-3. **Documentation**: Update runbook/docs alongside code
-4. **Real Data**: Use `data/posts.json` and `data/posts_new.json` for tests
+Before merging any data‑related changes:
+- Four‑variant rule enforced:
+  - Every record includes hindi, nukta_hindi, english, transliteration.
+- Provenance:
+  - raw source snapshot or fields retained for auditability.
+- Geocoding:
+  - If included, ensure quota‑safe runs and zero secrets in code.
+- Documentation:
+  - Update this README or related docs with any pipeline changes.
+- CI/CD (as available in project):
+  - Lint, typecheck, tests, coverage.
+  - Security scans; no secrets.
+  - A11y and perf checks for UI changes.
 
-## 📈 Current Status
+--------------------------------------------------------------------------------
+Quick Start (end‑to‑end)
+--------------------------------------------------------------------------------
 
-- ✅ Foundation infrastructure complete
-- ✅ Text preprocessing with nukta normalization
-- ✅ Feature flags and health monitoring
-- 🚧 Parse API skeleton (text-only)
-- 📋 Validation harness with Great Expectations
+1) Prepare environment
+   - Node.js ≥ 18
+   - Python 3.10+ venv (if using Python scripts)
+   - npm i
+   - npm i -D @playwright/test && npx playwright install chromium
 
-**Next**: Complete PR-04 (Parse API) and PR-05 (GE validation), then proceed to KG integration.
+2) Configure secrets
+   - Create/Update .env.local:
+     - MAPMYINDIA_CLIENT_ID=your_client_id_here
+     - MAPMYINDIA_CLIENT_SECRET=your_client_secret_here
 
----
+3) Scrape real data
+   - node scripts/scrape_cg_portal.js
 
-*Built with ❤️ for robust, observable, and reversible software that "just works".*
+4) Geocode enrichment (optional, if you want lat/lng/eLoc)
+   - python scripts/geocode_villages.py
 
-**SSOT References**: [v3.5 TEXT-FIRST](Brains%20🧠/PROJECT_DHRUV_SOTA_BRAIN_v3.5_TEXT_FIRST%20(1).md) | [v4.0 SOTA](Brains%20🧠/PROJECT_DHRUV_SOTA_BRAIN_v4.0_SOTA.md)
+5) Normalize and validate (four variants guaranteed)
+   - python scripts/process_village_data.py
+
+6) Run the app
+   - npm run dev
+   - Visit /mapping to explore data
+
+--------------------------------------------------------------------------------
+Autonomous Web Curation (continuous)
+--------------------------------------------------------------------------------
+
+- Purpose: Nightly zero-cost curation of authoritative Hindi/Nukta-Hindi spellings for district/block/GP/village/ULB/ward from allowlisted portals (gov.in, nic.in, censusindia.gov.in, egramswaraj.gov.in, etc.).
+- Schedule: Runs nightly at 02:00 UTC and can be triggered manually via the “web-curation” workflow.
+- Script: api/src/sota/dataset_builders/tools/web_curation.py
+- Outputs:
+  - data/name_mappings/autocurated/geography_name_map.ndjson (append-only curated lines)
+  - data/name_mappings/geography_name_map.json (auto-merged map)
+- Flags (env/repo variables):
+  - ENABLE_AUTONOMOUS_WEB_CURATION=true to allow autonomous runs
+  - ENABLE_SEARCH_AUTOMATION=true and/or ENABLE_WEB_SCRAPING=true to enable providers
+  - ENABLE_WEB_CACHE=true to cache results (recommended)
+  - CSE_DAILY_BUDGET=100 to strictly cap Google Custom Search JSON API calls per day (never exceed free 100/day)
+  - CSE_RATE_LIMIT_S=1.5 to rate-limit seconds between Google CSE calls (polite, configurable)
+- Force-run (ignores flags): python api/src/sota/dataset_builders/tools/web_curation.py --limit 200 --force --cse-daily-budget 100 --cse-rate-limit-s 1.5
+- Behavior:
+  - Only allowlisted domains are considered; candidates are verified deterministically.
+  - Placeholders and example/README mappings are ignored by loaders.
+  - Unmapped names are reduced over time; once coverage reaches 100%, electoral (AC/PC) enrichment proceeds.
+
+--------------------------------------------------------------------------------
+Notes
+--------------------------------------------------------------------------------
+
+- This README is the single source of truth for the four‑variant rule and data pipeline expectations used by this project.
+- If portal schema changes, update selectors in scripts/scrape_cg_portal.js and re‑run limited tests before full runs.
+- Always prefer the latest official sources. Avoid simulated data for production artifacts.
