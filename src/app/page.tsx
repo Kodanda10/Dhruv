@@ -1,12 +1,17 @@
 import Dashboard from '@/components/Dashboard';
 import Metrics from '@/components/Metrics';
 import { Suspense } from 'react';
+import { amita } from './fonts';
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">ध्रुव डैशबोर्ड</h1>
-      <Suspense fallback={null}>
+    <main className="container mx-auto px-4 py-8">
+      <header className="text-center mb-8">
+        <h1 className={`${amita.className} heading-amita text-5xl md:text-6xl text-white font-bold`}>
+          श्री ओपी चौधरी - सोशल मीडिया एनालिटिक्स डैशबोर्ड
+        </h1>
+      </header>
+      <Suspense fallback={<div className="text-center p-8">Loading Dashboard...</div>}>
         <Dashboard />
       </Suspense>
       <Metrics />

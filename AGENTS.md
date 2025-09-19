@@ -58,3 +58,18 @@
 ## Notes for Agents
 - Follow TDD (red→green→refactor) and scope lock from `.agent-policy/devops_agent_policy.yaml`.
 - Prefer reversible changes; update docs alongside code.
+
+## Branch & PR Safety
+- Do not modify or merge PR #32 or PR #38.
+- Use isolated git worktrees per PR; keep scope local to the branch.
+- Never delete files; if deprecating, move to `archive/`.
+
+## UI Changes (PR #37)
+- Teal glassmorphism theme with `:root` CSS vars and high-contrast text for legibility.
+- Title uses Amita Bold via `next/font`; body uses Noto Sans Devanagari.
+- Dashboard: fixed column widths; विवरण wraps full text; clickable chips; filter status “X / Y”; subtler placeholders; light column separators.
+- Metrics: semantic `h2` headings; accessible link-buttons; wrapped in glass card.
+
+## CI Changes
+- Vercel CLI workflow no-ops on PRs and non-main pushes; rely on Vercel App for previews.
+- Coverage gate enforced (95/70). Added tests for metrics interactions and chip toggle to satisfy gate.

@@ -27,7 +27,7 @@ class LangExtractParser:
         try:
             # The result is a list of documents, get the first one
             # Then get the first extraction's text
-            extracted_text = result[0].extractions[0].text
+            extracted_text = result['extractions'][0]['text']
         except (KeyError, IndexError, TypeError, AttributeError):
             extracted_text = "unknown"
             

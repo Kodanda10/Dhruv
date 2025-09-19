@@ -1,26 +1,25 @@
 'use client';
 import React from 'react';
 
-type ChipProps = {
+interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
   selected?: boolean;
   icon?: React.ReactNode;
-  onClick?: () => void;
   className?: string;
-};
+}
 
-export default function Chip({ label, selected, icon, onClick, className }: ChipProps) {
+export default function Chip({ label, selected = false, icon, className, ...props }: ChipProps) {
   return (
     <button
       type="button"
       className={[
-        'inline-flex items-center gap-1.5 px-2.5 py-1 text-sm',
-        'rounded-full border',
-        selected ? 'bg-blue-100 text-blue-900 border-blue-200' : 'bg-slate-100 text-slate-900 border-gray-200',
+        'chip',
+        selected ? 'chip--active' : '',
+        'text-sm',
         className || '',
       ].join(' ').trim()}
-      onClick={onClick}
       aria-pressed={selected}
+      {...props}
     >
       {icon ? <span aria-hidden>{icon}</span> : null}
       <span>{label}</span>

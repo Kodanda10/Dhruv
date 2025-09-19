@@ -1,4 +1,4 @@
-import posts from '../../data/posts.json';
+import posts from '../../data/posts_new.json';
 import { parsePost } from '@/utils/parse';
 
 type CountMap = Record<string, number>;

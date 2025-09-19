@@ -3,13 +3,13 @@ import time
 
 class MilvusEngine:
     def __init__(self, uri="http://localhost:19530", collection_name="project_dhruv"):
-        retries = 5 # Increased retries
-        delay = 10  # Increased delay to 10 seconds
+        retries = 3
+        delay = 5  # seconds
 
         for i in range(retries):
             try:
                 print(f"Attempting to connect to Milvus (attempt {i+1}/{retries})...")
-                self.client = MilvusClient(uri=uri, timeout=30) # Increased timeout
+                self.client = MilvusClient(uri=uri, timeout=10) # Added timeout
                 print("Successfully connected to Milvus.")
                 break  # Exit loop on success
             except Exception as e:
@@ -25,11 +25,10 @@ class MilvusEngine:
         self.dim = 384 # Based on the sentence-transformer model we are using
 
     def create_collection_if_not_exists(self):
-        # Ensure a clean slate for testing/development
         if self.client.has_collection(collection_name=self.collection_name):
-            print(f"Dropping existing collection: {self.collection_name}")
-            self.client.drop_collection(collection_name=self.collection_name)
-            
+            print(f"Collection '{self.collection_name}' already exists. Skipping creation.")
+            return
+
         print(f"Creating collection: {self.collection_name}")
         schema = self.client.create_schema(auto_id=False, enable_dynamic_field=False)
         schema.add_field(field_name="id", datatype=DataType.VARCHAR, max_length=100, is_primary=True)

@@ -1,14 +1,14 @@
 # Project Dhruv Runbook
 
 ## Deploy & Rollback
-- Deploy: GitHub → merge to `main` triggers Vercel Production.
-- Preview: PRs auto-deploy to Vercel Preview.
-- Rollback: Use `vercel rollback <deployment-url-or-id>` to restore last good build within minutes.
+- Deploy: Merge to `main` triggers Vercel Production (via Vercel GitHub App). CLI deploy workflow is skipped on PRs and non-main pushes.
+- Preview: PRs auto-deploy to Vercel Preview (see "Vercel" check on PR for URL).
+- Rollback: `vercel rollback <deployment-url-or-id>` restores last good build. Target the Production deployment for fast rollback (< 10 min).
 
 ## Feature Flags
 - `FLAG_PARSE`: Controls parsing pipeline.
-  - Production default: OFF (enable via Vercel env).
-  - Dev/Test default: ON (set `FLAG_PARSE=off` to disable).
+  - Production default: OFF (enable via Vercel env)
+  - Dev/Test default: ON (set `FLAG_PARSE=off` to disable)
 - Change flags in Vercel Project → Settings → Environment Variables.
 
 ## Health & Monitoring
@@ -18,6 +18,12 @@
 ## CI Quality Gates
 - Coverage: lines >= 95%, branches >= 70%.
 - Required checks: lint, type, unit, coverage gate, security, SBOM/licenses, web-a11y-perf, perf-k6, e2e, IaC, audit.
+
+## UI Theme (PR #37)
+- Theme: Teal glassmorphism with high-contrast text.
+- Components: `Card`, `SoftButton`, `Chip`; Amita heading font enforced via `next/font`.
+- Accessibility: Correct heading order; table separators; improved placeholders.
+
 
 ## Incident Playbook
 1) Identify failing check in GitHub Actions (use `./scripts/ci-watch.sh`).
