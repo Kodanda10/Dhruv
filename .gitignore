@@ -1,9 +1,11 @@
+node_modules
+.next
+.vercel
+coverage
+.nyc_output
 audit.json
+.DS_Store
 .env*
 out
 dist
-
-# Python virtualenv
-api/.venv/
-.venv/
 trufflehog/
