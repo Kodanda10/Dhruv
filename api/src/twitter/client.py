@@ -85,14 +85,15 @@ class TwitterClient:
             user_id = user.data.id
             logger.info(f'Fetching tweets for user @{username} (ID: {user_id})')
             
-            # Fetch tweets (exclude retweets - only original tweets)
+            # Fetch tweets (exclude retweets - only original tweets and replies)
+            # Note: 'exclude' parameter should be a list for Tweepy v4
             tweets = self.client.get_users_tweets(
                 id=user_id,
                 max_results=min(max_results, 100),  # API limit is 100
                 start_time=start_time,
                 end_time=end_time,
                 since_id=since_id,
-                exclude='retweets',  # Exclude retweets - only original tweets
+                exclude=['retweets'],  # Exclude retweets only (keep original tweets + replies)
                 tweet_fields=[
                     'created_at',
                     'public_metrics',
