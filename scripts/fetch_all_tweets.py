@@ -1,33 +1,31 @@
 #!/usr/bin/env python3
 """
-Tweet Fetcher Script
+Fetch ALL tweets from a user (no date restrictions)
 
-Fetches tweets from a Twitter user and stores them in a PostgreSQL database.
+This script fetches all available tweets from a user by paginating through
+all tweets using the since_id parameter.
 
 Usage:
-    python scripts/fetch_tweets.py --handle opchoudhary --since 2023-12-01 --until 2025-10-31
-    python scripts/fetch_tweets.py --handle opchoudhary --resume  # Continue from last fetch
+    python scripts/fetch_all_tweets.py --handle OPChoudhary_Ind
 """
 
 import os
 import sys
-import argparse
-import logging
-from datetime import datetime, timedelta
+import time
 from pathlib import Path
 import psycopg2
 from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
-# Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from api.src.twitter.client import TwitterClient
 
 # Setup logging
+import logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -44,32 +42,7 @@ def get_db_connection():
     return psycopg2.connect(database_url)
 
 
-def create_tweets_table(conn):
-    """Create tweets table if it doesn't exist."""
-    with conn.cursor() as cur:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS raw_tweets (
-                tweet_id VARCHAR PRIMARY KEY,
-                author_handle VARCHAR NOT NULL,
-                text TEXT NOT NULL,
-                created_at TIMESTAMP NOT NULL,
-                media_urls TEXT[],
-                hashtags TEXT[],
-                mentions TEXT[],
-                urls TEXT[],
-                retweet_count INT DEFAULT 0,
-                like_count INT DEFAULT 0,
-                reply_count INT DEFAULT 0,
-                quote_count INT DEFAULT 0,
-                fetched_at TIMESTAMP DEFAULT NOW(),
-                processing_status VARCHAR DEFAULT 'pending'
-            );
-        """)
-        conn.commit()
-        logger.info('Tweets table ready')
-
-
-def get_last_fetched_tweet_id(conn, author_handle: str) -> str:
+def get_last_fetched_tweet_id(conn, author_handle: str):
     """Get the most recent tweet ID for a user (for resumable fetching)."""
     with conn.cursor() as cur:
         cur.execute("""
@@ -121,62 +94,35 @@ def insert_tweets(conn, tweets: list, author_handle: str):
         logger.info(f'Inserted {len(tweets)} tweets')
 
 
-def fetch_tweets_incremental(
-    client: TwitterClient,
-    conn,
-    author_handle: str,
-    start_date: datetime,
-    end_date: datetime,
-    resume: bool = False,
-):
+def fetch_all_tweets(client: TwitterClient, conn, author_handle: str, resume: bool = False):
     """
-    Fetch tweets incrementally with rate limiting.
+    Fetch ALL tweets from a user by paginating through all tweets.
     
     Strategy:
-    - Fetch 100 tweets at a time (API max per request)
-    - Exclude retweets (only original tweets)
-    - Use pagination with since_id to resume
+    - Fetch 100 tweets at a time
+    - Use since_id for pagination (get tweets older than last fetched)
     - Respect rate limits (1 request per 15 minutes for free tier)
-    - Pause 15 minutes between batches
+    - Continue until no more tweets
     """
     total_fetched = 0
     since_id = None
+    batch_num = 1
     
     if resume:
         since_id = get_last_fetched_tweet_id(conn, author_handle)
         if since_id:
             logger.info(f'Resuming from tweet ID: {since_id}')
     
-    # Fetch in batches of 100 tweets (API max per request)
-    batch_size = 100
-    current_date = start_date
-    batch_num = 1
-    
-    while current_date < end_date:
-        # Calculate batch end date (1 month at a time)
-        batch_end = min(current_date + timedelta(days=30), end_date)
-        
-        logger.info(f'Batch #{batch_num}: Fetching tweets from {current_date.date()} to {batch_end.date()}')
+    while True:
+        logger.info(f'Batch #{batch_num}: Fetching tweets...')
         
         try:
             # Fetch batch (100 tweets max, excluding retweets)
-            # Note: If date range returns no results, try without date filter
             tweets = client.fetch_user_tweets(
                 username=author_handle,
-                max_results=batch_size,
-                start_time=current_date,
-                end_time=batch_end,
+                max_results=100,
                 since_id=since_id,
             )
-            
-            # If no tweets with date filter, try without date filter for this batch
-            if not tweets and batch_num == 1:
-                logger.warning('No tweets found with date filter, trying without date filter...')
-                tweets = client.fetch_user_tweets(
-                    username=author_handle,
-                    max_results=batch_size,
-                    since_id=since_id,
-                )
             
             if not tweets:
                 logger.info('No more tweets found')
@@ -186,25 +132,24 @@ def fetch_tweets_incremental(
             insert_tweets(conn, tweets, author_handle)
             total_fetched += len(tweets)
             
-            # Update since_id for next iteration
-            since_id = tweets[0]['id']  # Most recent tweet ID
+            # Update since_id for next iteration (oldest tweet ID)
+            since_id = tweets[-1]['id']  # Last tweet in batch (oldest)
             
             # Progress update
             logger.info(f'✓ Batch #{batch_num} complete: {len(tweets)} tweets fetched')
             logger.info(f'✓ Total progress: {total_fetched} tweets fetched so far')
             
-            # If we got fewer than batch_size, we've reached the end
-            if len(tweets) < batch_size:
+            # If we got fewer than 100, we've reached the end
+            if len(tweets) < 100:
                 logger.info('Reached end of available tweets')
                 break
             
             # Move to next batch
-            current_date = batch_end + timedelta(days=1)
             batch_num += 1
             
             # Pause to respect rate limits (15 minutes for free tier)
             logger.info('⏸️  Rate limit: Pausing for 15 minutes before next batch...')
-            logger.info(f'   Next batch will start at: {datetime.now() + timedelta(minutes=15)}')
+            logger.info(f'   Next batch will start at: {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + 15*60))}')
             time.sleep(15 * 60)  # 15 minutes = 900 seconds
             
         except Exception as e:
@@ -216,29 +161,15 @@ def fetch_tweets_incremental(
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='Fetch tweets from Twitter')
+    import argparse
+    parser = argparse.ArgumentParser(description='Fetch ALL tweets from a Twitter user')
     parser.add_argument('--handle', required=True, help='Twitter username (without @)')
-    parser.add_argument('--since', help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--until', help='End date (YYYY-MM-DD)')
     parser.add_argument('--resume', action='store_true', help='Resume from last fetch')
-    parser.add_argument('--limit', type=int, default=500, help='Max tweets to fetch (default: 500)')
     
     args = parser.parse_args()
     
-    # Parse dates
-    if args.resume:
-        start_date = datetime(2023, 12, 1)  # Default start
-        end_date = datetime(2025, 10, 31)   # Default end
-    else:
-        if not args.since or not args.until:
-            logger.error('--since and --until are required unless using --resume')
-            sys.exit(1)
-        
-        start_date = datetime.fromisoformat(args.since)
-        end_date = datetime.fromisoformat(args.until)
-    
-    logger.info(f'Fetching tweets for @{args.handle}')
-    logger.info(f'Date range: {start_date.date()} to {end_date.date()}')
+    logger.info(f'Fetching ALL tweets for @{args.handle}')
+    logger.info(f'Excluding retweets (original tweets only)')
     
     try:
         # Initialize Twitter client
@@ -247,20 +178,15 @@ def main():
         # Get database connection
         conn = get_db_connection()
         
-        # Create table if needed
-        create_tweets_table(conn)
-        
         # Fetch tweets
-        total = fetch_tweets_incremental(
+        total = fetch_all_tweets(
             client=client,
             conn=conn,
             author_handle=args.handle,
-            start_date=start_date,
-            end_date=end_date,
             resume=args.resume,
         )
         
-        logger.info(f'✅ Successfully fetched {total} tweets')
+        logger.info(f'✅ Successfully fetched {total} tweets total!')
         
         # Close connection
         conn.close()
