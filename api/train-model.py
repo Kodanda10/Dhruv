@@ -10,9 +10,9 @@ from src.parsing.parser import create_parser, GeminiParser
 # --- Configuration ---
 EMBEDDING_MODEL = 'paraphrase-MiniLM-L6-v2'
 COLLECTION_NAME = "project_dhruv"
-DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts_new.json')
-CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts_new_checkpoint.json')
-PROCESSED_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts_new_processed.json')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts.json')
+CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts_checkpoint.json')
+PROCESSED_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'posts_processed.json')
 
 def load_checkpoint():
     """Load processing checkpoint"""
@@ -48,8 +48,9 @@ def main():
 
     # 2. Initialize Milvus Engine and create collection
     print("\n2. Setting up Milvus collection...")
-    milvus_engine = MilvusEngine(collection_name=COLLECTION_NAME)
-    milvus_engine.create_collection_if_not_exists()
+    # milvus_engine = MilvusEngine(collection_name=COLLECTION_NAME)
+    # milvus_engine.create_collection_if_not_exists()
+    print("Skipping Milvus setup (not available)")
 
     # 3. Initialize Parser and Embedding Model
     print("\n3. Initializing models...")
@@ -158,8 +159,8 @@ def main():
     # 5. Final batch insert
     if processed_data:
         print(f"\n5. Inserting {len(processed_data)} documents into Milvus...")
-        milvus_engine.insert(processed_data)
-        print("✓ Successfully inserted documents into Milvus")
+        # milvus_engine.insert(processed_data)
+        print("✓ Skipping Milvus insertion (not available)")
     else:
         print("No data to insert.")
 

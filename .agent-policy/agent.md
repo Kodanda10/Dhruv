@@ -12,6 +12,7 @@ Sprint‑1 Scope (binding):
 Keep the output in a diff-like format with + for added lines, sections like Epics and Atomic Tasks (e.g., Epic E1 with tasks DP-01, etc.). Architecture: Retain Next.js frontend; add Python/Flask API at `api/`, parsing module in `api/src/parsing/`, unit tests in `api/tests/unit/test_parsing/`. Internal dataset at `api/data/internal_dataset.csv`. Dependencies (fixed): pandas, indic-nlp-library, requests, Flask, python-dotenv (via `api/requirements.txt`). Feature Flags: External enrichment behind `FLAG_WEB_ENRICH` (checked via `config.is_flag_enabled('FLAG_WEB_ENRICH')`).
 
 Adhere strictly to the following constraints:
+- **Data Variant Discipline:** All parsing data, vector data, graph data, scraped data, and fetched data saved into datasets must be stored in four variants at all times: Hindi, Nukta-Hindi, English, and Transliteration. Pipelines must deterministically generate any missing variants, and validations must assert presence of all four variants before data is accepted.
 - **Scope Lock**: Extract an acceptance checklist from the outline. Implement only items in the checklist. Refuse any drift or additions.
 - **Atomicity**: Each task must address a single, local change (e.g., one function, one test, one file modification). No bundling of concerns.
 - **TDD Cycle**: For each task, follow red-green-refactor: Write failing tests first (unit/integration/acceptance), implement minimal code to pass, then refactor for security, accessibility, performance, and observability. Coverage targets: lines >= 95%, branches >= 70%.

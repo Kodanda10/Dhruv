@@ -84,7 +84,8 @@
 - Scope: Initial Pandera validator for the aliases dataset (derived from `api/data/aliases.json`), feature-flagged via `FLAG_DATA_VALIDATION`.
 - Local usage:
   - Run: `export FLAG_DATA_VALIDATION=on && python -m api.validations.pandera.run_all --json-out validation/pandera-summary.json`
-  - Output: JSON summary printed to stdout and written to `validation/pandera-summary.json`.
+  - Run: `export FLAG_DATA_VALIDATION=on && python -m api.validations.great_expectations --json-out data/validations/ge-summary.json`
+  - Output: JSON summaries written to the specified paths (skip when flag off).
   - Disable: `export FLAG_DATA_VALIDATION=off` (validator skips and exits 0).
 - CI:
   - Job: “Data Validation (Pandera)” runs in CI.

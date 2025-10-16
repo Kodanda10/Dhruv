@@ -133,10 +133,11 @@ def fetch_tweets_incremental(
     Fetch tweets incrementally with rate limiting.
     
     Strategy:
-    - Fetch 500 tweets at a time (free tier limit)
+    - Fetch 100 tweets at a time (API max per request)
+    - Exclude retweets (only original tweets)
     - Use pagination with since_id to resume
-    - Respect rate limits (15 requests per 15 minutes)
-    - Pause between batches
+    - Respect rate limits (1 request per 15 minutes for free tier)
+    - Pause 15 minutes between batches
     """
     total_fetched = 0
     since_id = None
@@ -146,18 +147,19 @@ def fetch_tweets_incremental(
         if since_id:
             logger.info(f'Resuming from tweet ID: {since_id}')
     
-    # Fetch in batches of 500 tweets (max per month for free tier)
-    batch_size = 500
+    # Fetch in batches of 100 tweets (API max per request)
+    batch_size = 100
     current_date = start_date
+    batch_num = 1
     
     while current_date < end_date:
         # Calculate batch end date (1 month at a time)
         batch_end = min(current_date + timedelta(days=30), end_date)
         
-        logger.info(f'Fetching tweets from {current_date.date()} to {batch_end.date()}')
+        logger.info(f'Batch #{batch_num}: Fetching tweets from {current_date.date()} to {batch_end.date()}')
         
         try:
-            # Fetch batch
+            # Fetch batch (100 tweets max, excluding retweets)
             tweets = client.fetch_user_tweets(
                 username=author_handle,
                 max_results=batch_size,
@@ -178,7 +180,8 @@ def fetch_tweets_incremental(
             since_id = tweets[0]['id']  # Most recent tweet ID
             
             # Progress update
-            logger.info(f'Progress: {total_fetched} tweets fetched')
+            logger.info(f'✓ Batch #{batch_num} complete: {len(tweets)} tweets fetched')
+            logger.info(f'✓ Total progress: {total_fetched} tweets fetched so far')
             
             # If we got fewer than batch_size, we've reached the end
             if len(tweets) < batch_size:
@@ -187,10 +190,12 @@ def fetch_tweets_incremental(
             
             # Move to next batch
             current_date = batch_end + timedelta(days=1)
+            batch_num += 1
             
-            # Pause to respect rate limits
-            logger.info('Pausing for 1 minute to respect rate limits...')
-            time.sleep(60)
+            # Pause to respect rate limits (15 minutes for free tier)
+            logger.info('⏸️  Rate limit: Pausing for 15 minutes before next batch...')
+            logger.info(f'   Next batch will start at: {datetime.now() + timedelta(minutes=15)}')
+            time.sleep(15 * 60)  # 15 minutes = 900 seconds
             
         except Exception as e:
             logger.error(f'Error fetching batch: {str(e)}')

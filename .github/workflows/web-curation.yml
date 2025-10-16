@@ -77,6 +77,29 @@ jobs:
           echo "---- Diff (name_mappings) ----"
           git diff --stat -- data/name_mappings || true
 
+      - name: Compute coverage summary
+        id: coverage
+        run: |
+          mkdir -p coverage
+          python api/src/sota/dataset_builders/tools/coverage_report.py --json-out coverage/web-curation-coverage.json
+          python api/src/sota/dataset_builders/tools/coverage_markdown.py --json coverage/web-curation-coverage.json --out coverage/web-curation-coverage.md --max-samples 10 --title "Chhattisgarh Geography — Mapping Coverage"
+          {
+            printf "%s\n" "This automated PR proposes curated Hindi/Nukta-Hindi mappings verified from allowlisted authoritative sources (gov/nic/census/egramswaraj).";
+            printf "%s\n" "- Flags: ENABLE_AUTONOMOUS_WEB_CURATION=${ENABLE_AUTONOMOUS_WEB_CURATION}, SEARCH=${ENABLE_SEARCH_AUTOMATION}, SCRAPE=${ENABLE_WEB_SCRAPING}";
+            printf "%s\n" "- NDJSON: data/name_mappings/autocurated/geography_name_map.ndjson";
+            printf "%s\n" "- JSON map auto-merged: data/name_mappings/geography_name_map.json";
+            printf "%s\n" "- Cache: data/.web_cache (not committed)";
+            printf "%s\n" "";
+            cat coverage/web-curation-coverage.md;
+          } > coverage/web-curation-pr-body.md
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-curation-coverage
+          path: coverage/web-curation-coverage.json
+
       - name: Create PR with curated mappings
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -89,12 +112,7 @@ jobs:
             !data/.web_cache/**
           commit-message: 'chore(web-curation): auto-curated mappings from authoritative portals'
           title: 'chore(web-curation): auto-curated mappings'
-          body: |
-            This automated PR proposes curated Hindi/Nukta-Hindi mappings verified from allowlisted authoritative sources (gov/nic/census/egramswaraj).
-            - Flags: ENABLE_AUTONOMOUS_WEB_CURATION=${{ env.ENABLE_AUTONOMOUS_WEB_CURATION }}, SEARCH=${{ env.ENABLE_SEARCH_AUTOMATION }}, SCRAPE=${{ env.ENABLE_WEB_SCRAPING }}
-            - NDJSON: data/name_mappings/autocurated/geography_name_map.ndjson
-            - JSON map auto-merged: data/name_mappings/geography_name_map.json
-            - Cache: data/.web_cache (not committed)
+          body-path: coverage/web-curation-pr-body.md
           labels: |
             automation
             web-curation

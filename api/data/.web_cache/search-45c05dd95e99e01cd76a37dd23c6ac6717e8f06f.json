@@ -1,0 +1,54 @@
+{
+  "results": [
+    {
+      "title": "Education Portal",
+      "url": "https://eduportal.cg.nic.in/ConsolidatedRpt.aspx?flag=DBC_S&dist=2201&blk=220124&clu=2201240007&sch=&psups=1",
+      "snippet": "SrNo, District, Block, Cluster, School. 1, KORIYA, BHARATPUR, CRC MADISARAI, GONDWANA PUBLIC SCHOOL GHORDHARA(22012400202)."
+    },
+    {
+      "title": "Dept. of Food",
+      "url": "https://khadya.cg.nic.in/pdsonline/pmuy/RptApplinD.aspx?Id=4&DistrictID=01&TehsilID=001&UR=R&Code=0046",
+      "snippet": "4, 35220100100070000000500037002, SAVITASINGH, SAVITA HOUSE, 5BL:BHARATPUR,VL:MADISARAI 22 MAIN ROAD MADISARI MADISARI 497778, JANAKPUR INDANE GRAMIN VITRAK ; 5 ..."
+    },
+    {
+      "title": "Education Portal",
+      "url": "https://eduportal.cg.nic.in/ConsolidatedRpt.aspx?flag=DBC_S&dist=2201&blk=220124&clu=2201240007&sch=&psups=4",
+      "snippet": "SrNo, District, Block, Cluster, School. 1, KORIYA, BHARATPUR, CRC MADISARAI, GOVT. MIDDLE SCHOOL HARCHOKA(22012401702). 2, KORIYA, BHARATPUR, CRC MADISARAI ..."
+    },
+    {
+      "title": "Dept. of Food",
+      "url": "http://khadya.cg.nic.in/pdsonline/pmuy/RptBenefD.aspx?Id=1&DistrictID=01&TehsilID=001&UR=R&Code=0009",
+      "snippet": "RAMBAI HOUSE, 01 BL:BHARATPUR,VL:BE 456 MADISARAI ROAD BELA BELA 497778, JANAKPUR INDANE GRAMIN VITRAK. 111, 7048910238, 12/03/2017, RAM KALI, RAM KALI HOUSE, 7 ..."
+    },
+    {
+      "title": "Dept. of Food",
+      "url": "https://khadya.cg.nic.in/pdsonline/pmuy/RptEXBenefD.aspx?Vlocation=53010100001005&Action_Type=0",
+      "snippet": "NOOTAN HOUSE 12 02 BHARATPUR ROAD SCHOOL PARA MADISARAI 497778, JANAKPUR INDANE GRAMIN VITRAK. 5, 7071242988, 14/07/2018, PARWATI YADAV, YADAV HOUSE 86 W.NO 6 ..."
+    },
+    {
+      "title": "Dept. of Food",
+      "url": "http://khadya.cg.nic.in/pdsonline/pmuy/RptBenefD.aspx?Id=1&DistrictID=01&TehsilID=001&UR=R&Code=0004",
+      "snippet": "UPADHYA HOUSE, H.NO 320 BL:BHARATPU W.NO 10 MADISARAI ROAD MAIN BASTI BADWAHI 497778, JANAKPUR INDANE GRAMIN VITRAK. 3, 7063590521, 14/03/2018, CHANDRAWATI BAI ..."
+    },
+    {
+      "title": "Geo Tagged Asset Report",
+      "url": "https://egramswaraj.gov.in/geotaggedforgpdp.do?planunttypcd=3&gpcode=127243",
+      "snippet": "5, 46139558, शासकीय भवन में वाटर रनिंग सप्लाई ; 6, 53527287, koriya neer marammatt ; 7, 33196080, nal jal yojna maramth akry ; 8, 54500459, middle school repair ..."
+    },
+    {
+      "title": "Health | District Manendragarh-Chirmiri-Bharatpur Government Of ...",
+      "url": "https://manendragarh-chirmiri-bharatpur.cg.gov.in/en/health/",
+      "snippet": "PHC Madisarai, Madisari, Sanjay Kumar Mishra, RMA, 8319461096. 21, Manendragarh- Chirmiri- Bharatpur, BHARATPUR, Primary HealtdCenter, PHC Bahrasi, Dr. Amit ..."
+    },
+    {
+      "title": "Untitled",
+      "url": "https://egramswaraj.gov.in/FileRedirect.jsp?FD=ExpenditureReport2020-2021/22/343&name=4038.html",
+      "snippet": "Village wise Receipt and Payment Statement Financial Year:-2020-2021. State:-CHHATTISGARH,District:-KOREA,Block:-BHARATPUR."
+    },
+    {
+      "title": "Dept. of Food",
+      "url": "http://khadya.cg.nic.in/pdsonline/pmuy/RptWardWiseApplin.aspx?TehsilCode=001&NewDistID=01",
+      "snippet": "क्र. ग्रामपंचायत, कुल अनुमोदित हितग्राही, निर्माण श्रमिक, गैर निर्माण श्रमिक (ग्रामीण). 1, AKTAWAR, 103 · 1 · 102. 2, BADGAVKALA, 136 · 21 · 115. 3, BADGAVKHUR, 105 · 4 · 101."
+    }
+  ]
+}

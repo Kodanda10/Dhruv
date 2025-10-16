@@ -10,6 +10,8 @@ from .dataset_builders.festival_builder import build_festival_dataset
 from .dataset_builders.poi_builder import build_poi_dataset
 from .dataset_builders.chhattisgarh_schemes_builder import build_chhattisgarh_schemes_dataset
 from .dataset_builders.central_schemes_builder import build_central_schemes_dataset
+from .dataset_builders.cg_geo_excel_builder import build_cg_geo_excel_dataset
+from .dataset_builders.electoral_enrichment import enrich_ndjson_lines
 
 # Database connection
 import psycopg2
@@ -137,6 +139,23 @@ def run_etl_for_builder(builder_func, dataset_name: str):
                 record.get('description')
             ))
 
+    elif dataset_name == 'geography_excel':
+        for line in data_lines:
+            record = json.loads(line)
+            # Insert flat excel-derived geography (dedup handled in builder)
+            cursor.execute("""
+                INSERT INTO dims.dim_geography (state, district, ac, block, gp, village, pincode)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (state, district, village) DO NOTHING
+            """, (
+                'छत्तीसगढ़',
+                record.get('district'),
+                None,
+                record.get('block'),
+                record.get('gram_panchayat'),
+                record.get('village'),
+                record.get('pincode')
+            ))
     elif dataset_name in ['chhattisgarh_schemes', 'central_schemes']:
         for line in data_lines:
             record = json.loads(line)
@@ -184,6 +203,7 @@ def run_monthly_etl():
 
     # Run ETL for each builder
     run_etl_for_builder(build_geography_dataset, 'geography')
+    run_etl_for_builder(build_cg_geo_excel_dataset, 'geography_excel')
     run_etl_for_builder(build_festival_dataset, 'festival')
     run_etl_for_builder(build_poi_dataset, 'poi')
     run_etl_for_builder(build_chhattisgarh_schemes_dataset, 'chhattisgarh_schemes')

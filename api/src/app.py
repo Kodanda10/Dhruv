@@ -3,9 +3,7 @@ import json
 import uuid
 import hashlib
 import time
-from datetime import datetime, timezone
 from flask import Flask, jsonify, request
-from pydantic import BaseModel
 from .parsing.normalization import normalize_tokens
 from .parsing.alias_loader import load_aliases, AliasIndex
 from .parsing.parser import LangExtractParser
@@ -59,34 +57,6 @@ def create_app() -> Flask:
         'ENABLE_EMBEDDINGS': FLAGS.ENABLE_EMBEDDINGS,
       },
     })
-
-  class ParseRequest(BaseModel):
-    text: str
-    source_id: str | None = None
-    dry_run: bool = False
-
-  @app.post('/api/sota/parse')
-  def parse():
-    try:
-        req = ParseRequest(**request.json)
-    except Exception as e:
-        return jsonify({"error": "Invalid request format", "details": str(e)}), 400
-
-    # Stub: simple type guess
-    event_type = "Announcement" if "#" in req.text else "Meeting"
-    event_id = f"{datetime.now(timezone.utc).date()}-{event_type}-stub"
-    event = {
-        "event_id": event_id,
-        "type": event_type,
-        "title": req.text[:80],
-        "description": req.text,
-        "certainty_score": 0.5,
-        "provenance": req.source_id or "unknown",
-    }
-    if not req.dry_run:
-        # TODO: write to KG (later PR)
-        pass
-    return jsonify({"event": event})
 
   @app.post('/api/normalize')
   def normalize():

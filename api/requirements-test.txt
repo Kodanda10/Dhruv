@@ -17,3 +17,4 @@ pytest-mock==3.14.0
 
 # Validation (kept light; used by schema/validation related tests if present)
 marshmallow==3.21.3
+pandas==2.2.2

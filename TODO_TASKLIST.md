@@ -142,8 +142,8 @@ Legend: [ ] pending • [~] in_progress • [x] completed (UTC timestamps)
 - [x] I5-02: Implement festival dataset builder (NDJSON with lunar/solar rules, year_dates resolution). (completed: 2025-09-10T12:00:00Z)
 - [x] I5-03: Implement POI dataset builder (NDJSON for temples, venues with lat/lon, OSM integration). (completed: 2025-09-10T12:00:00Z)
 - [x] I5-04: Add ETL pipeline skeleton (monthly refresh, checksum validation). (completed: 2025-09-10T12:00:00Z)
-- [x] I5-02.1: Implement Chhattisgarh Govt Schemes dataset builder (NDJSON with eligibility, benefits, application process). (completed: 2025-09-10T12:00:00Z)
-- [x] I5-02.2: Implement Central Govt Schemes dataset builder (NDJSON with eligibility, benefits, application process). (completed: 2025-09-10T12:00:00Z)
+- [x] I5-02.1: Implement Chhattisgarh Govt Schemes dataset builder (NDJSON with eligibility, benefits, application process). (completed: 2025-09-10T12:00:00Z) - Added 3 schemes with JSON structure, unit tests, ETL integration
+- [x] I5-02.2: Implement Central Govt Schemes dataset builder (NDJSON with eligibility, benefits, application process). (completed: 2025-09-10T12:00:00Z) - Added 4 schemes with JSON structure, unit tests, ETL integration
 - [x] I5-05: Wire dataset builders to Postgres dims (fact_event, bridges). (completed: 2025-09-10T12:00:00Z)
 - [x] I5-06: Enable ENABLE_SOTA_DATASET_BUILDER flag for testing. (completed: 2025-09-10T12:00:00Z)
 

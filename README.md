@@ -143,7 +143,20 @@ All scripts are designed to be run stepwise. Always validate that four variants 
    - python scripts/process_village_data.py
    - Output: data/processed_villages.json
 
-4) Limited/experimental extractor (optional)
+4) Deterministic electoral enrichment (offline)
+   Module: api/src/sota/dataset_builders/electoral_enrichment.py
+   Description:
+   - Reads NDJSON records (e.g. wards or villages) and attaches Assembly / Parliamentary constituencies.
+   - Uses curated lookup tables in data/constituencies.json (district/block/ULB granularity).
+   - Logs rejects to data/rejects/electoral_mismatches.ndjson and fails fast when strict mode is on.
+
+   Usage:
+   - python api/src/sota/dataset_builders/electoral_enrichment.py --input data/urban.ndjson --output data/urban_with_constituencies.ndjson
+   - Or wrap an in-repo builder: `enrich_from_builder(build_cg_urban_excel_dataset)`
+
+   👉 Curated name backfills (for unresolved variants) are covered in `docs/name_mapping_backfill.md` and use `mappings_from_csv.py` to emit NDJSON/JSON patches.
+
+5) Limited/experimental extractor (optional)
    Script: scripts/extract_cg_data.py
    Description:
    - Early prototype for fetching dropdowns and a small data subset.
