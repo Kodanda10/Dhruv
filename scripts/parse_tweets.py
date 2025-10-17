@@ -15,6 +15,7 @@ import sys
 import time
 from pathlib import Path
 import psycopg2
+import psycopg2.extras
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -99,6 +100,12 @@ def insert_parsed_event(conn, parsed_event: dict):
         parsed_event: Parsed event dict
     """
     with conn.cursor() as cur:
+        # First, delete any existing parsed event for this tweet
+        cur.execute("""
+            DELETE FROM parsed_events WHERE tweet_id = %s
+        """, (parsed_event['tweet_id'],))
+        
+        # Then insert the new one
         cur.execute("""
             INSERT INTO parsed_events (
                 tweet_id,
@@ -112,20 +119,6 @@ def insert_parsed_event(conn, parsed_event: dict):
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
-            ON CONFLICT (tweet_id) 
-            DO UPDATE SET
-                event_type = EXCLUDED.event_type,
-                event_type_confidence = EXCLUDED.event_type_confidence,
-                event_date = EXCLUDED.event_date,
-                date_confidence = EXCLUDED.date_confidence,
-                locations = EXCLUDED.locations,
-                people_mentioned = EXCLUDED.people_mentioned,
-                organizations = EXCLUDED.organizations,
-                schemes_mentioned = EXCLUDED.schemes_mentioned,
-                overall_confidence = EXCLUDED.overall_confidence,
-                needs_review = EXCLUDED.needs_review,
-                parsed_by = EXCLUDED.parsed_by,
-                parsed_at = NOW()
         """, (
             parsed_event['tweet_id'],
             parsed_event['event_type'],
