@@ -15,7 +15,6 @@ export default function Home() {
           <h1 className={`${titleFont.className} text-4xl md:text-5xl text-gray-900 font-bold mb-2`}>
             सोशल मीडिया एनालिटिक्स डैशबोर्ड
           </h1>
-          <p className="text-gray-600 text-sm">OP Choudhary Social Media Analytics</p>
         </header>
 
         {/* Tab Navigation */}

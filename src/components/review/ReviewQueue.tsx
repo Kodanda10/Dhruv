@@ -25,6 +25,15 @@ interface ParsedTweet {
     schemes?: string[];
     schemes_mentioned?: string[];
   };
+
+  const handleSaveAndApprove = () => {
+    // Save changes, then approve the tweet
+    handleSave();
+    // Move approval to next tick so state updates apply
+    setTimeout(() => {
+      handleApprove();
+    }, 0);
+  };
   confidence?: number;
   needs_review?: boolean;
   review_status?: string;
@@ -289,13 +298,11 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {editedData.locations?.map((loc: string, i: number) => (
-                      <Badge key={i} variant="info" removable onRemove={() => removeEntity('locations', i)}>
-                        {loc}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Input
+                    placeholder="e.g., रायगढ़, रायपुर"
+                    value={(editedData.locations || []).join(', ')}
+                    onChange={(e) => setEditedData({ ...editedData, locations: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                  />
                 </div>
 
                 {/* People */}
@@ -311,13 +318,11 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {editedData.people?.map((person: string, i: number) => (
-                      <Badge key={i} variant="default" removable onRemove={() => removeEntity('people', i)}>
-                        {person}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Input
+                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                    value={(editedData.people || []).join(', ')}
+                    onChange={(e) => setEditedData({ ...editedData, people: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                  />
                 </div>
 
                 {/* Organizations */}
@@ -333,13 +338,11 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {editedData.organizations?.map((org: string, i: number) => (
-                      <Badge key={i} variant="default" removable onRemove={() => removeEntity('organizations', i)}>
-                        {org}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Input
+                    placeholder="e.g., भाजपा, राज्य शासन"
+                    value={(editedData.organizations || []).join(', ')}
+                    onChange={(e) => setEditedData({ ...editedData, organizations: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                  />
                 </div>
 
                 {/* Schemes */}
@@ -355,13 +358,11 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {editedData.schemes?.map((scheme: string, i: number) => (
-                      <Badge key={i} variant="warning" removable onRemove={() => removeEntity('schemes', i)}>
-                        {scheme}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Input
+                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                    value={(editedData.schemes || []).join(', ')}
+                    onChange={(e) => setEditedData({ ...editedData, schemes: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                  />
                 </div>
 
                 {/* Correction Reason */}
@@ -445,6 +446,9 @@ export default function ReviewQueue() {
                 </Button>
                 <Button variant="success" size="sm" onClick={handleSave}>
                   <Check className="w-4 h-4 mr-1" /> Save
+                </Button>
+                <Button variant="success" size="sm" onClick={handleSaveAndApprove}>
+                  <Check className="w-4 h-4 mr-1" /> Save & Approve
                 </Button>
               </>
             ) : (
