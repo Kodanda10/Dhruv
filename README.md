@@ -271,3 +271,4 @@ Notes
 - This README is the single source of truth for the four‑variant rule and data pipeline expectations used by this project.
 - If portal schema changes, update selectors in scripts/scrape_cg_portal.js and re‑run limited tests before full runs.
 - Always prefer the latest official sources. Avoid simulated data for production artifacts.
+
