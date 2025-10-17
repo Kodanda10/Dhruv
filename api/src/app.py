@@ -3,6 +3,8 @@ import json
 import uuid
 import hashlib
 import time
+import psycopg2
+import psycopg2.extras
 from flask import Flask, jsonify, request
 from .parsing.normalization import normalize_tokens
 from .parsing.alias_loader import load_aliases, AliasIndex
@@ -155,6 +157,226 @@ def create_app() -> Flask:
   @app.get('/api/metrics')
   def metrics():
     return jsonify(metrics_snapshot())
+
+  @app.get('/api/parsed-events')
+  def get_parsed_events():
+    """
+    Get parsed events for human review.
+    
+    Query params:
+    - status: pending/approved/rejected/edited (default: all)
+    - needs_review: true/false (default: all)
+    - limit: number of results (default: 50)
+    """
+    try:
+      # Get query parameters
+      status = request.args.get('status')
+      needs_review = request.args.get('needs_review')
+      limit = int(request.args.get('limit', 50))
+      
+      # Connect to database
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+      
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      
+      # Build query
+      query = """
+        SELECT 
+          pe.id,
+          pe.tweet_id,
+          rt.text as tweet_text,
+          rt.created_at as tweet_created_at,
+          pe.event_type,
+          pe.event_type_confidence,
+          pe.event_date,
+          pe.date_confidence,
+          pe.locations,
+          pe.people_mentioned,
+          pe.organizations,
+          pe.schemes_mentioned,
+          pe.overall_confidence,
+          pe.needs_review,
+          pe.review_status,
+          pe.reviewed_at,
+          pe.reviewed_by,
+          pe.parsed_at,
+          pe.parsed_by
+        FROM parsed_events pe
+        JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
+        WHERE 1=1
+      """
+      params = []
+      
+      if status:
+        query += " AND pe.review_status = %s"
+        params.append(status)
+      
+      if needs_review == 'true':
+        query += " AND pe.needs_review = true"
+      elif needs_review == 'false':
+        query += " AND pe.needs_review = false"
+      
+      query += " ORDER BY rt.created_at DESC LIMIT %s"
+      params.append(limit)
+      
+      cur.execute(query, params)
+      events = cur.fetchall()
+      
+      cur.close()
+      conn.close()
+      
+      return jsonify({
+        'success': True,
+        'count': len(events),
+        'events': events
+      })
+      
+    except Exception as e:
+      return jsonify({'error': str(e)}), 500
+
+  @app.put('/api/parsed-events/<int:event_id>')
+  def update_parsed_event(event_id):
+    """
+    Update a parsed event (for human review corrections).
+    
+    Body: JSON with fields to update
+    """
+    try:
+      data = request.get_json()
+      
+      # Connect to database
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+      
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor()
+      
+      # Build update query
+      update_fields = []
+      params = []
+      
+      if 'event_type' in data:
+        update_fields.append('event_type = %s')
+        params.append(data['event_type'])
+      
+      if 'event_date' in data:
+        update_fields.append('event_date = %s')
+        params.append(data['event_date'])
+      
+      if 'locations' in data:
+        update_fields.append('locations = %s')
+        params.append(psycopg2.extras.Json(data['locations']))
+      
+      if 'people_mentioned' in data:
+        update_fields.append('people_mentioned = %s')
+        params.append(data['people_mentioned'])
+      
+      if 'organizations' in data:
+        update_fields.append('organizations = %s')
+        params.append(data['organizations'])
+      
+      if 'schemes_mentioned' in data:
+        update_fields.append('schemes_mentioned = %s')
+        params.append(data['schemes_mentioned'])
+      
+      if not update_fields:
+        return jsonify({'error': 'No fields to update'}), 400
+      
+      # Add review metadata
+      update_fields.append('review_status = %s')
+      params.append('edited')
+      
+      update_fields.append('reviewed_at = NOW()')
+      
+      if 'reviewed_by' in data:
+        update_fields.append('reviewed_by = %s')
+        params.append(data['reviewed_by'])
+      
+      params.append(event_id)
+      
+      query = f"""
+        UPDATE parsed_events
+        SET {', '.join(update_fields)}
+        WHERE id = %s
+      """
+      
+      cur.execute(query, params)
+      conn.commit()
+      
+      cur.close()
+      conn.close()
+      
+      return jsonify({'success': True, 'message': 'Event updated'})
+      
+    except Exception as e:
+      return jsonify({'error': str(e)}), 500
+
+  @app.post('/api/parsed-events/<int:event_id>/approve')
+  def approve_parsed_event(event_id):
+    """Approve a parsed event."""
+    try:
+      data = request.get_json() or {}
+      reviewed_by = data.get('reviewed_by', 'user')
+      
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+      
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor()
+      
+      cur.execute("""
+        UPDATE parsed_events
+        SET review_status = 'approved',
+            reviewed_at = NOW(),
+            reviewed_by = %s
+        WHERE id = %s
+      """, (reviewed_by, event_id))
+      
+      conn.commit()
+      cur.close()
+      conn.close()
+      
+      return jsonify({'success': True, 'message': 'Event approved'})
+      
+    except Exception as e:
+      return jsonify({'error': str(e)}), 500
+
+  @app.post('/api/parsed-events/<int:event_id>/reject')
+  def reject_parsed_event(event_id):
+    """Reject a parsed event."""
+    try:
+      data = request.get_json() or {}
+      reviewed_by = data.get('reviewed_by', 'user')
+      
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+      
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor()
+      
+      cur.execute("""
+        UPDATE parsed_events
+        SET review_status = 'rejected',
+            reviewed_at = NOW(),
+            reviewed_by = %s
+        WHERE id = %s
+      """, (reviewed_by, event_id))
+      
+      conn.commit()
+      cur.close()
+      conn.close()
+      
+      return jsonify({'success': True, 'message': 'Event rejected'})
+      
+    except Exception as e:
+      return jsonify({'error': str(e)}), 500
+
   return app
 
 

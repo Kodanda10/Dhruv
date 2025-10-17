@@ -1,5 +1,5 @@
 "use client";
-import posts from '../../data/posts_new.json';
+import parsedTweets from '../../data/parsed_tweets.json';
 import { parsePost, formatHindiDate } from '@/utils/parse';
 import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
@@ -10,7 +10,7 @@ import Card from './Card';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
 
-type Post = { id: string | number; timestamp: string; content: string };
+type Post = { id: string | number; timestamp: string; content: string; parsed?: any; confidence?: number; needs_review?: boolean; review_status?: string };
 
 export default function Dashboard() {
   const [locFilter, setLocFilter] = useState('');
@@ -36,7 +36,26 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const parsed = useMemo(() => (posts as Post[]).map((p) => {
+  const parsed = useMemo(() => (parsedTweets as Post[]).map((p) => {
+    if (p.parsed && p.parsed.event_type) {
+      // Use parsed data from database
+      return {
+        id: p.id,
+        ts: p.timestamp,
+        when: formatHindiDate(p.timestamp),
+        where: p.parsed.locations?.map((l: any) => l.name || l) || [],
+        what: [p.parsed.event_type],
+        which: {
+          mentions: p.parsed.people || [],
+          hashtags: p.parsed.organizations || [],
+        },
+        how: p.content,
+        confidence: p.confidence,
+        needs_review: p.needs_review,
+        review_status: p.review_status,
+      };
+    }
+    // Fallback to parsePost if no parsed data
     if (isParseEnabled()) {
       return { id: p.id, ts: p.timestamp, ...parsePost(p) };
     }
