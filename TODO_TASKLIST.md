@@ -36,6 +36,21 @@ Legend: [ ] pending • [~] in_progress • [x] completed (UTC timestamps)
 
 ---
 
+## ✅ Twitter API Integration (Completed: 2025-10-17)
+
+- [x] cleanup-archive: Remove over-engineered components (Neo4j, Milvus SOTA brain) (completed: 2025-10-17)
+- [x] twitter-api-setup: Configure Twitter API credentials and client (completed: 2025-10-17)
+- [x] tweets-db-schema: Create raw_tweets table schema (completed: 2025-10-17)
+- [x] fetch-tweets-script: Implement tweet fetching with rate limit handling (completed: 2025-10-17)
+- [x] rate-limit-checker: Create scripts to check API rate limits (completed: 2025-10-17)
+- [x] fetch-monitor: Verify tweet fetch and database storage (completed: 2025-10-17)
+- [x] token-verification: Smart token validation without using quota (completed: 2025-10-17)
+- [x] sample-fetch: Fetch 9 tweets to verify complete pipeline (completed: 2025-10-17)
+
+**Status:** 9 tweets fetched and stored. 91 tweets remaining in monthly quota. Pipeline verified working.
+
+---
+
 ## Phase 3 — Core Engine Enhancement (LangExtract + Milvus)
 
 ### Epic CMS: Solidify the Backend CMS
