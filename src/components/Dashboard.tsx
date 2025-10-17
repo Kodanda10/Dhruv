@@ -5,6 +5,7 @@ import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { getEventTypeHindi } from '@/lib/eventTypes';
 import type { Route } from 'next';
 import Card from './Card';
 import SoftButton from './SoftButton';
@@ -210,7 +211,7 @@ export default function Dashboard() {
               <tr key={row.id} className={`align-top hover:bg-gray-50`}>
                 <td className="p-2 border-b border-gray-200 whitespace-nowrap">{row.when}</td>
                 <td className="p-2 border-b border-l border-gray-200">{row.where.join(', ') || '—'}</td>
-                <td className="p-2 border-b border-l border-gray-200">{row.what.join(', ') || '—'}</td>
+                <td className="p-2 border-b border-l border-gray-200">{row.what.length ? row.what.map((w:any) => getEventTypeHindi(w)).join(', ') : '—'}</td>
                 <td className="p-2 border-b border-l border-gray-200 align-top w-[14%]" aria-label="कौन/टैग">
                   {(() => {
                     const tags = [...row.which.mentions, ...row.which.hashtags];
@@ -256,7 +257,26 @@ export default function Dashboard() {
                   aria-label="विवरण"
                   title={row.how}
                 >
-                  {row.how}
+                  {(() => {
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const parts = row.how.split(urlRegex);
+                    return parts.map((part: string, i: number) => {
+                      const isUrl = part.startsWith('http://') || part.startsWith('https://');
+                      return isUrl ? (
+                        <a
+                          key={i}
+                          href={part}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-700 underline break-all"
+                        >
+                          {part}
+                        </a>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      );
+                    });
+                  })()}
                 </td>
               </tr>
             ))}

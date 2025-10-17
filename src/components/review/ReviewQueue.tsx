@@ -5,10 +5,12 @@ import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
+import { EVENT_TYPE_OPTIONS, getEventTypeHindi } from '@/lib/eventTypes';
 import Badge from '../ui/Badge';
 import { formatDate } from '@/lib/utils';
 import { getConfidenceColor, getConfidenceEmoji, formatConfidence } from '@/lib/colors';
 import { Edit, Check, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import TagsSelector from './TagsSelector';
 
 interface ParsedTweet {
   id: string;
@@ -24,16 +26,7 @@ interface ParsedTweet {
     organizations?: string[];
     schemes?: string[];
     schemes_mentioned?: string[];
-  };
-
-  const handleSaveAndApprove = () => {
-    // Save changes, then approve the tweet
-    handleSave();
-    // Move approval to next tick so state updates apply
-    setTimeout(() => {
-      handleApprove();
-    }, 0);
-  };
+};
   confidence?: number;
   needs_review?: boolean;
   review_status?: string;
@@ -47,16 +40,7 @@ interface Correction {
   timestamp: string;
 }
 
-const EVENT_TYPES = [
-  { value: 'meeting', label: 'बैठक (Meeting)' },
-  { value: 'rally', label: 'रैली (Rally)' },
-  { value: 'inspection', label: 'निरीक्षण (Inspection)' },
-  { value: 'inauguration', label: 'उद्घाटन (Inauguration)' },
-  { value: 'scheme_announcement', label: 'योजना घोषणा (Scheme Announcement)' },
-  { value: 'birthday_wishes', label: 'जन्मदिन शुभकामनाएं (Birthday Wishes)' },
-  { value: 'condolence', label: 'शोक संदेश (Condolence)' },
-  { value: 'other', label: 'अन्य (Other)' },
-];
+const EVENT_TYPES = EVENT_TYPE_OPTIONS;
 
 export default function ReviewQueue() {
   const [tweets, setTweets] = useState<ParsedTweet[]>([]);
@@ -66,6 +50,13 @@ export default function ReviewQueue() {
   const [correctionReason, setCorrectionReason] = useState('');
   const [corrections, setCorrections] = useState<Record<string, Correction[]>>({});
   const [sortBy, setSortBy] = useState<'confidence' | 'date'>('confidence');
+  const [customEventTypes, setCustomEventTypes] = useState<string[]>([]);
+  const allEventOptions = useMemo(() => {
+    const custom = customEventTypes.map((s) => ({ value: s, label: s }));
+    const merged = [...EVENT_TYPE_OPTIONS, ...custom];
+    const seen = new Set<string>();
+    return merged.filter((o) => (seen.has(o.value) ? false : (seen.add(o.value), true)));
+  }, [customEventTypes]);
   
   useEffect(() => {
     // Load and sort tweets
@@ -83,6 +74,28 @@ export default function ReviewQueue() {
     
     setTweets(sorted);
   }, [sortBy]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('customEventTypes');
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) setCustomEventTypes(arr.filter((x) => typeof x === 'string'));
+      }
+    } catch {}
+  }, []);
+
+  const addCustomEventType = (label: string) => {
+    const val = (label || '').trim();
+    if (!val) return;
+    const exists = allEventOptions.some((o) => o.value === val);
+    if (exists) return;
+    const next = [...customEventTypes, val];
+    setCustomEventTypes(next);
+    try {
+      localStorage.setItem('customEventTypes', JSON.stringify(next));
+    } catch {}
+  };
 
   const currentTweet = tweets[currentIndex];
   
@@ -112,6 +125,9 @@ export default function ReviewQueue() {
     if (!currentTweet || !correctionReason.trim()) {
       alert('कृपया सुधार का कारण दर्ज करें (Please enter correction reason)');
       return;
+    }
+    if (editedData?.event_type && !allEventOptions.some((o) => o.value === editedData.event_type)) {
+      addCustomEventType(editedData.event_type);
     }
     
     const correction: Correction = {
@@ -180,6 +196,11 @@ export default function ReviewQueue() {
     }
   };
 
+  const handleSaveAndApprove = () => {
+    handleSave();
+    setTimeout(() => handleApprove(), 0);
+  };
+
   const addEntity = (field: 'locations' | 'people' | 'organizations' | 'schemes') => {
     const newValue = prompt(`नया ${field === 'locations' ? 'स्थान' : field === 'people' ? 'व्यक्ति' : field === 'organizations' ? 'संगठन' : 'योजना'} जोड़ें (Add new ${field}):`);
     if (newValue && newValue.trim()) {
@@ -245,7 +266,7 @@ export default function ReviewQueue() {
       </div>
 
       {/* Review Card */}
-      <Card className={`border-2 ${confidence < 0.6 ? 'border-red-200' : confidence < 0.8 ? 'border-amber-200' : 'border-green-200'}`}>
+      <Card className={`border-2 bg-white ${confidence < 0.6 ? 'border-red-200' : confidence < 0.8 ? 'border-amber-200' : 'border-green-200'}`}>
         <CardHeader className="bg-gray-50">
           <div className="flex justify-between items-start">
             <div>
@@ -265,8 +286,8 @@ export default function ReviewQueue() {
 
         <CardContent className="space-y-4 pt-4">
           {/* Tweet Content */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-700 leading-relaxed">{tweetText}</p>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-900 leading-relaxed">{tweetText}</p>
           </div>
 
           {editMode ? (
@@ -278,11 +299,28 @@ export default function ReviewQueue() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     🎯 घटना प्रकार (Event Type)
                   </label>
-                  <Select
-                    value={editedData.event_type}
-                    onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
-                    options={EVENT_TYPES}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select
+                        value={editedData.event_type}
+                        onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
+                        options={allEventOptions}
+                      />
+                    </div>
+                    <Input
+                      placeholder="नया प्रकार जोड़ें (e.g., सम्मान समारोह)"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val) {
+                            addCustomEventType(val);
+                            setEditedData({ ...editedData, event_type: val });
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Locations */}
@@ -365,6 +403,20 @@ export default function ReviewQueue() {
                   />
                 </div>
 
+                {/* Topics / Tags */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      🏷️ विषय (Topics/Tags)
+                    </label>
+                  </div>
+                  <TagsSelector
+                    tweetId={String(currentTweet.id)}
+                    initialSelected={(currentTweet as any).parsed?.topics?.map((t: any) => t.label_hi) || []}
+                    onChange={(vals) => setEditedData({ ...editedData, topics: vals })}
+                  />
+                </div>
+
                 {/* Correction Reason */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -386,7 +438,7 @@ export default function ReviewQueue() {
                 <div>
                   <div className="text-xs font-medium text-gray-500 mb-1">🎯 घटना प्रकार</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {EVENT_TYPES.find(t => t.value === currentTweet.parsed?.event_type)?.label || currentTweet.parsed?.event_type}
+                    {getEventTypeHindi(currentTweet.parsed?.event_type)}
                   </div>
                 </div>
                 <div>

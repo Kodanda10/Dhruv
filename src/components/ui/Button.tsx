@@ -12,13 +12,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
     const baseStyles = 'inline-flex items-center justify-center rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
     
+    // Use literal Tailwind classes for safelisting and consistent legibility
     const variantStyles = {
-      primary: `bg-[${colors.primary.green}] text-white hover:bg-[#0ea370] focus:ring-[${colors.primary.green}]`,
-      secondary: `bg-[${colors.gray[200]}] text-[${colors.gray[800]}] hover:bg-[${colors.gray[300]}] focus:ring-[${colors.gray[400]}]`,
-      success: `bg-[${colors.semantic.success}] text-white hover:bg-[#0ea370] focus:ring-[${colors.semantic.success}]`,
-      danger: `bg-[${colors.semantic.error}] text-white hover:bg-[#dc2626] focus:ring-[${colors.semantic.error}]`,
-      ghost: `bg-transparent text-[${colors.gray[700]}] hover:bg-[${colors.gray[100]}] focus:ring-[${colors.gray[300]}]`,
-    };
+      primary: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-600',
+      secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-gray-300',
+      success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-600',
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-600',
+      ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+    } as const;
     
     const sizeStyles = {
       sm: 'px-3 py-1.5 text-sm',

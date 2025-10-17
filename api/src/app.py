@@ -158,6 +158,106 @@ def create_app() -> Flask:
   def metrics():
     return jsonify(metrics_snapshot())
 
+  # --- Tags APIs ---
+  def _db():
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+      raise RuntimeError('DATABASE_URL not configured')
+    return psycopg2.connect(database_url)
+
+  def _slugify(label: str) -> str:
+    s = label.strip()
+    s = s.replace(' ', '-').replace('/', '-').replace('\n', '-')
+    return hashlib.md5(s.encode('utf-8')).hexdigest()[:10] + '-' + s
+
+  @app.get('/api/tags')
+  def list_tags():
+    q = (request.args.get('query') or '').strip()
+    try:
+      conn = _db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      if q:
+        cur.execute("""
+          SELECT id, slug, label_hi, label_en, status
+          FROM tags
+          WHERE label_hi ILIKE %s OR label_en ILIKE %s
+          ORDER BY label_hi ASC
+          LIMIT 100
+        """, (f'%{q}%', f'%{q}%'))
+      else:
+        cur.execute("""
+          SELECT id, slug, label_hi, label_en, status
+          FROM tags
+          WHERE status IN ('active','proposed')
+          ORDER BY label_hi ASC
+          LIMIT 200
+        """)
+      rows = cur.fetchall()
+      cur.close(); conn.close()
+      return jsonify({'success': True, 'tags': rows})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
+
+  @app.post('/api/tags')
+  def create_tag():
+    data = request.get_json(silent=True) or {}
+    label_hi = (data.get('label_hi') or '').strip()
+    label_en = (data.get('label_en') or '').strip() or None
+    status = (data.get('status') or 'proposed').strip()
+    if not label_hi:
+      return jsonify({'success': False, 'error': 'label_hi required'}), 400
+    try:
+      conn = _db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      # Check existing
+      cur.execute("SELECT id, slug FROM tags WHERE label_hi = %s", (label_hi,))
+      row = cur.fetchone()
+      if row:
+        tag_id = row['id']
+      else:
+        cur.execute(
+          "INSERT INTO tags (slug, label_hi, label_en, status) VALUES (%s,%s,%s,%s) RETURNING id, slug",
+          (_slugify(label_hi), label_hi, label_en, status)
+        )
+        row = cur.fetchone(); tag_id = row['id']
+      conn.commit(); cur.close(); conn.close()
+      return jsonify({'success': True, 'id': tag_id})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
+
+  @app.post('/api/tweets/<tweet_id>/tags')
+  def attach_tags(tweet_id: str):
+    data = request.get_json(silent=True) or {}
+    tag_ids = data.get('tag_ids') or []
+    labels = data.get('labels') or []
+    source = (data.get('source') or 'human')
+    try:
+      conn = _db(); cur = conn.cursor()
+      # Create any labels that do not exist
+      for label in labels:
+        cur.execute("SELECT id FROM tags WHERE label_hi = %s", (label,))
+        row = cur.fetchone()
+        if row is None:
+          cur.execute("INSERT INTO tags (slug, label_hi, status) VALUES (%s,%s,'proposed') RETURNING id",
+                      (_slugify(label), label))
+          tag_id = cur.fetchone()[0]
+          tag_ids.append(tag_id)
+        else:
+          tag_ids.append(row[0])
+      # Upsert into tweet_tags
+      for tid in set(tag_ids):
+        cur.execute(
+          """
+          INSERT INTO tweet_tags (tweet_id, tag_id, source)
+          VALUES (%s,%s,%s)
+          ON CONFLICT (tweet_id, tag_id) DO UPDATE SET source = EXCLUDED.source
+          """,
+          (str(tweet_id), int(tid), source)
+        )
+      conn.commit(); cur.close(); conn.close()
+      return jsonify({'success': True})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
+
   @app.get('/api/parsed-events')
   def get_parsed_events():
     """
