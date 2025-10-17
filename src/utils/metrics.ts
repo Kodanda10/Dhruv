@@ -1,5 +1,5 @@
-import posts from '../../data/posts_new.json';
-import { parsePost } from '@/utils/parse';
+import parsedTweets from '../../data/parsed_tweets.json';
+import { parsePost, formatHindiDate } from '@/utils/parse';
 
 type CountMap = Record<string, number>;
 
@@ -20,13 +20,23 @@ function topN(map: CountMap, n: number): Array<{ key: string; count: number }> {
 }
 
 export function computeMetrics() {
-  const parsed = (posts as Array<{ id: string | number; timestamp: string; content: string }>).map(
-    (p) => parsePost(p),
-  );
-  const allPlaces = parsed.flatMap((p) => p.where);
-  const allActions = parsed.flatMap((p) => p.what);
+  // Use parsed tweets from database
+  const parsed = parsedTweets.map((p: any) => {
+    if (p.parsed && p.parsed.event_type) {
+      return {
+        where: p.parsed.locations?.map((l: any) => l.name || l) || [],
+        what: [p.parsed.event_type],
+      };
+    }
+    // Fallback to parsePost
+    return parsePost(p as any);
+  });
+  
+  const allPlaces = parsed.flatMap((p) => p.where).filter(Boolean);
+  const allActions = parsed.flatMap((p) => p.what).filter(Boolean);
   const placeCounts = tally(allPlaces);
   const actionCounts = tally(allActions);
+  
   return {
     places: topN(placeCounts, 5),
     actions: topN(actionCounts, 10),
