@@ -1,5 +1,6 @@
 import Dashboard from '@/components/Dashboard';
 import Metrics from '@/components/Metrics';
+import HumanReviewSimple from '@/components/HumanReviewSimple';
 import { Suspense } from 'react';
 import { amita } from './fonts';
 
@@ -11,9 +12,24 @@ export default function Home() {
           श्री ओपी चौधरी - सोशल मीडिया एनालिटिक्स डैशबोर्ड
         </h1>
       </header>
-      <Suspense fallback={<div className="text-center p-8">Loading Dashboard...</div>}>
-        <Dashboard />
-      </Suspense>
+      
+      {/* Human Review Interface */}
+      <section className="mb-8">
+        <h2 className="text-3xl font-semibold text-white mb-4">📝 मानव समीक्षा (Human Review)</h2>
+        <Suspense fallback={<div className="text-center p-8">Loading Review Interface...</div>}>
+          <HumanReviewSimple />
+        </Suspense>
+      </section>
+      
+      {/* Main Dashboard */}
+      <section className="mb-8">
+        <h2 className="text-3xl font-semibold text-white mb-4">📊 विश्लेषण डैशबोर्ड (Analytics Dashboard)</h2>
+        <Suspense fallback={<div className="text-center p-8">Loading Dashboard...</div>}>
+          <Dashboard />
+        </Suspense>
+      </section>
+      
+      {/* Metrics Summary */}
       <Metrics />
     </main>
   );

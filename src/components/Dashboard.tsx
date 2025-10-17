@@ -39,6 +39,9 @@ export default function Dashboard() {
   const parsed = useMemo(() => (parsedTweets as Post[]).map((p) => {
     if (p.parsed && p.parsed.event_type) {
       // Use parsed data from database
+      const schemes = p.parsed.schemes_mentioned || p.parsed.schemes || [];
+      const organizations = p.parsed.organizations || [];
+      
       return {
         id: p.id,
         ts: p.timestamp,
@@ -46,9 +49,10 @@ export default function Dashboard() {
         where: p.parsed.locations?.map((l: any) => l.name || l) || [],
         what: [p.parsed.event_type],
         which: {
-          mentions: p.parsed.people || [],
-          hashtags: p.parsed.organizations || [],
+          mentions: p.parsed.people_mentioned || p.parsed.people || [],
+          hashtags: [...organizations, ...schemes], // Include schemes in tags
         },
+        schemes: schemes, // Keep schemes separately for display
         how: p.content,
         confidence: p.confidence,
         needs_review: p.needs_review,
@@ -66,6 +70,7 @@ export default function Dashboard() {
       where: [] as string[],
       what: [] as string[],
       which: { mentions: [] as string[], hashtags: [] as string[] },
+      schemes: [],
       how: p.content,
     };
   }), []);
