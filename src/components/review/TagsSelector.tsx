@@ -14,6 +14,7 @@ export interface TagsSelectorProps {
 export default function TagsSelector({ tweetId, initialSelected = [], onChange }: TagsSelectorProps) {
   const [query, setQuery] = useState('');
   const [all, setAll] = useState<TagItem[]>([]);
+  const [suggested, setSuggested] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>(initialSelected);
 
   useEffect(() => {
@@ -31,6 +32,19 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
       .catch(() => {});
     return () => controller.abort();
   }, [query]);
+
+  // Load suggested topics for this tweet
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/tweets/${encodeURIComponent(tweetId)}/tags`, { signal: controller.signal })
+      .then(r => r.json())
+      .then(data => {
+        const sug = (data?.suggested || []).map((s: any) => s.label_hi).filter(Boolean);
+        setSuggested(sug);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [tweetId]);
 
   useEffect(() => { onChange?.(selected); }, [selected, onChange]);
 
@@ -65,6 +79,16 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
         <button type="button" onClick={create} className="rounded-md bg-green-600 text-white px-3">+ जोड़ें</button>
         <button type="button" onClick={persist} className="rounded-md bg-blue-600 text-white px-3">सहेजें</button>
       </div>
+      {suggested.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-600">सुझाव:</div>
+          <div className="flex flex-wrap gap-8">
+            {suggested.map((label, i) => (
+              <TagBubble key={`sug-${label}-${i}`} label={label} selected={selected.includes(label)} onToggle={() => toggle(label)} />
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap gap-8">
         {shown.map((t, i) => (
           <TagBubble key={`${t.label_hi}-${i}`} label={t.label_hi} selected={selected.includes(t.label_hi)} onToggle={() => toggle(t.label_hi)} />

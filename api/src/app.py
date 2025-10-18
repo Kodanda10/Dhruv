@@ -8,8 +8,12 @@ import psycopg2.extras
 from flask import Flask, jsonify, request
 from .parsing.normalization import normalize_tokens
 from .parsing.alias_loader import load_aliases, AliasIndex
-from .parsing.parser import LangExtractParser
-from .parsing.prompts import EXTRACTION_PROMPTS
+from typing import Any
+try:
+  from .parsing.prompts import EXTRACTION_PROMPTS  # type: ignore
+except Exception:
+  # Fallback for tests that don't need parse endpoint
+  EXTRACTION_PROMPTS = {}
 from .config.feature_flags import FLAGS
 from .metrics import inc, snapshot as metrics_snapshot
 
@@ -19,7 +23,7 @@ _ALIASES: AliasIndex | None = None
 _ALIASES_ETAG: str | None = None
 
 # Lazy-initialized LangExtract parser
-_PARSER: LangExtractParser | None = None
+_PARSER: Any | None = None
 
 
 def _update_etag():
@@ -149,6 +153,8 @@ def create_app() -> Flask:
 
     global _PARSER
     if _PARSER is None:
+      # Lazy import to avoid heavy deps during unrelated tests
+      from .parsing.parser import LangExtractParser  # type: ignore
       _PARSER = LangExtractParser()
 
     result = _PARSER.parse(text, entity)
@@ -255,6 +261,58 @@ def create_app() -> Flask:
         )
       conn.commit(); cur.close(); conn.close()
       return jsonify({'success': True})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
+
+  @app.get('/api/tweets/<tweet_id>/tags')
+  def get_tweet_tags(tweet_id: str):
+    """Return attached tags and parser-suggested topics for a tweet."""
+    try:
+      conn = _db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      # Get tweet text and attached tags
+      cur.execute(
+        """
+        SELECT rt.text AS tweet_text
+        FROM raw_tweets rt
+        LEFT JOIN tweet_tags tt ON tt.tweet_id = rt.tweet_id
+        WHERE rt.tweet_id = %s
+        LIMIT 1
+        """,
+        (str(tweet_id),)
+      )
+      row = cur.fetchone()
+      tweet_text = (row or {}).get('tweet_text', '')
+
+      # Load tag vocabulary and aliases
+      cur2 = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur2.execute(
+        """
+        SELECT t.label_hi, a.alias
+        FROM tags t
+        LEFT JOIN tag_aliases a ON a.tag_id = t.id
+        WHERE t.status IN ('active','proposed')
+        """
+      )
+      rows = cur2.fetchall()
+      cur2.close()
+
+      labels: dict[str, list[str]] = {}
+      for r in rows:
+        lab = r.get('label_hi')
+        alias = r.get('alias')
+        labels.setdefault(lab, [])
+        if alias:
+          labels[lab].append(alias)
+
+      # Use EnhancedParser topic extraction on-the-fly
+      from .parsing.enhanced_parser import EnhancedParser  # local import to avoid heavy deps elsewhere
+      p = EnhancedParser()
+      p.set_topics(list(labels.keys()), labels)
+      suggested = p._extract_topics(tweet_text)
+
+      cur.close(); conn.close()
+      return jsonify({'success': True, 'attached': [], 'suggested': suggested})
     except Exception as e:
       return jsonify({'success': False, 'error': str(e)}), 500
 

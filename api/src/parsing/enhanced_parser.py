@@ -131,6 +131,9 @@ class EnhancedParser:
         # Determine if needs review
         needs_review = overall_confidence < 0.7
         
+        # Extract topics if configured
+        topics = self._extract_topics(text)
+
         return {
             'tweet_id': tweet_id,
             'event_type': event_type,
@@ -141,11 +144,59 @@ class EnhancedParser:
             'people_mentioned': people,
             'organizations': organizations,
             'schemes_mentioned': schemes,
+            'topics': topics,
             'overall_confidence': overall_confidence,
             'needs_review': needs_review,
             'review_status': 'pending',
             'parsed_by': 'enhanced_parser_v1',
         }
+
+    # ---- Topics support ----
+    def set_topics(self, labels_hi: list[str], alias_map: dict[str, list[str]] | None = None) -> None:
+        """Configure topic vocabulary and aliases (Hindi labels)."""
+        self._topic_labels = labels_hi
+        self._topic_aliases = alias_map or {}
+
+    def _extract_topics(self, text: str) -> list[dict[str, Any]]:
+        labels: list[str] = getattr(self, '_topic_labels', [])
+        aliases: dict[str, list[str]] = getattr(self, '_topic_aliases', {})
+        if not labels and not aliases:
+            return []
+
+        results: list[dict[str, Any]] = []
+        # exact/alias match → high confidence
+        suffix_keywords = ['मिशन', 'योजना', 'अभियान']
+        for label in labels:
+            found = False
+            alias_list = aliases.get(label, [])
+            for alias in alias_list:
+                if not alias:
+                    continue
+                idx = text.find(alias)
+                if idx != -1:
+                    # If a suffix keyword appears shortly after alias in text, boost confidence
+                    window = text[idx: idx + len(alias) + 12]
+                    if any(k in window for k in suffix_keywords):
+                        results.append({'label_hi': label, 'confidence': 0.9, 'source': 'alias'})
+                    else:
+                        results.append({'label_hi': label, 'confidence': 0.7, 'source': 'alias-partial'})
+                    found = True
+                    break
+            if found:
+                continue
+            # substring/partial → medium
+            tokens = label.split()
+            partial = [t for t in tokens if t and t in text]
+            if partial:
+                results.append({'label_hi': label, 'confidence': 0.7, 'source': 'substring'})
+
+        # dedupe by label, keep highest confidence
+        best: dict[str, dict[str, Any]] = {}
+        for r in results:
+            cur = best.get(r['label_hi'])
+            if cur is None or r['confidence'] > cur['confidence']:
+                best[r['label_hi']] = r
+        return list(best.values())
     
     def _extract_locations(self, text: str) -> List[str]:
         """Extract location names from text."""
