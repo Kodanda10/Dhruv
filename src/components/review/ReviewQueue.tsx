@@ -6,17 +6,20 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import { EVENT_TYPE_OPTIONS, getEventTypeHindi } from '@/lib/eventTypes';
+import { api } from '@/lib/api';
 import Badge from '../ui/Badge';
 import { formatDate } from '@/lib/utils';
 import { getConfidenceColor, getConfidenceEmoji, formatConfidence } from '@/lib/colors';
 import { Edit, Check, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import TagsSelector from './TagsSelector';
+import LocationHierarchyPicker, { GeoNode } from './LocationHierarchyPicker';
 
 interface ParsedTweet {
   id: string;
   timestamp: string;
   content: string;
   text?: string;
+  parsedEventId?: number; // server-side parsed_events.id when available
   parsed?: {
     event_type: string;
     event_type_confidence?: number;
@@ -59,20 +62,50 @@ export default function ReviewQueue() {
   }, [customEventTypes]);
   
   useEffect(() => {
-    // Load and sort tweets
-    const loaded = (parsedTweets as ParsedTweet[]).map(t => ({
-      ...t,
-      content: t.content || t.text || '',
-    }));
-    
-    const sorted = [...loaded].sort((a, b) => {
-      if (sortBy === 'confidence') {
-        return (a.confidence || 0) - (b.confidence || 0);
-      }
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    });
-    
-    setTweets(sorted);
+    let mounted = true;
+    (async () => {
+      // Try server queue first
+      try {
+        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true&limit=100`);
+        if (mounted && res.success) {
+          const mapped: ParsedTweet[] = res.events.map((e) => ({
+            id: String(e.tweet_id),
+            parsedEventId: e.id,
+            timestamp: e.tweet_created_at,
+            content: e.tweet_text,
+            parsed: {
+              event_type: e.event_type,
+              event_type_confidence: e.event_type_confidence,
+              locations: (e.locations || []).map((l: any) => l.name || l),
+              people_mentioned: e.people_mentioned || [],
+              organizations: e.organizations || [],
+              schemes_mentioned: e.schemes_mentioned || [],
+            },
+            confidence: e.overall_confidence,
+            needs_review: e.needs_review,
+            review_status: e.review_status,
+          }));
+          const sorted = [...mapped].sort((a, b) => {
+            if (sortBy === 'confidence') return (a.confidence || 0) - (b.confidence || 0);
+            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+          });
+          setTweets(sorted);
+          return;
+        }
+      } catch {}
+
+      // Fallback to static JSON
+      const loaded = (parsedTweets as ParsedTweet[]).map(t => ({
+        ...t,
+        content: t.content || t.text || '',
+      }));
+      const sorted = [...loaded].sort((a, b) => {
+        if (sortBy === 'confidence') return (a.confidence || 0) - (b.confidence || 0);
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+      if (mounted) setTweets(sorted);
+    })();
+    return () => { mounted = false; };
   }, [sortBy]);
 
   useEffect(() => {
@@ -113,6 +146,8 @@ export default function ReviewQueue() {
     setEditMode(true);
     setEditedData({
       event_type: currentTweet.parsed?.event_type || 'other',
+      // prefer hierarchical paths if present; otherwise convert to name-only nodes
+      locationsPaths: (currentTweet as any).parsed?.locations || [],
       locations: currentTweet.parsed?.locations?.map((l: any) => l.name || l) || [],
       people: currentTweet.parsed?.people_mentioned || currentTweet.parsed?.people || [],
       organizations: currentTweet.parsed?.organizations || [],
@@ -121,7 +156,7 @@ export default function ReviewQueue() {
     setCorrectionReason('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentTweet || !correctionReason.trim()) {
       alert('कृपया सुधार का कारण दर्ज करें (Please enter correction reason)');
       return;
@@ -143,7 +178,7 @@ export default function ReviewQueue() {
       [currentTweet.id]: [...(prev[currentTweet.id] || []), correction],
     }));
     
-    // Update tweet data
+    // Update tweet data (local state)
     const updatedTweets = [...tweets];
     updatedTweets[currentIndex] = {
       ...currentTweet,
@@ -156,6 +191,49 @@ export default function ReviewQueue() {
     };
     setTweets(updatedTweets);
     
+    // Persist edit to localStorage for Home tab overlay
+    try {
+      const key = `tweet_review:${String(currentTweet.id)}`;
+      const payload = {
+        event_type: editedData.event_type,
+        locations: editedData.locations || [],
+        people_mentioned: editedData.people || [],
+        organizations: editedData.organizations || [],
+        schemes_mentioned: editedData.schemes || [],
+        review_status: 'edited',
+        updated_at: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+      // maintain a simple index of reviewed ids
+      const idxKey = 'tweet_review_index';
+      const idxRaw = localStorage.getItem(idxKey);
+      const idx = idxRaw ? Array.from(new Set([...(JSON.parse(idxRaw) || []), String(currentTweet.id)])) : [String(currentTweet.id)];
+      localStorage.setItem(idxKey, JSON.stringify(idx));
+      // trigger storage listeners for live refresh
+      localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+    } catch {}
+
+    // Try server persistence (requires parsedEventId)
+    try {
+      const evId = currentTweet.parsedEventId;
+      if (evId) {
+        // Build locations payload: prefer hierarchical paths if provided
+        const locs = Array.isArray(editedData.locationsPaths) && editedData.locationsPaths.length
+          ? editedData.locationsPaths
+          : (editedData.locations || []).map((n: string) => ({ name: n }));
+        await api.put(`/api/parsed-events/${encodeURIComponent(evId)}`, {
+          event_type: editedData.event_type,
+          locations: locs,
+          people_mentioned: editedData.people || [],
+          organizations: editedData.organizations || [],
+          schemes_mentioned: editedData.schemes || [],
+          reviewed_by: 'reviewer',
+        });
+      }
+    } catch {
+      // ignore; local overlay already applied
+    }
+
     setEditMode(false);
     setCorrectionReason('');
     
@@ -163,7 +241,7 @@ export default function ReviewQueue() {
     console.log('✅ Correction saved for ML training:', correction);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!currentTweet) return;
     
     const updatedTweets = [...tweets];
@@ -172,11 +250,54 @@ export default function ReviewQueue() {
       review_status: 'approved',
     };
     setTweets(updatedTweets);
+
+    // Persist approval status to localStorage overlay
+    try {
+      const key = `tweet_review:${String(currentTweet.id)}`;
+      const existingRaw = localStorage.getItem(key);
+      const existing = existingRaw ? JSON.parse(existingRaw) : {};
+      const payload = {
+        ...existing,
+        review_status: 'approved',
+        updated_at: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+      const idxKey = 'tweet_review_index';
+      const idxRaw = localStorage.getItem(idxKey);
+      const idx = idxRaw ? Array.from(new Set([...(JSON.parse(idxRaw) || []), String(currentTweet.id)])) : [String(currentTweet.id)];
+      localStorage.setItem(idxKey, JSON.stringify(idx));
+      localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+    } catch {}
     
+    // Server approve (requires parsedEventId)
+    try {
+      const evId = currentTweet.parsedEventId;
+      if (evId) await api.post(`/api/parsed-events/${encodeURIComponent(evId)}/approve`, { reviewed_by: 'reviewer' });
+    } catch {}
+
     // Move to next
-    if (currentIndex < tweets.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
+    const nextIndex = currentIndex + 1;
+    // Remove approved from pending queue view
+    setTweets(prev => prev.filter((t, idx) => idx !== currentIndex));
+    if (nextIndex <= tweets.length - 1) setCurrentIndex(Math.min(nextIndex, tweets.length - 2));
+  };
+
+  const handleSkip = async () => {
+    if (!currentTweet) return;
+    // Update local state: remove from queue
+    setTweets(prev => prev.filter((_, idx) => idx !== currentIndex));
+    // Persist skip to overlay and backend
+    try {
+      const key = `tweet_review:${String(currentTweet.id)}`;
+      const existingRaw = localStorage.getItem(key);
+      const existing = existingRaw ? JSON.parse(existingRaw) : {};
+      localStorage.setItem(key, JSON.stringify({ ...existing, review_status: 'skipped', updated_at: new Date().toISOString() }));
+      localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+    } catch {}
+    try {
+      const evId = currentTweet.parsedEventId;
+      if (evId) await api.post(`/api/parsed-events/${encodeURIComponent(evId)}/skip`, { reviewed_by: 'reviewer' });
+    } catch {}
   };
 
   const handleReject = () => {
@@ -196,9 +317,13 @@ export default function ReviewQueue() {
     }
   };
 
-  const handleSaveAndApprove = () => {
-    handleSave();
-    setTimeout(() => handleApprove(), 0);
+  const handleSaveAndApprove = async () => {
+    if (!correctionReason.trim()) {
+      alert('कृपया सुधार का कारण दर्ज करें (Please enter correction reason)');
+      return;
+    }
+    await handleSave();
+    await handleApprove();
   };
 
   const addEntity = (field: 'locations' | 'people' | 'organizations' | 'schemes') => {
@@ -230,6 +355,18 @@ export default function ReviewQueue() {
   const confidence = currentTweet.confidence || 0;
   const confidenceColor = getConfidenceColor(confidence);
   const confidenceEmoji = getConfidenceEmoji(confidence);
+
+  const formatLocLabel = (loc: any) => {
+    // Accept name-only or hierarchical path
+    if (loc && Array.isArray(loc.path)) {
+      const parts = loc.path.map((n: any) => {
+        if (!n?.name) return null;
+        return (n.type || '').toLowerCase() === 'ward' ? `Ward ${n.name}` : n.name;
+      }).filter(Boolean);
+      return parts.join(' › ');
+    }
+    return loc?.name || String(loc || '');
+  };
 
   return (
     <div className="space-y-6">
@@ -323,23 +460,16 @@ export default function ReviewQueue() {
                   </div>
                 </div>
 
-                {/* Locations */}
+                {/* Locations - hierarchical picker */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="text-sm font-medium text-gray-700">
                       📍 स्थान (Locations)
                     </label>
-                    <button
-                      onClick={() => addEntity('locations')}
-                      className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Add
-                    </button>
                   </div>
-                  <Input
-                    placeholder="e.g., रायगढ़, रायपुर"
-                    value={(editedData.locations || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, locations: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                  <LocationHierarchyPicker
+                    value={editedData.locationsPaths || []}
+                    onChange={(paths) => setEditedData({ ...editedData, locationsPaths: paths })}
                   />
                 </div>
 
@@ -413,7 +543,16 @@ export default function ReviewQueue() {
                   <TagsSelector
                     tweetId={String(currentTweet.id)}
                     initialSelected={(currentTweet as any).parsed?.topics?.map((t: any) => t.label_hi) || []}
-                    onChange={(vals) => setEditedData({ ...editedData, topics: vals })}
+                    onChange={(vals) => {
+                      setEditedData({ ...editedData, topics: vals });
+                      try {
+                        const key = `tweet_review:${String(currentTweet.id)}`;
+                        const raw = localStorage.getItem(key);
+                        const existing = raw ? JSON.parse(raw) : {};
+                        localStorage.setItem(key, JSON.stringify({ ...existing, topics: vals, updated_at: new Date().toISOString() }));
+                        localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+                      } catch {}
+                    }}
                   />
                 </div>
 
@@ -445,7 +584,7 @@ export default function ReviewQueue() {
                   <div className="text-xs font-medium text-gray-500 mb-1">📍 स्थान</div>
                   <div className="flex flex-wrap gap-1">
                     {(currentTweet.parsed?.locations || []).map((loc: any, i: number) => (
-                      <Badge key={i} variant="info">{loc.name || loc}</Badge>
+                      <Badge key={i} variant="info">{formatLocLabel(loc)}</Badge>
                     ))}
                   </div>
                 </div>
@@ -462,6 +601,14 @@ export default function ReviewQueue() {
                   <div className="flex flex-wrap gap-1">
                     {(currentTweet.parsed?.organizations || []).map((org: string, i: number) => (
                       <Badge key={i}>{org}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs font-medium text-gray-500 mb-1">🏷️ विषय (Topics/Tags)</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
+                      <Badge key={i}>{t?.label_hi || t?.label || String(t)}</Badge>
                     ))}
                   </div>
                 </div>
@@ -507,6 +654,9 @@ export default function ReviewQueue() {
               <>
                 <Button variant="danger" size="sm" onClick={handleReject}>
                   <X className="w-4 h-4 mr-1" /> Reject
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleSkip}>
+                  Skip
                 </Button>
                 <Button variant="secondary" size="sm" onClick={handleEdit}>
                   <Edit className="w-4 h-4 mr-1" /> Edit

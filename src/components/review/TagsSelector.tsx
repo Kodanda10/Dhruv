@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Input from '../ui/Input';
 import TagBubble from './TagBubble';
+import { api } from '@/lib/api';
 
 export interface TagItem { id?: number; label_hi: string; }
 
@@ -22,28 +23,28 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
   }, [initialSelected]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const q = query.trim();
-    fetch(`/api/tags${q ? `?query=${encodeURIComponent(q)}` : ''}`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(data => {
-        if (data && data.tags) setAll(data.tags.map((t: any) => ({ id: t.id, label_hi: t.label_hi })));
-      })
-      .catch(() => {});
-    return () => controller.abort();
+    let mounted = true;
+    (async () => {
+      try {
+        const q = query.trim();
+        const data = await api.get<{ success: boolean; tags: any[] }>(`/api/tags${q ? `?query=${encodeURIComponent(q)}` : ''}`);
+        if (mounted && data?.success) setAll(data.tags.map((t: any) => ({ id: t.id, label_hi: t.label_hi })));
+      } catch {}
+    })();
+    return () => { mounted = false; };
   }, [query]);
 
   // Load suggested topics for this tweet
   useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/tweets/${encodeURIComponent(tweetId)}/tags`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(data => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await api.get<{ success: boolean; suggested: { label_hi: string }[] }>(`/api/tweets/${encodeURIComponent(tweetId)}/tags`);
         const sug = (data?.suggested || []).map((s: any) => s.label_hi).filter(Boolean);
-        setSuggested(sug);
-      })
-      .catch(() => {});
-    return () => controller.abort();
+        if (mounted) setSuggested(sug);
+      } catch {}
+    })();
+    return () => { mounted = false; };
   }, [tweetId]);
 
   useEffect(() => { onChange?.(selected); }, [selected, onChange]);
@@ -58,18 +59,21 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
     setSelected(prev => prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]);
   };
 
-  const create = () => {
+  const create = async () => {
     const val = query.trim();
     if (!val) return;
-    fetch('/api/tags', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label_hi: val }) })
-      .then(() => setSelected(prev => prev.includes(val) ? prev : [...prev, val]));
+    try {
+      await api.post('/api/tags', { label_hi: val });
+      setSelected(prev => prev.includes(val) ? prev : [...prev, val]);
+    } catch {}
   };
 
-  const persist = () => {
-    fetch(`/api/tweets/${encodeURIComponent(tweetId)}/tags`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ labels: selected, source: 'human' })
-    });
+  const persist = async () => {
+    try {
+      await api.post(`/api/tweets/${encodeURIComponent(tweetId)}/tags`, { labels: selected, source: 'human' });
+      // notify others to refresh
+      localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+    } catch {}
   };
 
   return (

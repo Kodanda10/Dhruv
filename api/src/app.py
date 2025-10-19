@@ -473,6 +473,38 @@ def create_app() -> Flask:
     except Exception as e:
       return jsonify({'error': str(e)}), 500
 
+  @app.post('/api/parsed-events/<int:event_id>/skip')
+  def skip_parsed_event(event_id: int):
+    """Skip a parsed event so it is excluded from Home/Analytics and removed from pending queue."""
+    try:
+      data = request.get_json() or {}
+      reviewed_by = data.get('reviewed_by', 'user')
+
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor()
+
+      cur.execute(
+        """
+        UPDATE parsed_events
+        SET review_status = 'skipped',
+            needs_review = false,
+            reviewed_at = NOW(),
+            reviewed_by = %s
+        WHERE id = %s
+        """,
+        (reviewed_by, event_id)
+      )
+      conn.commit()
+      cur.close(); conn.close()
+
+      return jsonify({'success': True, 'message': 'Event skipped'})
+    except Exception as e:
+      return jsonify({'error': str(e)}), 500
+
   @app.post('/api/parsed-events/<int:event_id>/approve')
   def approve_parsed_event(event_id):
     """Approve a parsed event."""
@@ -503,6 +535,125 @@ def create_app() -> Flask:
       
     except Exception as e:
       return jsonify({'error': str(e)}), 500
+
+  @app.get('/api/locations')
+  def list_locations():
+    """Suggest distinct location names from parsed events, optionally filtered by query substring."""
+    try:
+      q = (request.args.get('query') or '').strip()
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      if q:
+        cur.execute(
+          """
+          SELECT DISTINCT (loc->>'name') AS name
+          FROM parsed_events
+          CROSS JOIN LATERAL jsonb_array_elements(COALESCE(locations, '[]'::jsonb)) AS loc
+          WHERE (loc->>'name') IS NOT NULL AND (loc->>'name') <> '' AND (loc->>'name') ILIKE %s
+          ORDER BY name ASC
+          LIMIT 100
+          """,
+          (f'%{q}%',)
+        )
+      else:
+        cur.execute(
+          """
+          SELECT DISTINCT (loc->>'name') AS name
+          FROM parsed_events
+          CROSS JOIN LATERAL jsonb_array_elements(COALESCE(locations, '[]'::jsonb)) AS loc
+          WHERE (loc->>'name') IS NOT NULL AND (loc->>'name') <> ''
+          ORDER BY name ASC
+          LIMIT 200
+          """
+        )
+      rows = cur.fetchall()
+      cur.close(); conn.close()
+      names = [r.get('name') for r in rows if r.get('name')]
+      if q:
+        # Ensure filtering still applies even if DB adapter mock returns unfiltered rows in tests
+        names = [n for n in names if q.lower() in n.lower()]
+      return jsonify({'success': True, 'locations': names})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
+
+  @app.get('/api/geo/search')
+  def geo_search():
+    """
+    Search hierarchical geography paths (District→AC→Block→GP→Village→Ward or ULB→Ward).
+    Returns flattened labels for UI along with full path for selection.
+    """
+    try:
+      q = (request.args.get('query') or '').strip()
+      database_url = os.getenv('DATABASE_URL')
+      if not database_url:
+        return jsonify({'error': 'DATABASE_URL not configured'}), 500
+
+      conn = psycopg2.connect(database_url)
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      # For now, mine from parsed_events.locations JSON paths if present
+      if q:
+        cur.execute(
+          """
+          SELECT DISTINCT loc AS path
+          FROM (
+            SELECT jsonb_array_elements(COALESCE(locations, '[]'::jsonb)) AS loc
+            FROM parsed_events
+          ) t
+          WHERE (loc->>'name') ILIKE %s
+          LIMIT 100
+          """,
+          (f'%{q}%',)
+        )
+      else:
+        cur.execute(
+          """
+          SELECT DISTINCT loc AS path
+          FROM (
+            SELECT jsonb_array_elements(COALESCE(locations, '[]'::jsonb)) AS loc
+            FROM parsed_events
+          ) t
+          LIMIT 200
+          """
+        )
+      rows = cur.fetchall()
+      cur.close(); conn.close()
+
+      def build_label(path_any):
+        try:
+          # Accept either a list of nodes [{type,name}, ...] or a dict with 'path' array
+          if isinstance(path_any, list):
+            parts = [n.get('name') for n in path_any if isinstance(n, dict) and n.get('name')]
+            return ' › '.join(parts)
+          if isinstance(path_any, dict):
+            arr = path_any.get('path')
+            if isinstance(arr, list):
+              parts = [n.get('name') for n in arr if isinstance(n, dict) and n.get('name')]
+              return ' › '.join(parts)
+            # fallback: single node
+            name = path_any.get('name')
+            return name or ''
+          return ''
+        except Exception:
+          return ''
+
+      results = []
+      for r in rows:
+        path_any = r.get('path')
+        label = build_label(path_any)
+        if not label:
+          continue
+        if q and q.lower() not in label.lower():
+          # ensure post-filter by label when mocks bypass WHERE
+          continue
+        results.append({'label': label, 'path': path_any})
+
+      return jsonify({'success': True, 'results': results})
+    except Exception as e:
+      return jsonify({'success': False, 'error': str(e)}), 500
 
   @app.post('/api/parsed-events/<int:event_id>/reject')
   def reject_parsed_event(event_id):

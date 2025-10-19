@@ -7,7 +7,8 @@ const config = {
     '\\.(png|jpg|jpeg|gif|svg)$': '<rootDir>/tests/__mocks__/fileMock.js',
   },
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
+    '^.+\\.(js|jsx)$': 'babel-jest',
   },
   testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
   coverageDirectory: '<rootDir>/coverage',

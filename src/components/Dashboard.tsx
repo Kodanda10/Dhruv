@@ -1,5 +1,6 @@
 "use client";
 import parsedTweets from '../../data/parsed_tweets.json';
+import { api } from '@/lib/api';
 import { parsePost, formatHindiDate } from '@/utils/parse';
 import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
@@ -15,6 +16,7 @@ type Post = { id: string | number; timestamp: string; content: string; parsed?: 
 
 export default function Dashboard() {
   const [locFilter, setLocFilter] = useState('');
+  const [serverRows, setServerRows] = useState<any[] | null>(null);
   const [tagFilter, setTagFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -37,27 +39,79 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const parsed = useMemo(() => (parsedTweets as Post[]).map((p) => {
+  // Fetch server-side parsed events (if API available)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?limit=200`);
+        if (mounted && res.success) setServerRows(res.events);
+      } catch {
+        // ignore; fallback to local file
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Overlay local reviewed edits from localStorage onto data
+  const baseRows: any[] = useMemo(() => {
+    if (serverRows && Array.isArray(serverRows) && serverRows.length) {
+      return serverRows.map((e: any) => ({
+        id: e.tweet_id,
+        timestamp: e.tweet_created_at,
+        content: e.tweet_text,
+        parsed: {
+          event_type: e.event_type,
+          locations: (e.locations || []).map((l: any) => l.name || l),
+          people_mentioned: e.people_mentioned || [],
+          organizations: e.organizations || [],
+          schemes_mentioned: e.schemes_mentioned || [],
+        },
+        confidence: e.overall_confidence,
+        needs_review: e.needs_review,
+        review_status: e.review_status,
+      }));
+    }
+    return (parsedTweets as Post[]) as any[];
+  }, [serverRows]);
+
+  const parsed = useMemo(() => baseRows.map((p: any) => {
     if (p.parsed && p.parsed.event_type) {
       // Use parsed data from database
       const schemes = p.parsed.schemes_mentioned || p.parsed.schemes || [];
       const organizations = p.parsed.organizations || [];
       
+      // Apply local overlay if present
+      let overlay: any = null;
+      try {
+        const raw = localStorage.getItem(`tweet_review:${String(p.id)}`);
+        overlay = raw ? JSON.parse(raw) : null;
+      } catch {}
+      const eventType = overlay?.event_type || p.parsed.event_type;
+      const ovLocations = overlay?.locations || [];
+      const ovPeople = overlay?.people_mentioned || [];
+      const ovOrgs = overlay?.organizations || [];
+      const ovSchemes = overlay?.schemes_mentioned || [];
+      const locations = (ovLocations.length ? ovLocations : (p.parsed.locations || [])).map((l: any) => l.name || l);
+      const people = ovPeople.length ? ovPeople : (p.parsed.people_mentioned || p.parsed.people || []);
+      const orgs = ovOrgs.length ? ovOrgs : (p.parsed.organizations || []);
+      const schemesEff = ovSchemes.length ? ovSchemes : schemes;
+      const reviewStatus = overlay?.review_status || p.review_status;
       return {
         id: p.id,
         ts: p.timestamp,
         when: formatHindiDate(p.timestamp),
-        where: p.parsed.locations?.map((l: any) => l.name || l) || [],
-        what: [p.parsed.event_type],
+        where: locations,
+        what: [eventType],
         which: {
-          mentions: p.parsed.people_mentioned || p.parsed.people || [],
-          hashtags: [...organizations, ...schemes], // Include schemes in tags
+          mentions: people,
+          hashtags: [...orgs, ...schemesEff],
         },
-        schemes: schemes, // Keep schemes separately for display
+        schemes: schemesEff,
         how: p.content,
         confidence: p.confidence,
         needs_review: p.needs_review,
-        review_status: p.review_status,
+        review_status: reviewStatus,
       };
     }
     // Fallback to parsePost if no parsed data
@@ -82,7 +136,8 @@ export default function Dashboard() {
   };
 
   const filtered = useMemo(() => {
-    let rows = parsed;
+    // Exclude skipped from Home
+    let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
     if (locFilter.trim()) {
       const q = locFilter.trim();
       rows = rows.filter((r) => r.where.some((w) => matchTextFlexible(w, q)));
@@ -123,11 +178,60 @@ export default function Dashboard() {
     return rows;
   }, [parsed, locFilter, tagFilter, actionFilter, fromDate, toDate]);
 
+  const [refreshTs, setRefreshTs] = useState(0);
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'tweet_review_refresh_ts') {
+        setRefreshTs(Date.now());
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  // trigger recompute when refreshTs changes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _bump = refreshTs;
+
   const totalCount = parsed.length;
   const shownCount = filtered.length;
 
   return (
     <section>
+      {/* Simple summaries for tests and quick insights */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <h2 className="text-base font-semibold text-gray-800">स्थान सारांश</h2>
+          <div className="text-sm text-gray-600 mt-1">
+            {(() => {
+              const top = Object.entries(
+                filtered.reduce((acc: Record<string, number>, r: any) => {
+                  (r.where || []).forEach((w: string) => {
+                    acc[w] = (acc[w] || 0) + 1;
+                  });
+                  return acc;
+                }, {})
+              ).sort((a, b) => b[1] - a[1]).slice(0, 3);
+              return top.length ? top.map(([k, v]) => `${k} (${v})`).join(', ') : '—';
+            })()}
+          </div>
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-gray-800">गतिविधि सारांश</h2>
+          <div className="text-sm text-gray-600 mt-1">
+            {(() => {
+              const top = Object.entries(
+                filtered.reduce((acc: Record<string, number>, r: any) => {
+                  (r.what || []).forEach((w: string) => {
+                    acc[w] = (acc[w] || 0) + 1;
+                  });
+                  return acc;
+                }, {})
+              ).sort((a, b) => b[1] - a[1]).slice(0, 3);
+              return top.length ? top.map(([k, v]) => `${getEventTypeHindi(k)} (${v})`).join(', ') : '—';
+            })()}
+          </div>
+        </div>
+      </div>
       <div className="mb-4 flex items-end gap-4 flex-wrap bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         <label className="text-sm font-medium text-gray-700">
           स्थान फ़िल्टर
