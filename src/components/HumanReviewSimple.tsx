@@ -38,7 +38,7 @@ export default function HumanReviewSimple() {
 
   const handleSave = async (tweetId: string) => {
     // TODO: Send to API to save corrections
-    console.log('Saving corrections for tweet:', tweetId, editForm);
+    // console.log('Saving corrections for tweet:', tweetId, editForm);
     
     // Update local state
     setTweets(tweets.map(t => {

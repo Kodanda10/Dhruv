@@ -1,6 +1,6 @@
 'use client';
 import { parsePost, formatHindiDate } from '@/utils/parse';
-import { isParseEnabled, isCanonicalEnabled, isHumanReviewEnabled } from '../../config/flags';
+import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -8,8 +8,6 @@ import type { Route } from 'next';
 import Card from './Card';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
-import ReviewStatus from './ReviewStatus';
-import FeedbackSummary from './FeedbackSummary';
 
 type Post = { id: string | number; timestamp: string; content: string };
 
@@ -73,12 +71,12 @@ export default function HumanReviewDashboard() {
         const data = await response.json();
         if (data.success) {
           setPosts(data.data);
-          console.log(`Loaded ${data.total} processed posts from ${data.source} source`);
+          // console.log(`Loaded ${data.total} processed posts from ${data.source} source`);
         } else {
-          console.error('Failed to load posts:', data.error);
+          // console.error('Failed to load posts:', data.error);
         }
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        // console.error('Error fetching posts:', error);
       } finally {
         setIsLoadingPosts(false);
       }
@@ -98,7 +96,7 @@ export default function HumanReviewDashboard() {
             setReviewedPosts(data.data);
           }
         } catch (error) {
-          console.error('Error fetching reviewed posts:', error);
+          // console.error('Error fetching reviewed posts:', error);
         } finally {
           setIsLoadingReviewed(false);
         }
@@ -228,7 +226,7 @@ export default function HumanReviewDashboard() {
         alert('बल्क एक्शन विफल रहा!');
       }
     } catch (error) {
-      console.error('Error in bulk action:', error);
+      // console.error('Error in bulk action:', error);
       alert('बल्क एक्शन में त्रुटि हुई!');
     }
   };
@@ -254,7 +252,10 @@ export default function HumanReviewDashboard() {
         <h2 className="text-3xl font-bold text-teal-100 mb-4">मानव समीक्षा डैशबोर्ड</h2>
 
         {/* Review Status */}
-        <ReviewStatus />
+        <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-600/40">
+          <h3 className="text-blue-300 font-semibold mb-2">Review Status</h3>
+          <p className="text-blue-200">Review functionality coming soon</p>
+        </div>
 
         {/* Review Statistics and Feedback */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -283,7 +284,10 @@ export default function HumanReviewDashboard() {
             </div>
           </div>
           <div className="lg:col-span-1">
-            <FeedbackSummary />
+            <div className="bg-purple-900/20 p-4 rounded-lg border border-purple-600/40">
+              <h3 className="text-purple-300 font-semibold mb-2">Feedback Summary</h3>
+              <p className="text-purple-200">Feedback analysis coming soon</p>
+            </div>
           </div>
         </div>
 
@@ -347,7 +351,7 @@ export default function HumanReviewDashboard() {
                     }
                   }
                 } catch (error) {
-                  console.error('Error submitting feedback:', error);
+                  // console.error('Error submitting feedback:', error);
                   alert('फीडबैक सबमिट करने में त्रुटि हुई!');
                 }
               }}

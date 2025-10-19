@@ -238,7 +238,7 @@ export default function ReviewQueue() {
     setCorrectionReason('');
     
     // Log for ML training
-    console.log('✅ Correction saved for ML training:', correction);
+    // console.log('✅ Correction saved for ML training:', correction);
   };
 
   const handleApprove = async () => {

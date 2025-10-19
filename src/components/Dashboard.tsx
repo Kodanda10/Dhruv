@@ -128,7 +128,7 @@ export default function Dashboard() {
       schemes: [],
       how: p.content,
     };
-  }), []);
+  }), [baseRows]);
 
   const truncate = (s: string, max: number) => {
     if (s.length <= max) return { display: s, title: s };
@@ -140,7 +140,7 @@ export default function Dashboard() {
     let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
     if (locFilter.trim()) {
       const q = locFilter.trim();
-      rows = rows.filter((r) => r.where.some((w) => matchTextFlexible(w, q)));
+      rows = rows.filter((r) => r.where.some((w: string) => matchTextFlexible(w, q)));
     }
     if (tagFilter.trim()) {
       const tokens = tagFilter
@@ -153,7 +153,7 @@ export default function Dashboard() {
           tags.some((t) => matchTagFlexible(t, q)) ||
           matchTextFlexible(r.how, q) ||
           r.what.some((w) => matchTextFlexible(w, q)) ||
-          r.where.some((w) => matchTextFlexible(w, q))
+          r.where.some((w: string) => matchTextFlexible(w, q))
         );
       });
     }
