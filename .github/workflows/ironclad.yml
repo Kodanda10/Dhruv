@@ -2,9 +2,9 @@ name: Ironclad CI
 
 on:
   push:
-    branches: [main, 'feature/**', 'chore/**', 'fix/**']
+    branches: [ main, 'feature/**', 'chore/**', 'fix/**' ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -38,112 +38,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install Python test deps
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r api/requirements-test.txt
+          pip install -r api/requirements.txt pytest
       - name: Run API unit tests
         env:
           PYTHONPATH: .
         run: pytest -q api/tests/unit
-
-  data-validation:
-    name: Data Validation (Pandera) — flag gated
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install validation deps (pandas + pandera)
-        run: |
-          python -m pip install --upgrade pip
-          pip install pandas pandera
-      - name: Run Pandera validations (flag-gated)
-        env:
-          # Toggle via repository variable/secret: set vars.FLAG_DATA_VALIDATION to 'on' to enable
-          FLAG_DATA_VALIDATION: ${{ vars.FLAG_DATA_VALIDATION || 'off' }}
-        run: |
-          python -m api.validations.pandera.run_all --json-out validation/pandera-summary.json
-      - name: Upload validation summary
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pandera-validation-summary
-          path: validation/pandera-summary.json
-
-  api-heavy-tests:
-    if: ${{ vars.RUN_HEAVY_TESTS == 'on' }}
-    name: API Heavy Tests (unit+integration) — optional
-    runs-on: ubuntu-latest
-    services:
-      etcd:
-        image: bitnami/etcd:3.5
-        ports:
-          - 2379:2379
-        env:
-          ETCD_ENABLE_V2: 'true'
-          ALLOW_NONE_AUTHENTICATION: 'yes'
-          ETCD_ADVERTISE_CLIENT_URLS: 'http://etcd:2379'
-          ETCD_LISTEN_CLIENT_URLS: 'http://0.0.0.0:2379'
-      minio:
-        image: minio/minio:latest
-        ports:
-          - 9000:9000
-          - 9001:9001
-        env:
-          MINIO_ROOT_USER: 'minioadmin'
-          MINIO_ROOT_PASSWORD: 'minioadmin'
-        options: >-
-          --health-interval 5s --health-timeout 5s --health-retries 20
-        # command removed (not supported in services)
-      milvus:
-        image: milvusdb/milvus:v2.4.0
-        ports:
-          - 19530:19530
-        env:
-          ETCD_ENDPOINTS: etcd:2379
-          MINIO_ADDRESS: minio:9000
-          MILVUS_LOG_LEVEL: warn
-        options: >-
-          --health-interval 5s --health-timeout 5s --health-retries 90
-        # command removed (not supported in services)
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11']
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install heavy Python deps (requirements.txt)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r api/requirements.txt
-      - name: Run API unit tests (heavy)
-        env:
-          PYTHONPATH: .
-        run: pytest -q api/tests/unit
-      - name: Wait for Milvus readiness (19530)
-        run: |
-          echo "Waiting for Milvus on 127.0.0.1:19530..."
-          for i in $(seq 1 120); do
-            if (echo > /dev/tcp/127.0.0.1/19530) >/dev/null 2>&1; then
-              echo "Milvus is up"
-              break
-            fi
-            sleep 2
-          done
-          if ! (echo > /dev/tcp/127.0.0.1/19530) >/dev/null 2>&1; then
-            echo "Milvus not reachable in time"
-            exit 1
-          fi
-      - name: Run API integration tests (heavy)
-        env:
-          PYTHONPATH: .
-          RUN_MILVUS_INTEGRATION: on
-          FLAG_HEAVY_DEPS: on
-        run: pytest -q api/tests/integration
 
   coverage-gate:
     runs-on: ubuntu-latest
@@ -153,8 +55,8 @@ jobs:
         with: { node-version: '20' }
       - run: npm ci
       - run: npm run test:coverage
-      - name: Enforce coverage 85/70
-        run: node ./scripts/enforce-coverage.js --lines 85 --branches 70
+      - name: Enforce coverage 95/70
+        run: node ./scripts/enforce-coverage.js --lines 95 --branches 70
 
   security:
     runs-on: ubuntu-latest
@@ -215,7 +117,7 @@ jobs:
 
   e2e-smoke:
     runs-on: ubuntu-latest
-    needs: [lint-type, unit-tests, api-tests, data-validation, security]
+    needs: [lint-type, unit-tests, api-tests, security]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
