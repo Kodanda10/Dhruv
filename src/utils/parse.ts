@@ -1,4 +1,12 @@
-type Post = { id: string | number; timestamp: string; content: string };
+import { z } from 'zod';
+
+const PostSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  timestamp: z.string(),
+  content: z.string(),
+});
+
+type Post = z.infer<typeof PostSchema>;
 
 const MONTHS_HI = [
   'जनवरी',
@@ -28,7 +36,8 @@ export function formatHindiDate(iso: string): string {
 }
 
 // Known places and variants; extendable
-const PLACE_REGEX = /(नई दिल्ली|नयी दिल्ली|रायगढ़|दिल्ली|रायपुर|भारत|छत्तीसगढ़|खरसिया|गढ़ उमरिया|बस्तर|सरगुजा|जशपुर|बगीचा)/g;
+const PLACE_REGEX =
+  /(नई दिल्ली|नयी दिल्ली|रायगढ़|दिल्ली|रायपुर|भारत|छत्तीसगढ़|खरसिया|गढ़ उमरिया|बस्तर|सरगुजा|जशपुर|बगीचा)/g;
 const HASHTAG_REGEX = /#[^\s#]+/g;
 const MENTION_REGEX = /@[A-Za-z0-9_]+/g;
 const ACTION_KEYWORDS = [
@@ -51,16 +60,11 @@ const ACTION_KEYWORDS = [
 ];
 
 // Noun/subject keywords to surface also as hashtags from content
-const NOUN_TAG_KEYWORDS = [
-  'किसान',
-  'सड़क',
-  'शिविर',
-  'महिला',
-  'स्टार्टअप',
-];
+const NOUN_TAG_KEYWORDS = ['किसान', 'सड़क', 'शिविर', 'महिला', 'स्टार्टअप'];
 
 export function parsePost(post: Post) {
-  const when = formatHindiDate(post.timestamp);
+  const validatedPost = PostSchema.parse(post);
+  const when = formatHindiDate(validatedPost.timestamp);
   const whereSet = new Set<string>();
   // Direct matches from known list
   const matchWhere = post.content.match(PLACE_REGEX) || [];
