@@ -56,18 +56,44 @@ This branch (`copilot/fix-ci-issues-in-pr-40`) contains all the fixes mentioned 
 
 ## Merge Instructions
 
-### Option 1: Direct Merge (Recommended)
+⚠️ **Important**: This branch has unrelated history with `main` and will require conflict resolution.
+
+### Recommended: Merge via GitHub PR (Best Option)
+1. Create PR from `copilot/fix-ci-issues-in-pr-40` to `main`
+2. Review changes in GitHub's PR interface
+3. Resolve any conflicts using GitHub's conflict resolution UI
+4. Merge via GitHub UI (recommended: squash merge to clean history)
+5. Delete feature branch after merge
+
+GitHub's PR interface provides the best experience for resolving the conflicts that arise from unrelated histories.
+
+### Alternative: Manual Merge (Advanced)
+If you prefer to merge locally, conflicts will need to be resolved:
+
 ```bash
 git checkout main
-git merge copilot/fix-ci-issues-in-pr-40 --no-ff -m "Merge PR #40 fixes: Critical CI issues resolved"
+git merge copilot/fix-ci-issues-in-pr-40 --no-ff --allow-unrelated-histories
+
+# Resolve conflicts in each file
+# For the critical fixes, accept the versions from copilot/fix-ci-issues-in-pr-40:
+# - src/utils/parse.ts (regex fixes)
+# - .github/workflows/ironclad.yml (workflow cleanup)
+# - .gitignore (artifact exclusions)
+
+# After resolving conflicts:
+git add .
+git commit
 git push origin main
 ```
 
-### Option 2: Via GitHub PR
-1. Create PR from `copilot/fix-ci-issues-in-pr-40` to `main`
-2. Review changes
-3. Merge via GitHub UI
-4. Delete feature branch after merge
+### Conflicts to Expect
+Due to unrelated histories, conflicts will appear in these files:
+- `.agent-policy/` files
+- `.github/workflows/ironclad.yml` ⚠️ **Critical: Keep the version without api-tests job**
+- `.gitignore` ⚠️ **Critical: Keep the version with build artifact exclusions**
+- `src/utils/parse.ts` ⚠️ **Critical: Keep the version with 'g' flags on regex**
+- Various test files
+- Configuration files
 
 ## Post-Merge Cleanup
 
