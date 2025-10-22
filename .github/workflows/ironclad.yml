@@ -2,7 +2,7 @@ name: Ironclad CI
 
 on:
   push:
-    branches: [ main, 'feature/**', 'chore/**', 'fix/**' ]
+    branches: [ main, 'feature/**', 'feat/**', 'chore/**', 'fix/**' ]
   pull_request:
     branches: [ main ]
 
