@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Non-main push detected ($GITHUB_REF). Skipping Vercel deploy."
+      - name: Exit successfully
+        run: exit 0
 
   # Succeed gracefully when secrets are missing (main push or manual prod)
   no-secrets:
