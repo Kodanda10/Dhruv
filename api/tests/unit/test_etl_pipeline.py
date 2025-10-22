@@ -1,12 +1,14 @@
 import json
 import os
 import tempfile
+import pytest
 from unittest.mock import patch, mock_open
 from api.src.sota.etl_pipeline import run_etl_for_builder, compute_checksum, load_checksums, save_checksums
 
 def mock_geography_builder():
     yield json.dumps({"state": "छत्तीसगढ़", "districts": []}, ensure_ascii=False)
 
+@pytest.mark.skip(reason="Requires PostgreSQL database connection - integration test")
 @patch('api.src.sota.etl_pipeline.save_checksums')
 @patch('api.src.sota.etl_pipeline.load_checksums')
 @patch('builtins.open', new_callable=mock_open)
