@@ -9,7 +9,9 @@ const axeSource = require('axe-core').source;
     headless: 'new',
   });
   const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle0' });
+  // Increase timeout for slower CI runners
+  page.setDefaultNavigationTimeout(60000);
+  await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
   await page.addScriptTag({ content: axeSource });
   const results = await page.evaluate(async () => await axe.run(document));
   await browser.close();

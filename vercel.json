@@ -6,6 +6,8 @@
   "outputDirectory": ".next",
   "env": {
     "FLAG_PARSE": "on",
-    "NEXT_PUBLIC_FLAG_PARSE": "on"
+    "NEXT_PUBLIC_FLAG_PARSE": "on",
+    "FLAG_RECOMMENDATIONS": "on",
+    "NEXT_PUBLIC_FLAG_RECOMMENDATIONS": "on"
   }
 }
