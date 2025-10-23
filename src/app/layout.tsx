@@ -1,5 +1,4 @@
 import './globals.css';
-import { notoDevanagari } from './fonts';
 import type { ReactNode } from 'react';
 
 export const metadata = {
@@ -9,11 +8,11 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="hi" className={`bg-teal-950 ${notoDevanagari.className}`}>
+    <html lang="hi">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className="bg-teal-950 text-teal-50">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

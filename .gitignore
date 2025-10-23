@@ -13,3 +13,11 @@ trufflehog/
 # Web cache with sensitive data
 data/.web_cache/
 *.cache
+
+# Build artifacts and virtual environments
+tsconfig.tsbuildinfo
+.venv
+__pycache__
+*.pyc
+k6-summary.json
+junit.xml
