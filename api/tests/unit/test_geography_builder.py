@@ -22,4 +22,4 @@ def test_build_geography_dataset():
     assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['name'] == 'रायपुर'
     assert len(data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages']) == 5
     assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['name'] == 'रायपुर'
-    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['pincode'] == '496001'
+    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['pincode'] == '492001'
