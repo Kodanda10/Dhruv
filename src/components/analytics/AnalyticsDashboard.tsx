@@ -30,7 +30,7 @@ export default function AnalyticsDashboard() {
           setData(response);
           return;
         } catch (apiError) {
-          console.log('API not available, using static data');
+          // console.log('API not available, using static data');
         }
 
         // Fallback to static data processing

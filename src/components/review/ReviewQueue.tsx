@@ -13,6 +13,8 @@ import { getConfidenceColor, getConfidenceEmoji, formatConfidence } from '@/lib/
 import { Edit, Check, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import TagsSelector from './TagsSelector';
 import LocationHierarchyPicker, { GeoNode } from './LocationHierarchyPicker';
+import AutocompleteInput from './AutocompleteInput';
+import ProgressSidebar from './ProgressSidebar';
 
 interface ParsedTweet {
   id: string;
@@ -51,6 +53,7 @@ export default function ReviewQueue() {
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
   const [correctionReason, setCorrectionReason] = useState('');
+  const [notes, setNotes] = useState('');
   const [corrections, setCorrections] = useState<Record<string, Correction[]>>({});
   const [sortBy, setSortBy] = useState<'confidence' | 'date'>('confidence');
   const [customEventTypes, setCustomEventTypes] = useState<string[]>([]);
@@ -93,7 +96,7 @@ export default function ReviewQueue() {
           return;
         }
       } catch (error) {
-        console.log('API not available, using static data:', error);
+        // console.log('API not available, using static data:', error);
       }
 
       // Fallback to static JSON
@@ -158,6 +161,20 @@ export default function ReviewQueue() {
       schemes: currentTweet.parsed?.schemes_mentioned || currentTweet.parsed?.schemes || [],
     });
     setCorrectionReason('');
+    
+    // Load existing notes
+    try {
+      const notesKey = `tweet_notes:${String(currentTweet.id)}`;
+      const notesRaw = localStorage.getItem(notesKey);
+      if (notesRaw) {
+        const notesData = JSON.parse(notesRaw);
+        setNotes(notesData.notes || '');
+      } else {
+        setNotes('');
+      }
+    } catch {
+      setNotes('');
+    }
   };
 
   const handleSave = async () => {
@@ -176,6 +193,17 @@ export default function ReviewQueue() {
       reason: correctionReason,
       timestamp: new Date().toISOString(),
     };
+    
+    // Store notes separately
+    if (notes.trim()) {
+      try {
+        const notesKey = `tweet_notes:${String(currentTweet.id)}`;
+        localStorage.setItem(notesKey, JSON.stringify({
+          notes: notes.trim(),
+          timestamp: new Date().toISOString(),
+        }));
+      } catch {}
+    }
     
     setCorrections(prev => ({
       ...prev,
@@ -391,7 +419,9 @@ export default function ReviewQueue() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6">
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-4 text-center bg-gradient-to-br from-amber-50 to-white">
@@ -425,7 +455,7 @@ export default function ReviewQueue() {
       </div>
 
       {/* Review Card */}
-      <Card className={`border-2 bg-white ${confidence < 0.6 ? 'border-red-200' : confidence < 0.8 ? 'border-amber-200' : 'border-green-200'}`}>
+      <Card className={`border-2 bg-white ${confidence <= 0.5 ? 'border-red-500' : confidence <= 0.8 ? 'border-yellow-500' : 'border-green-500'}`}>
         <CardHeader className="bg-gray-50">
           <div className="flex justify-between items-start">
             <div>
@@ -458,18 +488,13 @@ export default function ReviewQueue() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     🎯 घटना प्रकार (Event Type)
                   </label>
-                  <Input
+                  <AutocompleteInput
+                    fieldName="event_type"
                     value={editedData.event_type || ''}
-                    onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
+                    onChange={(value) => setEditedData({ ...editedData, event_type: value })}
                     placeholder="e.g., जन्मदिन शुभकामनाएं, बैठक, रैली, निरीक्षण, उद्घाटन"
-                    list="event-type-suggestions"
                     className="w-full"
                   />
-                  <datalist id="event-type-suggestions">
-                    {allEventOptions.map((option) => (
-                      <option key={option.value} value={option.label} />
-                    ))}
-                  </datalist>
                 </div>
 
                 {/* Locations - hierarchical picker */}
@@ -498,10 +523,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                  <AutocompleteInput
+                    fieldName="people"
                     value={(editedData.people || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, people: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, people: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                    className="w-full"
                   />
                 </div>
 
@@ -518,10 +545,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., भाजपा, राज्य शासन"
+                  <AutocompleteInput
+                    fieldName="organizations"
                     value={(editedData.organizations || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, organizations: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, organizations: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., भाजपा, राज्य शासन"
+                    className="w-full"
                   />
                 </div>
 
@@ -538,10 +567,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                  <AutocompleteInput
+                    fieldName="schemes"
                     value={(editedData.schemes || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, schemes: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, schemes: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                    className="w-full"
                   />
                 </div>
 
@@ -578,6 +609,20 @@ export default function ReviewQueue() {
                     onChange={(e) => setCorrectionReason(e.target.value)}
                     placeholder="e.g., Tweet mentions birthday wishes, not a rally"
                     className="w-full"
+                  />
+                </div>
+
+                {/* Notes Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    📝 नोट्स (Notes) - Optional
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Internal notes, edge cases, or training data annotations..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
                   />
                 </div>
               </div>
@@ -693,6 +738,14 @@ export default function ReviewQueue() {
           ))}
         </Card>
       )}
+      </div>
+      
+      {/* Progress Sidebar */}
+      <ProgressSidebar 
+        tweets={tweets}
+        currentIndex={currentIndex}
+        onJumpToTweet={(index) => setCurrentIndex(index)}
+      />
     </div>
   );
 }
