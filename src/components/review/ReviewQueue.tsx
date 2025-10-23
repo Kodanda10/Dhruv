@@ -15,6 +15,7 @@ import TagsSelector from './TagsSelector';
 import LocationHierarchyPicker, { GeoNode } from './LocationHierarchyPicker';
 import AutocompleteInput from './AutocompleteInput';
 import ProgressSidebar from './ProgressSidebar';
+import TagBubble from './TagBubble';
 
 interface ParsedTweet {
   id: string;
@@ -665,7 +666,11 @@ export default function ReviewQueue() {
                   <div className="text-xs font-medium text-gray-500 mb-1">🏷️ विषय (Topics/Tags)</div>
                   <div className="flex flex-wrap gap-1">
                     {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
-                      <Badge key={i}>{t?.label_hi || t?.label || String(t)}</Badge>
+                      <TagBubble 
+                        key={i} 
+                        label={t?.label_hi || t?.label || String(t)} 
+                        selected={false}
+                      />
                     ))}
                   </div>
                 </div>

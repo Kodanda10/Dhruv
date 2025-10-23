@@ -10,6 +10,9 @@ const config = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(d3|d3-array|d3-axis|d3-scale|d3-shape|d3-time|d3-time-format)/)',
+  ],
   testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['json-summary', 'text', 'lcov'],

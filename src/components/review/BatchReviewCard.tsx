@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
+import TagBubble from './TagBubble';
 import { formatDate } from '@/lib/utils';
 import { getConfidenceColor, getConfidenceEmoji, formatConfidence } from '@/lib/colors';
 import { Check, X, Edit } from 'lucide-react';
