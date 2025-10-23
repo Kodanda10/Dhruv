@@ -1,6 +1,6 @@
 'use client';
 import Dashboard from '@/components/Dashboard';
-import Metrics from '@/components/Metrics';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import ReviewQueue from '@/components/review/ReviewQueue';
 import { Suspense, useState } from 'react';
 import { titleFont, notoDevanagari } from './fonts';
@@ -71,7 +71,7 @@ export default function Home() {
 
           {activeTab === 'analytics' && (
             <section>
-              <Metrics />
+              <AnalyticsDashboard />
             </section>
           )}
         </div>
