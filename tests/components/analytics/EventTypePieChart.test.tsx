@@ -135,7 +135,7 @@ describe('EventTypePieChart', () => {
     render(<EventTypePieChart {...defaultProps} data={singleData} />);
     
     expect(screen.getByText('योजना')).toBeInTheDocument();
-    expect(screen.getByText(/100/)).toBeInTheDocument();
+    expect(screen.getAllByText(/100/)).toHaveLength(2); // Total count and legend value
     expect(screen.getByText(/100%/)).toBeInTheDocument();
   });
 });
