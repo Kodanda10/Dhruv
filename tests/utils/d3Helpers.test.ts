@@ -1,7 +1,7 @@
 // Mock D3 for tests
 jest.mock('d3', () => ({
   scaleSequential: jest.fn(() => {
-    const scale = jest.fn((value) => `color-${value}`);
+    const scale = jest.fn((value) => `color-${value}`) as any;
     scale.domain = jest.fn().mockReturnValue(scale);
     scale.range = jest.fn().mockReturnValue(scale);
     return scale;
@@ -9,7 +9,7 @@ jest.mock('d3', () => ({
   interpolateBlues: jest.fn(),
   extent: jest.fn(),
   scaleTime: jest.fn(() => {
-    const scale = jest.fn((value) => value);
+    const scale = jest.fn((value) => value) as any;
     scale.domain = jest.fn().mockReturnValue(scale);
     scale.range = jest.fn().mockReturnValue(scale);
     return scale;

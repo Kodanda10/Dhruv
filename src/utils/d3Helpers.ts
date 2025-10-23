@@ -140,7 +140,7 @@ export function generateInsights(
     insights.push({
       title: 'सबसे सक्रिय स्थान',
       value: `${topLocation.name} (${topLocation.count} पोस्ट)`,
-      trend: 'neutral',
+      trend: 'neutral' as const,
       trendValue: '',
       icon: '📍'
     });
@@ -151,7 +151,7 @@ export function generateInsights(
     insights.push({
       title: 'औसत विश्वास स्कोर',
       value: `${Math.round(currentData.avgConfidence * 100)}%`,
-      trend: 'neutral',
+      trend: 'neutral' as const,
       trendValue: '',
       icon: '📊'
     });
@@ -163,7 +163,7 @@ export function generateInsights(
     insights.push({
       title: 'सबसे आम घटना प्रकार',
       value: `${topEventType.label} (${topEventType.percentage}%)`,
-      trend: 'neutral',
+      trend: 'neutral' as const,
       trendValue: '',
       icon: '🎯'
     });
