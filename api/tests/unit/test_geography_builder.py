@@ -13,13 +13,13 @@ def test_build_geography_dataset():
     assert data['state'] == 'छत्तीसगढ़'
     # Update assertion to match actual data - 5 districts now in dataset
     assert len(data['districts']) >= 1
-    assert data['districts'][0]['name'] == 'रायगढ़'
+    assert data['districts'][0]['name'] == 'रायपुर'
     assert len(data['districts'][0]['acs']) == 1
-    assert data['districts'][0]['acs'][0]['name'] == 'रायगढ़'
+    assert data['districts'][0]['acs'][0]['name'] == 'रायपुर'
     assert len(data['districts'][0]['acs'][0]['blocks']) == 1
-    assert data['districts'][0]['acs'][0]['blocks'][0]['name'] == 'रायगढ़'
+    assert data['districts'][0]['acs'][0]['blocks'][0]['name'] == 'रायपुर'
     assert len(data['districts'][0]['acs'][0]['blocks'][0]['gps']) == 1
-    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['name'] == 'रायगढ़'
+    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['name'] == 'रायपुर'
     assert len(data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages']) == 2
-    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['name'] == 'रायगढ़'
+    assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['name'] == 'रायपुर'
     assert data['districts'][0]['acs'][0]['blocks'][0]['gps'][0]['villages'][0]['pincode'] == '496001'
