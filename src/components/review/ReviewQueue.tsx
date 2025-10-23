@@ -67,7 +67,7 @@ export default function ReviewQueue() {
       // Try server queue first
       try {
         const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true&limit=100`);
-        if (mounted && res.success) {
+        if (mounted && res.success && res.events && res.events.length > 0) {
           const mapped: ParsedTweet[] = res.events.map((e) => ({
             id: String(e.tweet_id),
             parsedEventId: e.id,
@@ -92,12 +92,16 @@ export default function ReviewQueue() {
           setTweets(sorted);
           return;
         }
-      } catch {}
+      } catch (error) {
+        console.log('API not available, using static data:', error);
+      }
 
       // Fallback to static JSON
       const loaded = (parsedTweets as ParsedTweet[]).map(t => ({
         ...t,
         content: t.content || t.text || '',
+        needs_review: t.needs_review !== false, // Default to true for review
+        review_status: t.review_status || 'pending',
       }));
       const sorted = [...loaded].sort((a, b) => {
         if (sortBy === 'confidence') return (a.confidence || 0) - (b.confidence || 0);
@@ -345,9 +349,27 @@ export default function ReviewQueue() {
 
   if (!currentTweet) {
     return (
-      <Card className="p-8 text-center">
-        <p className="text-gray-600">कोई ट्वीट समीक्षा के लिए नहीं है (No tweets to review)</p>
-      </Card>
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
+          <p className="text-gray-500 mb-4">
+            {tweets.length === 0 
+              ? "अभी समीक्षा के लिए कोई ट्वीट उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
+              : "सभी ट्वीट की समीक्षा पूर्ण हो गई है।"
+            }
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              🔄 पुनः लोड करें
+            </Button>
+            {tweets.length > 0 && (
+              <Button variant="secondary" onClick={() => setCurrentIndex(0)}>
+                📝 पहला ट्वीट देखें
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -436,28 +458,18 @@ export default function ReviewQueue() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     🎯 घटना प्रकार (Event Type)
                   </label>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Select
-                        value={editedData.event_type}
-                        onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
-                        options={allEventOptions}
-                      />
-                    </div>
-                    <Input
-                      placeholder="नया प्रकार जोड़ें (e.g., सम्मान समारोह)"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val) {
-                            addCustomEventType(val);
-                            setEditedData({ ...editedData, event_type: val });
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }
-                      }}
-                    />
-                  </div>
+                  <Input
+                    value={editedData.event_type || ''}
+                    onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
+                    placeholder="e.g., जन्मदिन शुभकामनाएं, बैठक, रैली, निरीक्षण, उद्घाटन"
+                    list="event-type-suggestions"
+                    className="w-full"
+                  />
+                  <datalist id="event-type-suggestions">
+                    {allEventOptions.map((option) => (
+                      <option key={option.value} value={option.label} />
+                    ))}
+                  </datalist>
                 </div>
 
                 {/* Locations - hierarchical picker */}
