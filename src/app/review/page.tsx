@@ -35,19 +35,19 @@ export default function ReviewPage() {
         </h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <Link href="/api/review/list?status=pending&limit=10">Pending review items (API)</Link>
+            <a href="/api/review/list?status=pending&limit=10" className="text-blue-600 hover:underline">Pending review items (API)</a>
           </li>
           <li>
-            <Link href="/api/review/list?status=reviewed&limit=10">Reviewed items (API)</Link>
+            <a href="/api/review/list?status=reviewed&limit=10" className="text-blue-600 hover:underline">Reviewed items (API)</a>
           </li>
           <li>
-            <Link href="/api/review/status">Review status summary (API)</Link>
+            <a href="/api/review/status" className="text-blue-600 hover:underline">Review status summary (API)</a>
           </li>
           <li>
-            <Link href="/api/reviewed-posts?limit=10">Recently reviewed posts (API)</Link>
+            <a href="/api/reviewed-posts?limit=10" className="text-blue-600 hover:underline">Recently reviewed posts (API)</a>
           </li>
           <li>
-            <Link href="/api/processed-posts?limit=10">Processed posts (API)</Link>
+            <a href="/api/processed-posts?limit=10" className="text-blue-600 hover:underline">Processed posts (API)</a>
           </li>
         </ul>
       </section>
