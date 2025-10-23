@@ -15,20 +15,20 @@ jest.mock('d3', () => ({
     return scale;
   }),
   scaleLinear: jest.fn(() => {
-    const scale = jest.fn((value) => value);
+    const scale = jest.fn((value) => value) as any;
     scale.domain = jest.fn().mockReturnValue(scale);
     scale.range = jest.fn().mockReturnValue(scale);
     return scale;
   }),
   scaleBand: jest.fn(() => {
-    const scale = jest.fn((value) => value);
+    const scale = jest.fn((value) => value) as any;
     scale.domain = jest.fn().mockReturnValue(scale);
     scale.range = jest.fn().mockReturnValue(scale);
     scale.padding = jest.fn().mockReturnValue(scale);
     return scale;
   }),
   pie: jest.fn(() => {
-    const pie = jest.fn((data) => data);
+    const pie = jest.fn((data) => data) as any;
     pie.value = jest.fn().mockReturnValue(pie);
     pie.sort = jest.fn().mockReturnValue(pie);
     return pie;

@@ -35,12 +35,12 @@ jest.mock('d3', () => ({
     return line;
   }),
   axisBottom: jest.fn(() => {
-    const axis = jest.fn();
+    const axis = jest.fn() as any;
     axis.tickFormat = jest.fn().mockReturnValue(axis);
     return axis;
   }),
   axisLeft: jest.fn(() => {
-    const axis = jest.fn();
+    const axis = jest.fn() as any;
     axis.tickFormat = jest.fn().mockReturnValue(axis);
     return axis;
   }),

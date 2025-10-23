@@ -22,7 +22,7 @@ const SAMPLE_MAPPING = {
     transliteration: 'Harchoka',
     sources: ['https://prd.cg.nic.in/harchoka'],
   },
-} as const;
+};
 
 const SAMPLE_ENTRIES: MissingEntry[] = [
   { kind: 'village', english: 'Badwahi' },
