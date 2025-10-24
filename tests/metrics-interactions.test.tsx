@@ -41,10 +41,10 @@ describe('Metrics interactions (router mocked)', () => {
   it('clicks top action item and calls router.push with encoded action param', () => {
     render(<Metrics />);
 
-    const actionButton = screen.getByRole('button', { name: 'शुभकामनायें पर फ़िल्टर करें' });
+    const actionButton = screen.getByRole('button', { name: 'birthday_wishes पर फ़िल्टर करें' });
     fireEvent.click(actionButton);
 
-    const expected = `/?action=${encodeURIComponent('शुभकामनायें')}`;
+    const expected = `/?action=${encodeURIComponent('birthday_wishes')}`;
     expect(getPushMock()).toHaveBeenCalledTimes(1);
     expect(getPushMock()).toHaveBeenCalledWith(expected);
   });

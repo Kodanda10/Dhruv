@@ -108,6 +108,9 @@ export function getConfidenceEmoji(score: number): string {
  * @returns Formatted percentage string
  */
 export function formatConfidence(score: number): string {
+  if (isNaN(score) || !isFinite(score)) {
+    return '0%';
+  }
   const percentage = score > 1 ? score : score * 100;
   return `${Math.round(percentage)}%`;
 }

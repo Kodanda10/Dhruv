@@ -32,7 +32,7 @@ export default function ProgressSidebar({
     const rejected = tweets.filter(t => t.review_status === 'rejected').length;
     
     const reviewed = approved + edited;
-    const avgConfidence = tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / total;
+    const avgConfidence = total > 0 ? tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / total : 0;
     const progressPercentage = total > 0 ? ((reviewed + skipped) / total) * 100 : 0;
     
     return {
@@ -160,7 +160,7 @@ export default function ProgressSidebar({
       </Card>
 
       {/* Low Confidence Alert */}
-      {stats.pending > 0 && (
+      {tweets.filter(t => (t.confidence || 0) <= 0.5).length > 0 && (
         <Card className="p-4 border-red-200 bg-red-50">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>

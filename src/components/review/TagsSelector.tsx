@@ -20,7 +20,7 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
 
   useEffect(() => {
     setSelected(initialSelected);
-  }, [initialSelected]);
+  }, [JSON.stringify(initialSelected)]);
 
   useEffect(() => {
     let mounted = true;

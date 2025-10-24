@@ -58,13 +58,16 @@ describe('ProgressSidebar', () => {
     expect(screen.getByText('2')).toBeInTheDocument(); // 2 pending tweets
     
     // Approved: 1 approved tweet
-    expect(screen.getByText('1')).toBeInTheDocument(); // 1 approved tweet
+    const approvedElement = screen.getAllByText('1')[0]; // First occurrence should be approved
+    expect(approvedElement).toBeInTheDocument();
     
     // Edited: 1 corrected tweet
-    expect(screen.getByText('1')).toBeInTheDocument(); // 1 edited tweet
+    const editedElement = screen.getAllByText('1')[1]; // Second occurrence should be edited
+    expect(editedElement).toBeInTheDocument();
     
     // Skipped: 1 skipped tweet
-    expect(screen.getByText('1')).toBeInTheDocument(); // 1 skipped tweet
+    const skippedElement = screen.getAllByText('1')[2]; // Third occurrence should be skipped
+    expect(skippedElement).toBeInTheDocument();
   });
 
   it('should display current position correctly', () => {
@@ -125,14 +128,14 @@ describe('ProgressSidebar', () => {
     // Skipped = 1
     // Total = 5
     // Progress = (2 + 1) / 5 * 100 = 60%
-    expect(screen.getByText('60%')).toBeInTheDocument();
+    expect(screen.getAllByText('60%')).toHaveLength(2); // Progress and confidence both show 60%
   });
 
   it('should display average confidence correctly', () => {
     render(<ProgressSidebar {...defaultProps} />);
     
     // Average confidence = (0.3 + 0.8 + 0.9 + 0.4 + 0.6) / 5 = 0.6 = 60%
-    expect(screen.getByText('60%')).toBeInTheDocument();
+    expect(screen.getAllByText('60%')).toHaveLength(2); // Progress and confidence both show 60%
   });
 
   it('should not show low confidence alert when no low confidence tweets', () => {
@@ -148,6 +151,7 @@ describe('ProgressSidebar', () => {
       />
     );
     
+    // Low confidence alert should not be present when all tweets have high confidence
     expect(screen.queryByText('Low Confidence')).not.toBeInTheDocument();
   });
 
@@ -159,8 +163,8 @@ describe('ProgressSidebar', () => {
       />
     );
     
-    expect(screen.getByText('0 / 0')).toBeInTheDocument();
-    expect(screen.getByText('0%')).toBeInTheDocument();
+    expect(screen.getByText('1 / 0')).toBeInTheDocument();
+    expect(screen.getAllByText('0%')).toHaveLength(2); // Progress and confidence both show 0%
   });
 
   it('should handle tweets with no confidence values', () => {

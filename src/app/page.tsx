@@ -1,9 +1,13 @@
 'use client';
+import React from 'react';
 import Dashboard from '@/components/Dashboard';
-import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import ReviewQueue from '@/components/review/ReviewQueue';
+import ReviewQueueNew from '@/components/review/ReviewQueueNew';
 import { Suspense, useState } from 'react';
 import { titleFont, notoDevanagari } from './fonts';
+
+// Lazy load AnalyticsDashboard to avoid D3 import issues in tests
+const AnalyticsDashboard = React.lazy(() => import('@/components/analytics/AnalyticsDashboard'));
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'review' | 'analytics'>('home');
@@ -64,14 +68,16 @@ export default function Home() {
           {activeTab === 'review' && (
             <section>
               <Suspense fallback={<div className="text-center p-8 text-gray-600">Loading Review Interface...</div>}>
-                <ReviewQueue />
+                <ReviewQueueNew />
               </Suspense>
             </section>
           )}
 
           {activeTab === 'analytics' && (
             <section>
-              <AnalyticsDashboard />
+              <Suspense fallback={<div className="text-center p-8 text-gray-600">Loading Analytics...</div>}>
+                <AnalyticsDashboard data={{ tweets: [], insights: [] }} />
+              </Suspense>
             </section>
           )}
         </div>
