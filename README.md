@@ -2,6 +2,15 @@
 
 This repository powers a Next.js dashboard and data pipeline to build and visualize a reliable, verified dataset for Chhattisgarh villages and their electoral/administrative mappings.
 
+## 🚀 **TWEET FETCH SYSTEM**
+
+**✅ PRIMARY SCRIPT**: `fetch_5_latest_tweets_final.py`  
+**📍 Location**: `/Users/abhijita/Projects/Project_Dhruv/fetch_5_latest_tweets_final.py`  
+**📊 Status**: 64 tweets fetched, 100% success rate  
+**🎯 Usage**: `python fetch_5_latest_tweets_final.py`
+
+**📖 Full Documentation**: See `README_TWEET_FETCH.md` and `TWEET_FETCH_SUCCESS.md`
+
 Focus:
 - Real, official-source data (no simulation for production datasets)
 - Strict multilingual data variant discipline

@@ -40,8 +40,8 @@ export default function DashboardDark() {
     let mounted = true;
     (async () => {
       try {
-        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?limit=200`);
-        if (mounted && res.success) setServerRows(res.events);
+        const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
+        if (mounted && res.success) setServerRows(res.data);
       } catch {
         // ignore; fallback to local file
       }

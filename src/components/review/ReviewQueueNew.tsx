@@ -246,63 +246,38 @@ export default function ReviewQueueNew() {
   const confidence = currentTweet.confidence || 0;
 
   return (
-    <div className="min-h-screen bg-[#0A0128] text-neutral-200 antialiased">
-      {/* Background Effects */}
-      <div className="fixed inset-0 -z-10 h-full w-full">
-        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(44,0,95,0.7),rgba(255,255,255,0))]"></div>
-        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,75,79,0.6),rgba(255,255,255,0))]"></div>
-      </div>
-
-      {/* Header */}
-      <header className="fixed top-4 z-10 flex w-full max-w-5xl items-center justify-between whitespace-nowrap rounded-xl border border-white/10 bg-white/[.07] px-6 py-3 backdrop-blur-xl">
-        <div className="flex items-center gap-4 text-white">
-          <span className="text-[#13a4ec]" style={{fontSize: '28px'}}>insights</span>
-          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] text-neutral-100">विश्लेषिकी</h2>
-        </div>
-        <div className="hidden flex-1 items-center justify-center gap-9 md:flex">
-          <a className="text-sm font-medium leading-normal text-neutral-200 transition-colors hover:text-white" href="#">डैशबोर्ड</a>
-          <a className="text-sm font-bold leading-normal text-white" href="#">कतार</a>
-          <a className="text-sm font-medium leading-normal text-neutral-200 transition-colors hover:text-white" href="#">सेटिंग्स</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white/10 text-neutral-200 transition-colors hover:bg-white/20 hover:text-white">
-            <Bell className="w-5 h-5" />
-          </button>
-          <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhYH5Ti7sDpYdKLVf3b7esJKZpRiG8yJMxp7MbH1N-xnz5k-eM_pp-L36c_GpPeQE6ugwcueHXc_zt6CBtKPcAkqjvgFtCyqiOEhZCjgcpw3XjP3eY4yw5yBGERv2QOb9qgoqb9g1HCrEy5yFRYxihrqmpGHK5tMgvmG6SAAkisLgkU7zCa8qmpYBE8alnQe4HkWbOsI7ArSvQ4H20u6XKAhAIA4XKm2iyKdMT3D1-ubvOY5IFHvsMZa64qElvzXozw1YiiDJCM53R")'}}></div>
-        </div>
-      </header>
-
+    <div className="w-full">
       {/* Main Content */}
-      <main className="flex w-full flex-1 flex-col items-center px-4 pt-32 pb-16">
+      <div className="flex w-full flex-1 flex-col items-center">
         {/* Stats Cards */}
         <div className="mb-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-white/[.02] p-4 backdrop-blur-lg">
-            <p className="text-sm font-medium text-neutral-400">समीक्षा के लिए</p>
+          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+            <p className="text-sm font-medium text-gray-400">समीक्षा के लिए</p>
             <p className="text-2xl font-bold text-white">{stats.pending}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[.02] p-4 backdrop-blur-lg">
-            <p className="text-sm font-medium text-neutral-400">समीक्षित</p>
+          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+            <p className="text-sm font-medium text-gray-400">समीक्षित</p>
             <p className="text-2xl font-bold text-white">{stats.reviewed}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[.02] p-4 backdrop-blur-lg">
-            <p className="text-sm font-medium text-neutral-400">औसत विश्वास</p>
+          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+            <p className="text-sm font-medium text-gray-400">औसत विश्वास</p>
             <p className="text-2xl font-bold text-white">{Math.round(stats.avgConfidence * 100)}%</p>
           </div>
         </div>
 
         {/* Tweet Counter */}
-        <p className="mb-4 text-center text-sm font-normal leading-normal text-neutral-400">
+        <p className="mb-4 text-center text-sm font-normal leading-normal text-gray-400">
           ट्वीट {currentIndex + 1} में से {tweets.length}
         </p>
 
         {/* Tweet Card */}
-        <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[.07] p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
+        <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-[#0d1117] p-6 shadow-2xl sm:p-8">
           {/* Tweet Header */}
           <div className="flex items-center gap-4">
             <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNUkxYhQdfbK8RN72N4PUjwW9vbF4OPsUCu8LobAyWyBt0-Ty5BwoXr_Zp6AoaCFf1atiW5TAxUDhxgZR2zLoaElzlAQ_-V7fFo3dALshVsdy_OuJ8XzvwZG_InS1k30-fso8zRKyULYzJ1x84QjNc09mU1Yr2uqnFbOrUxpcZgztKSyRZ1HmTlJTfjSze8Wqs47Y9wUHzhVlxv1VpJvJn_0vM1jZe4kXyWcSxcsCUWpZaHwzIMCl3jx38C-zfTzwTLGUuQXAQeF13")'}}></div>
             <div className="flex flex-col justify-center">
-              <p className="text-lg font-medium leading-normal text-neutral-100 line-clamp-1">Tweet #{currentTweet.id}</p>
-              <p className="text-sm font-normal leading-normal text-neutral-400 line-clamp-2">{formatDate(currentTweet.timestamp)}</p>
+              <p className="text-lg font-medium leading-normal text-gray-100 line-clamp-1">Tweet #{currentTweet.id}</p>
+              <p className="text-sm font-normal leading-normal text-gray-400 line-clamp-2">{formatDate(currentTweet.timestamp)}</p>
             </div>
             <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-green-900/50">
               <Check className="w-4 h-4 text-green-400" />
@@ -310,10 +285,10 @@ export default function ReviewQueueNew() {
             </div>
           </div>
 
-          <hr className="my-6 border-white/10" />
+          <hr className="my-6 border-gray-700" />
 
           {/* Tweet Content */}
-          <p className="text-lg font-normal leading-relaxed text-neutral-200">
+          <p className="text-lg font-normal leading-relaxed text-gray-200">
             {tweetText}
           </p>
 
@@ -345,9 +320,9 @@ export default function ReviewQueueNew() {
           {editMode && (
             <div className="mt-6 flex flex-col">
               <label className="flex flex-col">
-                <p className="pb-2 text-sm font-medium leading-normal text-neutral-300">सुधार क्षेत्र</p>
+                <p className="pb-2 text-sm font-medium leading-normal text-gray-300">सुधार क्षेत्र</p>
                 <textarea 
-                  className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl border border-white/10 bg-black/20 p-4 text-base font-normal leading-normal text-neutral-200 placeholder:text-neutral-500 focus:border-[#13a4ec] focus:ring-1 focus:ring-[#13a4ec]/50 min-h-36"
+                  className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl border border-gray-700 bg-[#0d1117] p-4 text-base font-normal leading-normal text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 min-h-36"
                   value={correctionReason}
                   onChange={(e) => setCorrectionReason(e.target.value)}
                   placeholder="सुधार का कारण दर्ज करें..."
@@ -361,22 +336,20 @@ export default function ReviewQueueNew() {
         <div className="mt-8 flex w-full max-w-2xl flex-wrap items-center justify-center gap-4">
           <button 
             onClick={handleSkip}
-            className="group flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[.07] text-neutral-300 transition-all hover:scale-105 hover:bg-white/20 hover:text-white"
+            className="group flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-gray-700 bg-[#0d1117] text-gray-300 transition-all hover:scale-105 hover:bg-gray-800 hover:text-white"
           >
             <SkipForward className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setShowAIAssistant(true)}
-            className="group flex h-14 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105"
-            style={{backgroundColor: '#4d8bff', boxShadow: '0 0 20px rgba(77, 139, 255, 0.5)'}}
+            className="group flex h-14 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105 bg-blue-600 hover:bg-blue-700"
           >
             <Edit className="w-5 h-5" />
             <span>संपादित करें</span>
           </button>
           <button 
             onClick={handleApprove}
-            className="group flex h-14 flex-1 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-black shadow-lg transition-all hover:scale-105"
-            style={{backgroundColor: '#00ffa3', boxShadow: '0 0 20px rgba(0, 255, 163, 0.5)'}}
+            className="group flex h-14 flex-1 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105 bg-green-600 hover:bg-green-700"
           >
             <Check className="w-5 h-5" />
             <span>अनुमोदन करें</span>
@@ -405,7 +378,7 @@ export default function ReviewQueueNew() {
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-      </main>
+      </div>
 
       {/* AI Assistant Modal */}
       {showAIAssistant && (

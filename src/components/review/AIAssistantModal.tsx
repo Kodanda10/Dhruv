@@ -42,26 +42,52 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
     { name: 'सामुदायिक जुड़ाव', active: false }
   ]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!aiInput.trim()) return;
-    
+
     const newMessage = {
       type: 'user',
       content: aiInput
     };
-    
+
     setMessages(prev => [...prev, newMessage]);
+    const userInput = aiInput;
     setAiInput('');
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
+
+    try {
+      // Call AI Assistant API
+      const response = await fetch('/api/ai-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          tweetData: currentTweet
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const aiResponse = {
+          type: 'ai',
+          content: data.response,
+          suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं']
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        throw new Error(data.error || 'AI Assistant error');
+      }
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      const errorResponse = {
         type: 'ai',
-        content: 'समझ गया। मैंने आपके अनुरोध के अनुसार अपडेट कर दिया है। क्या आप कुछ और बदलना चाहेंगे?',
-        suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं']
+        content: 'क्षमा करें, मैं इस समय आपकी सहायता नहीं कर सकता। कृपया बाद में पुनः प्रयास करें।',
+        suggestions: ['पुनः प्रयास करें']
       };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, errorResponse]);
+    }
   };
 
   const toggleTag = (tagName: string) => {

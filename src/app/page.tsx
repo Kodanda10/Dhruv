@@ -1,14 +1,11 @@
 'use client';
 import React from 'react';
-import Dashboard from '@/components/Dashboard';
 import DashboardDark from '@/components/DashboardDark';
-import ReviewQueue from '@/components/review/ReviewQueue';
 import ReviewQueueNew from '@/components/review/ReviewQueueNew';
 import { Suspense, useState } from 'react';
 import { titleFont, notoDevanagari } from './fonts';
 
 // Lazy load AnalyticsDashboard to avoid D3 import issues in tests
-const AnalyticsDashboard = React.lazy(() => import('@/components/analytics/AnalyticsDashboard'));
 const AnalyticsDashboardDark = React.lazy(() => import('@/components/analytics/AnalyticsDashboardDark'));
 
 export default function Home() {
@@ -63,30 +60,30 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Tab Content */}
-        <div className="min-h-[600px]">
+        {/* Tab Content - Unified Layout */}
+        <div className="min-h-[600px] bg-[#192734] rounded-xl border border-gray-800 shadow-lg">
           {activeTab === 'home' && (
-            <section>
+            <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Tweets...</div>}>
                 <DashboardDark />
               </Suspense>
-            </section>
+            </div>
           )}
 
           {activeTab === 'review' && (
-            <section>
+            <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Review Interface...</div>}>
                 <ReviewQueueNew />
               </Suspense>
-            </section>
+            </div>
           )}
 
           {activeTab === 'analytics' && (
-            <section>
+            <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Analytics...</div>}>
                 <AnalyticsDashboardDark />
               </Suspense>
-            </section>
+            </div>
           )}
         </div>
       </div>
