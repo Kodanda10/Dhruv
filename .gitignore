@@ -8,3 +8,9 @@ audit.json
 .env*
 out
 dist
+tsconfig.tsbuildinfo
+.venv
+__pycache__
+*.pyc
+k6-summary.json
+junit.xml
