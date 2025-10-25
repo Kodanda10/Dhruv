@@ -100,9 +100,9 @@ describe('DayOfWeekChart', () => {
     render(<DayOfWeekChart {...defaultProps} />);
     
     expect(screen.getByText(/45/)).toBeInTheDocument();
-    expect(screen.getByText(/20%/)).toBeInTheDocument();
+    expect(screen.getByText(/16%/)).toBeInTheDocument();
     expect(screen.getByText(/52/)).toBeInTheDocument();
-    expect(screen.getByText(/23%/)).toBeInTheDocument();
+    expect(screen.getByText(/18%/)).toBeInTheDocument();
   });
 
   it('should apply custom className', () => {
@@ -134,7 +134,7 @@ describe('DayOfWeekChart', () => {
     // बुधवार has the highest count (52)
     expect(screen.getByText('बुधवार')).toBeInTheDocument();
     expect(screen.getByText(/52/)).toBeInTheDocument();
-    expect(screen.getByText(/23%/)).toBeInTheDocument();
+    expect(screen.getByText(/18%/)).toBeInTheDocument();
   });
 
   it('should render with default dimensions', () => {

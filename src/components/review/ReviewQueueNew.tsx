@@ -198,7 +198,8 @@ export default function ReviewQueueNew() {
     
     const newMessage = {
       type: 'user',
-      content: aiInput
+      content: aiInput,
+      suggestions: []
     };
     
     setAiMessages(prev => [...prev, newMessage]);

@@ -106,7 +106,7 @@ export default function AnalyticsDashboard({
                 data={timeSeriesData}
                 title="समय के साथ गतिविधि"
                 dateField="date"
-                valueField="count"
+                valueField="value"
                 width={800}
                 height={400}
               />
@@ -124,8 +124,6 @@ export default function AnalyticsDashboard({
             <DayOfWeekChart
               data={dayOfWeekData}
               title="सप्ताह के दिन के अनुसार गतिविधि"
-              width={400}
-              height={400}
             />
           </div>
 
@@ -140,8 +138,6 @@ export default function AnalyticsDashboard({
               <LocationBarChart
                 data={locationData}
                 title="स्थान वितरण"
-                width={800}
-                height={400}
               />
             )}
 
@@ -149,8 +145,6 @@ export default function AnalyticsDashboard({
               <LocationLeafletMap
                 data={locationData}
                 title="इंटरैक्टिव स्थान मानचित्र"
-                width={800}
-                height={400}
               />
             )}
 
@@ -165,7 +159,6 @@ export default function AnalyticsDashboard({
           {/* Narrative Classification */}
           <NarrativeClassificationChart
             data={narrativeData}
-            title="कथात्मक वर्गीकरण"
           />
         </div>
       </div>

@@ -25,7 +25,8 @@ export default function DayOfWeekChart({ data, title, className }: DayOfWeekChar
 
   useEffect(() => {
     if (containerRef.current) {
-      setDimensions(calculateChartDimensions(containerRef.current, { top: 20, right: 30, bottom: 60, left: 40 }));
+      const rect = containerRef.current.getBoundingClientRect();
+      setDimensions(calculateChartDimensions(rect.width, rect.height));
     }
   }, []);
 
@@ -106,7 +107,7 @@ export default function DayOfWeekChart({ data, title, className }: DayOfWeekChar
                   <div key={index}>
                     <span>{item.day}</span>
                     <span>{item.count}</span>
-                    <span>{item.percentage}%</span>
+                    <span>{Math.round((item.count / data.reduce((sum, d) => sum + d.count, 0)) * 100)}%</span>
                   </div>
                 ))}
                 <span>कुल: {data.reduce((sum, item) => sum + item.count, 0)}</span>

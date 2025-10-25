@@ -23,6 +23,6 @@ const config = {
   // Add timeout and retry settings
   testTimeout: 30000,
   // Disable parallel execution for problematic tests
-  runInBand: false,
+  // runInBand: false, // Removed invalid option
 };
 export default config;
