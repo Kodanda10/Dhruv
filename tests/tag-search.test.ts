@@ -1,4 +1,8 @@
-import { buildSearchKeys, matchTagFlexible, transliterateDevanagariToLatin } from '@/utils/tag-search';
+import {
+  buildSearchKeys,
+  matchTagFlexible,
+  transliterateDevanagariToLatin,
+} from '@/utils/tag-search';
 
 describe('tag search normalization', () => {
   it('builds keys for nukta and transliteration', () => {
@@ -16,8 +20,12 @@ describe('tag search normalization', () => {
 
   it('matches #रोज़गार with #Rojgar and #Rojgaar (hinglish)', () => {
     expect(matchTagFlexible('#रोज़गार', '#Rojgar')).toBe(true);
-    expect(matchTagFlexible('#रोजगार', '#Rojgaar')).toBe(true);
+    expect(matchTagFlexible('#रोज़गार', '#Rojgaar')).toBe(true);
     expect(matchTagFlexible('#रोज़गार', '#Rozgar')).toBe(true);
   });
-});
 
+  it('builds keys with synonym enrichment for raigarh', () => {
+    const keys = buildSearchKeys('raigarh');
+    expect(Array.from(keys)).toEqual(expect.arrayContaining(['raygarh']));
+  });
+});

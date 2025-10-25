@@ -1,0 +1,100 @@
+{
+  "_meta": {
+    "name": "Autocurated Seed URLs for Authoritative Hindi Spellings",
+    "version": "1.0",
+    "description": "Deterministic, allowlisted seed URLs for nightly autonomous curation without search APIs. The curator crawls these seeds politely, extracts Devanagari candidates, verifies via transliteration scoring, and writes mappings with provenance.",
+    "usage_notes": [
+      "Only add official/credible government portals (gov.in, nic.in, census, egramswaraj, state portals).",
+      "Keep the list small and focused on directories/sitemaps or landing pages with links to gram panchayat / village / ULB / ward lists.",
+      "The web curator respects robots.txt, rate limits, and caches responses. Do not add sites that disallow crawling.",
+      "If a domain frequently yields false positives, remove or disable the corresponding seed."
+    ],
+    "edit_instructions": "Add/remove entries under `seeds`. Use `enabled=false` to keep entries documented but inactive. Update `allowlisted_domains` when adding new official domains.",
+    "updated_by": "web-curator",
+    "updated_at": "YYYY-MM-DD"
+  },
+
+  "allowlisted_domains": [
+    ".gov.in",
+    ".nic.in",
+    "cgstate.gov.in",
+    "rural.cg.gov.in",
+    "prd.cg.nic.in",
+    "prd.cgstate.gov.in",
+    "egramswaraj.gov.in",
+    "censusindia.gov.in",
+    "panchayat.gov.in",
+    "cg.nic.in",
+    "cg.gov.in"
+  ],
+
+  "crawl_config": {
+    "respect_robots_txt": true,
+    "rate_limit_seconds": 0.8,
+    "timeout_seconds": 25,
+    "max_pages_per_seed": 3,
+    "user_agent": "dhruv-web-curator/1.0",
+    "cache_enabled": true,
+    "retry": {
+      "max_attempts": 2,
+      "backoff_seconds": 1.5
+    }
+  },
+
+  "safeguards": {
+    "skip_extensions": [".pdf", ".zip", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"],
+    "max_html_size_bytes": 5242880,
+    "max_devanagari_tokens_per_page": 5000
+  },
+
+  "seeds": [
+    {
+      "url": "https://rural.cg.gov.in/",
+      "category": "rural-directory",
+      "enabled": true,
+      "notes": "Chhattisgarh rural portal. Likely links to GP/village directories and schemes pages."
+    },
+    {
+      "url": "https://prd.cg.nic.in/",
+      "category": "rural-directory",
+      "enabled": true,
+      "notes": "Panchayat & Rural Development (NIC) — authoritative resources and directories."
+    },
+    {
+      "url": "https://egramswaraj.gov.in/",
+      "category": "national-rural-directory",
+      "enabled": true,
+      "notes": "National GP directory; useful for cross-verification of GP/village spellings."
+    },
+    {
+      "url": "https://censusindia.gov.in/",
+      "category": "national-census",
+      "enabled": true,
+      "notes": "Census directories and tables with official village names; may require table parsing."
+    },
+    {
+      "url": "https://panchayat.gov.in/",
+      "category": "national-panchayat",
+      "enabled": true,
+      "notes": "Ministry of Panchayati Raj; directories and references to official GP data."
+    },
+    {
+      "url": "https://cgstate.gov.in/",
+      "category": "state-portal",
+      "enabled": true,
+      "notes": "Chhattisgarh state portal; use for departmental links and authoritative references."
+    },
+    {
+      "url": "https://cg.gov.in/",
+      "category": "state-portal",
+      "enabled": false,
+      "notes": "Alternative state portal hostname; keep disabled unless needed."
+    },
+    {
+      "url": "https://cg.nic.in/",
+      "category": "state-portal-nic",
+      "enabled": false,
+      "notes": "NIC state entry point; enable if department pages are only reachable here."
+    }
+  ]
+}

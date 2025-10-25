@@ -1,39 +1,51 @@
+/// <reference types="jest" />
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import Metrics from '@/components/Metrics';
+import { render, screen, fireEvent } from '@testing-library/react';
 
-describe('Metrics interactions and rendering', () => {
-  it('renders headings and lists with items', () => {
-    render(<Metrics />);
-    expect(screen.getByText('स्थान सारांश')).toBeInTheDocument();
-    expect(screen.getByText('गतिविधि सारांश')).toBeInTheDocument();
-
-    const sections = screen.getAllByRole('list');
-    expect(sections.length).toBeGreaterThanOrEqual(2);
-    for (const ul of sections) {
-      const items = within(ul).getAllByRole('listitem');
-      expect(items.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('clicks on first place and activity to exercise onClick handlers', () => {
-    render(<Metrics />);
-    const lists = screen.getAllByRole('list');
-    const placeItems = within(lists[0]).getAllByRole('listitem');
-    const activityItems = within(lists[1]).getAllByRole('listitem');
-
-    // Click first place link button
-    const placeBtn = within(placeItems[0]).getByRole('button');
-    fireEvent.click(placeBtn);
-
-    // Click first activity link button
-    const actBtn = within(activityItems[0]).getByRole('button');
-    fireEvent.click(actBtn);
-
-    // No explicit assertion on router; the goal is to execute onClick handlers for coverage
-    expect(placeBtn).toBeInTheDocument();
-    expect(actBtn).toBeInTheDocument();
-  });
+// Simplified router mock: shared pushMock closed over by jest.mock.
+// Expose it on the mock module as __pushMock for assertions.
+jest.mock('next/navigation', () => {
+  const pushMock = jest.fn();
+  return {
+    __esModule: true,
+    useRouter: () => ({ push: pushMock }),
+    __pushMock: pushMock,
+  };
 });
 
+// Import after the mock so the component uses the mocked router
+import * as nextNavigation from 'next/navigation';
+import Metrics from '@/components/Metrics';
 
+function getPushMock(): jest.Mock {
+  return (nextNavigation as any).__pushMock as jest.Mock;
+}
+
+describe('Metrics interactions (router mocked)', () => {
+  beforeEach(() => {
+    getPushMock().mockReset();
+  });
+
+  it('clicks top location item and calls router.push with encoded loc param', () => {
+    render(<Metrics />);
+
+    // Button accessible name comes from aria-label
+    const raigarhButton = screen.getByRole('button', { name: 'रायगढ़ पर फ़िल्टर करें' });
+    fireEvent.click(raigarhButton);
+
+    const expected = `/?loc=${encodeURIComponent('रायगढ़')}`;
+    expect(getPushMock()).toHaveBeenCalledTimes(1);
+    expect(getPushMock()).toHaveBeenCalledWith(expected);
+  });
+
+  it('clicks top action item and calls router.push with encoded action param', () => {
+    render(<Metrics />);
+
+    const actionButton = screen.getByRole('button', { name: 'शुभकामनायें पर फ़िल्टर करें' });
+    fireEvent.click(actionButton);
+
+    const expected = `/?action=${encodeURIComponent('शुभकामनायें')}`;
+    expect(getPushMock()).toHaveBeenCalledTimes(1);
+    expect(getPushMock()).toHaveBeenCalledWith(expected);
+  });
+});

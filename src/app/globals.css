@@ -1,19 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Amita:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Teal glass theme */
-  --background: #083344; /* teal-950 */
-  --foreground: #e6f6f9; /* light teal text */
-  --surface: rgba(12, 74, 110, 0.55); /* teal-800 with alpha */
-  --border-soft: rgba(148, 163, 184, 0.3); /* slate-400 alpha */
-  --chip-bg: rgba(226, 232, 240, 0.12);
-  --chip-active-bg: rgba(59, 130, 246, 0.18);
-  --chip-fg: #e2e8f0; /* slate-200 */
-  --chip-active-fg: #bfdbfe; /* blue-200 */
+  /* Professional Green/White theme */
+  --background: #F9FAFB; /* Clean light gray */
+  --foreground: #1F2937; /* Dark gray text */
+  --primary-green: #10B981; /* Fresh green */
+  --primary-dark: #1E293B; /* Dark slate */
 }
 
 html, body {

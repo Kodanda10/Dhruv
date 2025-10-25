@@ -23,4 +23,14 @@ describe('parse util', () => {
     expect(typeof out.how).toBe('string');
     expect(out.how.length).toBeGreaterThan(5);
   });
+
+  it('extracts place from में heuristic', () => {
+    const post = {
+      id: 1000,
+      timestamp: '2025-09-05T10:30:00Z',
+      content: 'रायगढ़ में कार्यक्रम हुआ।',
+    };
+    const out = parsePost(post);
+    expect(out.where).toContain('रायगढ़');
+  });
 });

@@ -1,0 +1,99 @@
+{
+  "master": {
+    "metadata": {
+      "description": "Default tasks context",
+      "created": "2025-09-10T00:00:00.000Z",
+      "updated": "2025-09-19T20:18:39.539Z"
+    },
+    "tasks": [
+      {
+        "id": 1,
+        "title": "T2: Electoral enrichment scaffolding",
+        "description": "Introduce AC/PC enrichment builder that deterministically maps districts/blocks/ULBs to constituencies with strict validation.",
+        "details": "- Create api/src/sota/dataset_builders/electoral_enrichment.py with lookup tables and reject logging.\\n- Build unit tests covering successful joins, mismatches, and rejects.\\n- Wire enrichment into geography and urban ETL flows behind a flag.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "T3: Minimal Great Expectations suites",
+        "description": "Add baseline GE suites for urban and geography datasets and gate via FLAG_DATA_VALIDATION.",
+        "details": "- Define GE expectation suites for urban composite key uniqueness and non-null ward/ULB/district fields.\\n- Add geography suite ensuring dedup composite key uniqueness and sanity row counts.\\n- Wire suites into optional data-validation CI job toggled by FLAG_DATA_VALIDATION.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "T4: Curated CSV backfill flow",
+        "description": "Document and script a repeatable flow for ingesting curated CSV mappings into the curation pipeline.",
+        "details": "- Produce docs and examples showing how to run mappings_from_csv.py against high-frequency unmapped names.\\n- Add sample curated CSV and ensure outputs integrate with new urban/electoral builders.\\n- Include validation steps so contributors can run the backfill safely locally.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "T5: Coverage trend artifact",
+        "description": "Publish a weekly coverage trend artifact for the curation workflows.",
+        "details": "- Extend the web-curation workflow to compute historical coverage deltas and store a JSON/Markdown artifact.\\n- Surface trend summary in the PR template or dashboard for quick visibility.\\n- Ensure optional toggle so the job can be disabled without breaking CI.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "T6: Finalise urban ward dataset output",
+        "description": "Generate ward-level NDJSON via cg_urban_excel_builder and stash the artifact under data/datasets/.",
+        "details": "- Run cg_urban_excel_builder to emit data/datasets/chhattisgarh_urban.ndjson (or similar).\\n- Review rejects (duplicate composite keys) and ensure coverage markdown reflects the new file.\\n- Document the run command/flags so future updates stay reproducible.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "T7: Curate full constituency lookup",
+        "description": "Expand data/constituencies.json to cover all districts, blocks, and ULBs with verified AC/PC mappings.",
+        "details": "- Collate authoritative tables (SEC/Election Commission) for district/block/ULB → AC/PC.\\n- Normalize keys to match builder canon logic (lowercase, collapse whitespace).\\n- Add validation script ensuring 100% coverage for existing geography/urban datasets.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "T8: Data validation CI wiring",
+        "description": "Enable combined Pandera + Great Expectations gate in CI using the new validation modules.",
+        "details": "- Introduce a CI job that runs both pandera and great_expectations runners when FLAG_DATA_VALIDATION=on.\\n- Publish artifacts (pandera-summary.json, ge-summary.json).\\n- Document the toggle and update runbook/README if additional steps required.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "T9: Publish coverage trend artifact",
+        "description": "Integrate coverage_history.py into the nightly workflow and surface the history JSON for stakeholders.",
+        "details": "- Call coverage_history.py from web-curation workflow after coverage_report runs.\\n- Upload coverage/web-curation-history.json as an artifact (or commit into dashboard repo).\\n- Update README/PR template to reference the new history link.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      }
+    ]
+  }
+}

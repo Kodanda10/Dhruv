@@ -1,0 +1,26 @@
+{
+  "source": "Chhattisgarh SuShasan Portal",
+  "url": "https://sushasantihar.cg.nic.in/reports/sub-category-wise-application-filter-reports",
+  "fetched_at": "2025-09-12T20:14:43.610Z",
+  "filters": [
+    "ग्रामीण",
+    "शहरी"
+  ],
+  "attempted_districts": [
+    "कोड की सूची",
+    "मीडिया कवरेज"
+  ],
+  "successes": [],
+  "failures": [],
+  "rows": [],
+  "summary": {
+    "totals": {
+      "districts": 0,
+      "blocks": 0,
+      "panchayats": 0,
+      "villages": 0,
+      "wards": 0,
+      "rows": 0
+    }
+  }
+}

@@ -66,7 +66,8 @@ export function parsePost(post: Post) {
   const matchWhere = post.content.match(PLACE_REGEX) || [];
   matchWhere.forEach((w) => whereSet.add(w));
   // Heuristic: tokens before 'में' (e.g., 'रायगढ़ में' -> 'रायगढ़')
-  const inMatches = Array.from(post.content.matchAll(/([\p{L} ]{2,}?)\s+में/gu));
+  // Replace unsupported \p{L} (Python-style) with explicit Unicode ranges + ASCII letters
+  const inMatches = Array.from(post.content.matchAll(/([\u0900-\u097F\u0600-\u06FFA-Za-z ]{2,}?)\s+में/u));
   for (const m of inMatches) {
     const token = (m[1] || '').trim();
     if (token.length >= 2) {

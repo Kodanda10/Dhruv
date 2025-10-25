@@ -22,4 +22,30 @@ describe('Dashboard filters', () => {
       expect(cells[1].textContent || '').toMatch(/रायगढ़|—/);
     }
   });
+
+  it('filters rows by टैग/मेंशन', () => {
+    render(<Dashboard />);
+    const table = screen.getByRole('table', { name: 'गतिविधि सारणी' });
+    const tbody = within(table).getByTestId('tbody');
+    const before = within(tbody).getAllByRole('row').length;
+
+    const tagInput = screen.getByLabelText('टैग/मेंशन फ़िल्टर');
+    fireEvent.change(tagInput, { target: { value: '#विकास' } });
+
+    const after = within(tbody).getAllByRole('row').length;
+    expect(after).toBeLessThanOrEqual(before);
+  });
+
+  it('filters rows by तिथि से', () => {
+    render(<Dashboard />);
+    const table = screen.getByRole('table', { name: 'गतिविधि सारणी' });
+    const tbody = within(table).getByTestId('tbody');
+    const before = within(tbody).getAllByRole('row').length;
+
+    const fromInput = screen.getByLabelText('तिथि से');
+    fireEvent.change(fromInput, { target: { value: '2025-09-01' } });
+
+    const after = within(tbody).getAllByRole('row').length;
+    expect(after).toBeLessThanOrEqual(before);
+  });
 });

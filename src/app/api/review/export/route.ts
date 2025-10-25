@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 // In-memory reviewed data (shared with store route for demo; use Vercel KV for persistence)
 let reviewedData: any[] = [];

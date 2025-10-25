@@ -7,15 +7,15 @@ export default function Metrics() {
   const router = useRouter();
   const { places, actions } = computeMetrics();
   return (
-    <section className="card-soft p-4 space-y-6 text-teal-50">
+    <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-6 text-gray-900">
       <div>
-        <h2 className="text-2xl font-semibold text-white">स्थान सारांश</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">स्थान सारांश</h2>
         <ul className="list-disc list-inside mt-2">
           {places.map((p) => (
             <li key={p.key} className="leading-6">
               <button
                 type="button"
-                className="underline decoration-cyan-400/60 underline-offset-2 text-cyan-200 hover:text-white"
+                className="underline decoration-green-400/60 underline-offset-2 text-green-700 hover:text-green-800"
                 onClick={() => router.push((`/?loc=${encodeURIComponent(p.key)}`) as Route)}
                 aria-label={`${p.key} पर फ़िल्टर करें`}
                 title={`${p.key} पर फ़िल्टर करें`}
@@ -27,13 +27,13 @@ export default function Metrics() {
         </ul>
       </div>
       <div>
-        <h2 className="text-2xl font-semibold text-white">गतिविधि सारांश</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">गतिविधि सारांश</h2>
         <ul className="list-disc list-inside mt-2">
           {actions.map((a) => (
             <li key={a.key} className="leading-6">
               <button
                 type="button"
-                className="underline decoration-cyan-400/60 underline-offset-2 text-cyan-200 hover:text-white"
+                className="underline decoration-green-400/60 underline-offset-2 text-green-700 hover:text-green-800"
                 onClick={() => router.push((`/?action=${encodeURIComponent(a.key)}`) as Route)}
                 aria-label={`${a.key} पर फ़िल्टर करें`}
                 title={`${a.key} पर फ़िल्टर करें`}

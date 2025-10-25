@@ -9,3 +9,38 @@ audit.json
 out
 dist
 trufflehog/
+
+# Web cache with sensitive data
+data/.web_cache/
+*.cache
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 
