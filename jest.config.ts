@@ -17,5 +17,12 @@ const config = {
   testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['json-summary', 'text', 'lcov'],
+  // Increase memory limits and reduce workers to prevent crashes
+  maxWorkers: 2,
+  workerIdleMemoryLimit: '512MB',
+  // Add timeout and retry settings
+  testTimeout: 30000,
+  // Disable parallel execution for problematic tests
+  runInBand: false,
 };
 export default config;

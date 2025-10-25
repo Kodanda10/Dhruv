@@ -43,11 +43,11 @@ export default function AnalyticsDashboard({
 
   // Mock data for charts (in real app, this would come from API)
   const timeSeriesData = [
-    { date: '2024-01-01', count: 10 },
-    { date: '2024-01-02', count: 15 },
-    { date: '2024-01-03', count: 12 },
-    { date: '2024-01-04', count: 18 },
-    { date: '2024-01-05', count: 22 }
+    { date: '2024-01-01', value: 10 },
+    { date: '2024-01-02', value: 15 },
+    { date: '2024-01-03', value: 12 },
+    { date: '2024-01-04', value: 18 },
+    { date: '2024-01-05', value: 22 }
   ];
 
   const eventTypeData = [

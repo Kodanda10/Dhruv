@@ -1,6 +1,23 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Edit, Check, X, SkipNext, Psychology, ChevronLeft, ChevronRight, Notifications, Help, Settings, Send, Search, Close, Add, Delete } from 'lucide-react';
+import { 
+  Edit, 
+  Check, 
+  X, 
+  SkipForward, 
+  Brain, 
+  ChevronLeft, 
+  ChevronRight, 
+  Bell, 
+  HelpCircle, 
+  Settings, 
+  Send, 
+  Search, 
+  X as CloseIcon, 
+  Plus, 
+  Trash2 
+} from 'lucide-react';
+import AIAssistantModal from './AIAssistantModal';
 
 // Real data from deployment
 const parsedTweets = [
@@ -248,7 +265,7 @@ export default function ReviewQueueNew() {
         </div>
         <div className="flex items-center gap-4">
           <button className="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white/10 text-neutral-200 transition-colors hover:bg-white/20 hover:text-white">
-            <Notifications className="w-5 h-5" />
+            <Bell className="w-5 h-5" />
           </button>
           <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhYH5Ti7sDpYdKLVf3b7esJKZpRiG8yJMxp7MbH1N-xnz5k-eM_pp-L36c_GpPeQE6ugwcueHXc_zt6CBtKPcAkqjvgFtCyqiOEhZCjgcpw3XjP3eY4yw5yBGERv2QOb9qgoqb9g1HCrEy5yFRYxihrqmpGHK5tMgvmG6SAAkisLgkU7zCa8qmpYBE8alnQe4HkWbOsI7ArSvQ4H20u6XKAhAIA4XKm2iyKdMT3D1-ubvOY5IFHvsMZa64qElvzXozw1YiiDJCM53R")'}}></div>
         </div>
@@ -345,10 +362,10 @@ export default function ReviewQueueNew() {
             onClick={handleSkip}
             className="group flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[.07] text-neutral-300 transition-all hover:scale-105 hover:bg-white/20 hover:text-white"
           >
-            <SkipNext className="w-5 h-5" />
+            <SkipForward className="w-5 h-5" />
           </button>
           <button 
-            onClick={handleEdit}
+            onClick={() => setShowAIAssistant(true)}
             className="group flex h-14 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105"
             style={{backgroundColor: '#4d8bff', boxShadow: '0 0 20px rgba(77, 139, 255, 0.5)'}}
           >
@@ -396,14 +413,14 @@ export default function ReviewQueueNew() {
             <div className="flex flex-col flex-1">
               <div className="flex items-center justify-between p-6 border-b border-gray-800">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Psychology className="w-6 h-6 text-[#13a4ec]" />
+                  <Brain className="w-6 h-6 text-[#13a4ec]" />
                   विशेषज्ञ संपादक AI सहायक
                 </h2>
                 <button 
                   onClick={() => setShowAIAssistant(false)}
                   className="p-1 rounded-full hover:bg-gray-800 transition-colors"
                 >
-                  <Close className="w-5 h-5" />
+                  <CloseIcon className="w-5 h-5" />
                 </button>
               </div>
               
@@ -521,7 +538,7 @@ export default function ReviewQueueNew() {
                           onClick={() => removeTag(tag)}
                           className="text-blue-300 hover:text-blue-100 ml-1"
                         >
-                          <Close className="w-3 h-3" />
+                          <CloseIcon className="w-3 h-3" />
                         </button>
                       </span>
                     ))}
@@ -532,12 +549,12 @@ export default function ReviewQueueNew() {
                           onClick={() => addTag(tag)}
                           className="text-gray-400 hover:text-gray-100 ml-1"
                         >
-                          <Add className="w-3 h-3" />
+                          <Plus className="w-3 h-3" />
                         </button>
                       </span>
                     ))}
                     <div className="absolute bottom-3 right-3 p-2 rounded-full bg-red-800/50 text-red-300 border border-red-700 hover:bg-red-700/50 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 flex items-center justify-center size-8">
-                      <Delete className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </div>
                   </div>
                 </div>
@@ -546,6 +563,13 @@ export default function ReviewQueueNew() {
           </div>
         </div>
       )}
+
+      {/* AI Assistant Modal */}
+      <AIAssistantModal 
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+        currentTweet={currentTweet}
+      />
     </div>
   );
 }
