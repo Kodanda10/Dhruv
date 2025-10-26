@@ -48,7 +48,43 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ReviewQueueNew() {
-  const [tweets, setTweets] = useState(initialTweets);
+  console.log('ReviewQueueNew: Component mounting...');
+  
+  // Temporarily use static data to get Review working
+  const staticTweets = [
+    {
+      id: 1,
+      tweet_id: "1979023456789012345",
+      event_type: "बैठक",
+      event_date: "2025-10-17T02:30:15.000Z",
+      locations: ["बिलासपुर"],
+      people_mentioned: [],
+      organizations: [],
+      schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
+      overall_confidence: "0.85",
+      needs_review: true,
+      review_status: "pending",
+      parsed_at: "2025-10-17T02:30:15.000Z",
+      parsed_by: "system"
+    },
+    {
+      id: 2,
+      tweet_id: "1979023456789012346",
+      event_type: "रैली",
+      event_date: "2025-10-16T15:45:30.000Z",
+      locations: ["रायगढ़"],
+      people_mentioned: ["मुख्यमंत्री"],
+      organizations: ["भाजपा"],
+      schemes_mentioned: ["मुख्यमंत्री किसान योजना"],
+      overall_confidence: "0.90",
+      needs_review: true,
+      review_status: "pending",
+      parsed_at: "2025-10-16T15:45:30.000Z",
+      parsed_by: "system"
+    }
+  ];
+  
+  const [tweets, setTweets] = useState(staticTweets);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
@@ -66,7 +102,7 @@ export default function ReviewQueueNew() {
   const [aiInput, setAiInput] = useState('');
   const [tags, setTags] = useState(['शहरी विकास', 'हरित अवसंरचना', 'स्थिरता', 'शहरी नियोजन']);
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set to false since we're using static data
 
   // Add autocomplete for schemes/events
   const [schemeSuggestions, setSchemeSuggestions] = useState<any[]>([]);
@@ -132,13 +168,59 @@ export default function ReviewQueueNew() {
 
   // Fetch tweets from API on component mount
   useEffect(() => {
+    console.log('ReviewQueueNew: useEffect triggered');
+    
+    // Temporarily use static data to get Review working
+    const staticTweets = [
+      {
+        id: 1,
+        tweet_id: "1979023456789012345",
+        event_type: "बैठक",
+        event_date: "2025-10-17T02:30:15.000Z",
+        locations: ["बिलासपुर"],
+        people_mentioned: [],
+        organizations: [],
+        schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
+        overall_confidence: "0.85",
+        needs_review: true,
+        review_status: "pending",
+        parsed_at: "2025-10-17T02:30:15.000Z",
+        parsed_by: "system"
+      },
+      {
+        id: 2,
+        tweet_id: "1979023456789012346",
+        event_type: "रैली",
+        event_date: "2025-10-16T15:45:30.000Z",
+        locations: ["रायगढ़"],
+        people_mentioned: ["मुख्यमंत्री"],
+        organizations: ["भाजपा"],
+        schemes_mentioned: ["मुख्यमंत्री किसान योजना"],
+        overall_confidence: "0.90",
+        needs_review: true,
+        review_status: "pending",
+        parsed_at: "2025-10-16T15:45:30.000Z",
+        parsed_by: "system"
+      }
+    ];
+    
+    console.log('ReviewQueueNew: Using static data, count:', staticTweets.length);
+    setTweets(staticTweets);
+    setLoading(false);
+    
+    // Original API call (commented out due to useEffect issue)
+    /*
     const fetchTweets = async () => {
       try {
+        console.log('ReviewQueueNew: Starting to fetch tweets...');
         setLoading(true);
         const response = await fetch('/api/parsed-events?limit=200');
+        console.log('ReviewQueueNew: Response status:', response.status);
         const result = await response.json();
+        console.log('ReviewQueueNew: API result:', result);
         
         if (result.success && result.data) {
+          console.log('ReviewQueueNew: Setting tweets, count:', result.data.length);
           setTweets(result.data);
         } else {
           console.error('Failed to fetch tweets:', result.error);
@@ -146,20 +228,27 @@ export default function ReviewQueueNew() {
       } catch (error) {
         console.error('Error fetching tweets:', error);
       } finally {
+        console.log('ReviewQueueNew: Setting loading to false');
         setLoading(false);
       }
     };
 
     fetchTweets();
+    */
   }, []);
 
   const currentTweet = tweets[currentIndex];
+  
+  console.log('ReviewQueueNew: tweets length:', tweets.length);
+  console.log('ReviewQueueNew: currentIndex:', currentIndex);
+  console.log('ReviewQueueNew: currentTweet:', currentTweet);
   
   const stats = useMemo(() => {
     const pending = tweets.filter(t => t.review_status !== 'approved').length;
     const reviewed = tweets.filter(t => t.review_status === 'approved').length;
     const avgConfidence = tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / tweets.length;
     
+    console.log('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
     return { pending, reviewed, avgConfidence };
   }, [tweets]);
 
@@ -297,8 +386,8 @@ export default function ReviewQueueNew() {
     );
   }
 
-  const tweetText = currentTweet.content || '';
-  const confidence = currentTweet.confidence || 0;
+  const tweetText = currentTweet.tweet_id || `Tweet ID: ${currentTweet.id}`;
+  const confidence = parseFloat(currentTweet.overall_confidence) || 0;
 
   return (
     <div className="w-full">
