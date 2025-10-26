@@ -254,11 +254,11 @@ export default function ReviewQueueNew() {
     
     setEditMode(true);
     setEditedData({
-      event_type: currentTweet.parsed?.event_type || 'other',
-      locations: currentTweet.parsed?.locations?.map((l: any) => l.name || l) || [],
-      people: currentTweet.parsed?.people || [],
-      organizations: currentTweet.parsed?.organizations || [],
-      schemes: currentTweet.parsed?.schemes || [],
+      event_type: currentTweet.event_type || 'other',
+      locations: currentTweet.locations || [],
+      people: currentTweet.people_mentioned || [],
+      organizations: currentTweet.organizations || [],
+      schemes: currentTweet.schemes_mentioned || [],
     });
     setCorrectionReason('');
   };
@@ -418,7 +418,7 @@ export default function ReviewQueueNew() {
             <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNUkxYhQdfbK8RN72N4PUjwW9vbF4OPsUCu8LobAyWyBt0-Ty5BwoXr_Zp6AoaCFf1atiW5TAxUDhxgZR2zLoaElzlAQ_-V7fFo3dALshVsdy_OuJ8XzvwZG_InS1k30-fso8zRKyULYzJ1x84QjNc09mU1Yr2uqnFbOrUxpcZgztKSyRZ1HmTlJTfjSze8Wqs47Y9wUHzhVlxv1VpJvJn_0vM1jZe4kXyWcSxcsCUWpZaHwzIMCl3jx38C-zfTzwTLGUuQXAQeF13")'}}></div>
             <div className="flex flex-col justify-center">
               <p className="text-lg font-medium leading-normal text-gray-100 line-clamp-1">Tweet #{currentTweet.id}</p>
-              <p className="text-sm font-normal leading-normal text-gray-400 line-clamp-2">{formatDate(currentTweet.timestamp)}</p>
+              <p className="text-sm font-normal leading-normal text-gray-400 line-clamp-2">{formatDate(currentTweet.event_date)}</p>
             </div>
             <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-green-900/50">
               <Check className="w-4 h-4 text-green-400" />
@@ -437,23 +437,23 @@ export default function ReviewQueueNew() {
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-4">
             <div>
               <p className="text-sm font-medium text-gray-400 mb-1">घटना प्रकार</p>
-              <p className="font-semibold text-gray-200">{getEventTypeHindi(currentTweet.parsed?.event_type) || '—'}</p>
+              <p className="font-semibold text-gray-200">{getEventTypeHindi(currentTweet.event_type) || '—'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-400 mb-1">स्थान</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.parsed?.locations || []).map((l: any) => l.name || l).join(', ') || '—'}</p>
+              <p className="font-semibold text-gray-200">{(currentTweet.locations || []).join(', ') || '—'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-400 mb-1">लोग</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.parsed?.people || []).join(', ') || '—'}</p>
+              <p className="font-semibold text-gray-200">{(currentTweet.people_mentioned || []).join(', ') || '—'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-400 mb-1">संगठन</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.parsed?.organizations || []).join(', ') || '—'}</p>
+              <p className="font-semibold text-gray-200">{(currentTweet.organizations || []).join(', ') || '—'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-400 mb-1">योजनाएं</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.parsed?.schemes || []).join(', ') || '—'}</p>
+              <p className="font-semibold text-gray-200">{(currentTweet.schemes_mentioned || []).join(', ') || '—'}</p>
             </div>
           </div>
 
