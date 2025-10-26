@@ -104,6 +104,12 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
     }
   };
 
+  const toggleTag = (tagName: string) => {
+    setTags(prev => prev.map(tag => 
+      tag.name === tagName ? { ...tag, active: !tag.active } : tag
+    ));
+  };
+
   const handleSuggestionClick = (suggestion: string) => {
     setAiInput(suggestion);
   };
