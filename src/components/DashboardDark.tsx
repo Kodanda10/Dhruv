@@ -87,9 +87,9 @@ export default function DashboardDark() {
   console.log('DashboardDark: Simple fetch result:', { serverRows: serverRows?.length, isPolling });
 
   const parsed = useMemo(() => {
-    // Temporarily use parsedTweets directly to get dashboard working
-    const source = parsedTweets;
-    console.log('DashboardDark: Using parsedTweets directly, length:', source.length);
+    // Use real database data from serverRows, fallback to parsedTweets if empty
+    const source = serverRows.length > 0 ? serverRows : parsedTweets;
+    console.log('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
     
     return source.map((p: any) => {
       // Handle both old parsed structure and new database structure

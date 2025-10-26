@@ -170,46 +170,6 @@ export default function ReviewQueueNew() {
   useEffect(() => {
     console.log('ReviewQueueNew: useEffect triggered');
     
-    // Temporarily use static data to get Review working
-    const staticTweets = [
-      {
-        id: 1,
-        tweet_id: "1979023456789012345",
-        event_type: "बैठक",
-        event_date: "2025-10-17T02:30:15.000Z",
-        locations: ["बिलासपुर"],
-        people_mentioned: [],
-        organizations: [],
-        schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-        overall_confidence: "0.85",
-        needs_review: true,
-        review_status: "pending",
-        parsed_at: "2025-10-17T02:30:15.000Z",
-        parsed_by: "system"
-      },
-      {
-        id: 2,
-        tweet_id: "1979023456789012346",
-        event_type: "रैली",
-        event_date: "2025-10-16T15:45:30.000Z",
-        locations: ["रायगढ़"],
-        people_mentioned: ["मुख्यमंत्री"],
-        organizations: ["भाजपा"],
-        schemes_mentioned: ["मुख्यमंत्री किसान योजना"],
-        overall_confidence: "0.90",
-        needs_review: true,
-        review_status: "pending",
-        parsed_at: "2025-10-16T15:45:30.000Z",
-        parsed_by: "system"
-      }
-    ];
-    
-    console.log('ReviewQueueNew: Using static data, count:', staticTweets.length);
-    setTweets(staticTweets);
-    setLoading(false);
-    
-    // Original API call (commented out due to useEffect issue)
-    /*
     const fetchTweets = async () => {
       try {
         console.log('ReviewQueueNew: Starting to fetch tweets...');
@@ -224,9 +184,47 @@ export default function ReviewQueueNew() {
           setTweets(result.data);
         } else {
           console.error('Failed to fetch tweets:', result.error);
+          // Fallback to static data if API fails
+          const staticTweets = [
+            {
+              id: 1,
+              tweet_id: "1979023456789012345",
+              event_type: "बैठक",
+              event_date: "2025-10-17T02:30:15.000Z",
+              locations: ["बिलासपुर"],
+              people_mentioned: [],
+              organizations: [],
+              schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
+              overall_confidence: "0.85",
+              needs_review: true,
+              review_status: "pending",
+              parsed_at: "2025-10-17T02:30:15.000Z",
+              parsed_by: "system"
+            }
+          ];
+          setTweets(staticTweets);
         }
       } catch (error) {
         console.error('Error fetching tweets:', error);
+        // Fallback to static data if API fails
+        const staticTweets = [
+          {
+            id: 1,
+            tweet_id: "1979023456789012345",
+            event_type: "बैठक",
+            event_date: "2025-10-17T02:30:15.000Z",
+            locations: ["बिलासपुर"],
+            people_mentioned: [],
+            organizations: [],
+            schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
+            overall_confidence: "0.85",
+            needs_review: true,
+            review_status: "pending",
+            parsed_at: "2025-10-17T02:30:15.000Z",
+            parsed_by: "system"
+          }
+        ];
+        setTweets(staticTweets);
       } finally {
         console.log('ReviewQueueNew: Setting loading to false');
         setLoading(false);
@@ -234,7 +232,6 @@ export default function ReviewQueueNew() {
     };
 
     fetchTweets();
-    */
   }, []);
 
   const currentTweet = tweets[currentIndex];
