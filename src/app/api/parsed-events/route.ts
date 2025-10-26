@@ -7,7 +7,32 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '200');
     
-    // Try to read from parsed_tweets.json
+    // First try to read from database via internal API
+    try {
+      const tweetsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'}/api/tweets?limit=${limit}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (tweetsResponse.ok) {
+        const tweetsData = await tweetsResponse.json();
+        if (tweetsData.success && tweetsData.data) {
+          return NextResponse.json({
+            success: true,
+            data: tweetsData.data,
+            total: tweetsData.total,
+            returned: tweetsData.returned,
+            source: 'database'
+          });
+        }
+      }
+    } catch (dbError) {
+      console.log('Database API not available, falling back to static file');
+    }
+    
+    // Fallback: Try to read from parsed_tweets.json
     const dataPath = path.join(process.cwd(), 'data', 'parsed_tweets.json');
     
     if (fs.existsSync(dataPath)) {
@@ -21,7 +46,8 @@ export async function GET(request: NextRequest) {
         success: true,
         data: limitedTweets,
         total: tweets.length,
-        returned: limitedTweets.length
+        returned: limitedTweets.length,
+        source: 'static_file'
       });
     } else {
       // Return empty array if file doesn't exist
@@ -29,7 +55,8 @@ export async function GET(request: NextRequest) {
         success: true,
         data: [],
         total: 0,
-        returned: 0
+        returned: 0,
+        source: 'empty'
       });
     }
   } catch (error) {
