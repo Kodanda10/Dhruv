@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { parsePost, formatHindiDate } from '@/utils/parse';
 import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getEventTypeHindi } from '@/lib/eventTypes';
 import { useSortableTable, SortField } from '@/hooks/useSortableTable';
@@ -14,6 +14,39 @@ import type { Route } from 'next';
 type Post = { id: string | number; timestamp: string; content: string; parsed?: any; confidence?: number; needs_review?: boolean; review_status?: string };
 
 export default function DashboardDark() {
+  console.log('DashboardDark: Component mounting...');
+  
+  // Move useEffect to the very beginning
+  const [serverRows, setServerRows] = useState<any[]>([]);
+  const [isPolling, setIsPolling] = useState(false);
+
+  console.log('DashboardDark: About to call useEffect');
+
+  useEffect(() => {
+    console.log('DashboardDark: useEffect triggered');
+    const fetchData = async () => {
+      console.log('DashboardDark: Simple fetch starting...');
+      setIsPolling(true);
+      try {
+        const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
+        console.log('DashboardDark: Simple fetch response:', res);
+        if (res.success) {
+          setServerRows(res.data);
+        }
+      } catch (error) {
+        console.error('DashboardDark: Simple fetch error:', error);
+      } finally {
+        setIsPolling(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  console.log('DashboardDark: After useEffect');
+  
   const [locFilter, setLocFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -37,31 +70,27 @@ export default function DashboardDark() {
   }, [searchParams]);
 
   // Fetch server-side parsed events with polling
-  const fetchParsedEvents = async () => {
+  const fetchParsedEvents = useCallback(async () => {
     try {
+      console.log('DashboardDark: Fetching parsed events...');
       const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
+      console.log('DashboardDark: API response:', res);
       if (res.success) return res.data;
+      console.log('DashboardDark: API response not successful');
       return [];
-    } catch {
+    } catch (error) {
+      console.error('DashboardDark: API fetch error:', error);
       return [];
     }
-  };
+  }, []);
 
-  const { 
-    data: serverRows, 
-    isLoading: isPolling, 
-    hasNewData, 
-    clearNewDataNotification 
-  } = usePolling(fetchParsedEvents, {
-    interval: 30000, // 30 seconds
-    enabled: true,
-    onNewData: (newData, previousData) => {
-      console.log(`New tweets detected: ${newData.length - previousData.length} new tweets`);
-    }
-  });
+  console.log('DashboardDark: Simple fetch result:', { serverRows: serverRows?.length, isPolling });
 
   const parsed = useMemo(() => {
-    const source = serverRows || parsedTweets;
+    // Temporarily use parsedTweets directly to get dashboard working
+    const source = parsedTweets;
+    console.log('DashboardDark: Using parsedTweets directly, length:', source.length);
+    
     return source.map((p: any) => {
       // Handle both old parsed structure and new database structure
       const isDbData = p.locations !== undefined; // Database data has locations directly
@@ -129,7 +158,11 @@ export default function DashboardDark() {
   }, [serverRows]);
 
   const filtered = useMemo(() => {
+    console.log('DashboardDark: parsed length:', parsed.length);
+    console.log('DashboardDark: first parsed item:', parsed[0]);
+    
     let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
+    console.log('DashboardDark: after skip filter:', rows.length);
     if (locFilter.trim()) {
       const q = locFilter.trim();
       rows = rows.filter((r) => r.where.some((w: string) => matchTextFlexible(w, q)));
@@ -195,8 +228,8 @@ export default function DashboardDark() {
 
   return (
     <section>
-      {/* New Data Notification */}
-      {hasNewData && (
+      {/* New Data Notification - Temporarily disabled */}
+      {false && (
         <div className="mb-4 bg-green-900/50 border border-green-700 rounded-lg p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-green-400">refresh</span>
@@ -205,7 +238,7 @@ export default function DashboardDark() {
             </span>
           </div>
           <button
-            onClick={clearNewDataNotification}
+            onClick={() => {}}
             className="text-green-400 hover:text-green-300 text-sm underline"
           >
             छुपाएं

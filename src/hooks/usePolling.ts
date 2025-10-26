@@ -16,13 +16,21 @@ export function usePolling<T>(
   const [hasNewData, setHasNewData] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const previousDataRef = useRef<T[]>([]);
+  const fetchFnRef = useRef(fetchFn);
+
+  // Update the ref when fetchFn changes
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+  }, [fetchFn]);
 
   const fetchData = useCallback(async () => {
     if (isLoading) return;
     
+    console.log('usePolling: Starting fetch...');
     setIsLoading(true);
     try {
-      const newData = await fetchFn();
+      const newData = await fetchFnRef.current();
+      console.log('usePolling: Fetched data length:', newData.length);
       const previousData = previousDataRef.current;
       
       // Check if there's new data
@@ -38,18 +46,22 @@ export function usePolling<T>(
     } finally {
       setIsLoading(false);
     }
-  }, [fetchFn, isLoading, onNewData]);
+  }, [isLoading, onNewData]);
 
   useEffect(() => {
+    console.log('usePolling: useEffect triggered, enabled:', enabled);
     if (!enabled) return;
 
     // Initial fetch
+    console.log('usePolling: Starting initial fetch...');
     fetchData();
 
     // Set up polling
+    console.log('usePolling: Setting up polling interval:', interval);
     intervalRef.current = setInterval(fetchData, interval);
 
     return () => {
+      console.log('usePolling: Cleaning up interval');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
