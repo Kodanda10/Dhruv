@@ -317,8 +317,8 @@ Return ONLY valid JSON, no extra text.
         parsed['generated_hashtags'] = generate_contextual_hashtags(parsed)
         
         return parsed
-        
-    except Exception as e:
+
+        except Exception as e:
         print(f"Gemini parsing error: {str(e)}")
         return {
             "event_type": "Unknown",

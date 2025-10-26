@@ -104,11 +104,172 @@ export default function ReviewQueueNew() {
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
   const [loading, setLoading] = useState(false); // Set to false since we're using static data
 
-  // Add autocomplete for schemes/events
-  const [schemeSuggestions, setSchemeSuggestions] = useState<any[]>([]);
-  const [eventSuggestions, setEventSuggestions] = useState<any[]>([]);
+  // Add missing functions
+  const handleAISend = async (message: string) => {
+    if (!message.trim()) return;
+
+    const newMessage = {
+      type: 'user',
+      content: message
+    };
+
+    setAiMessages(prev => [...prev, newMessage]);
+    const userInput = message;
+
+    // Add loading message
+    const loadingMessage = {
+      type: 'ai',
+      content: 'सोच रहा हूँ...',
+      suggestions: []
+    };
+    setAiMessages(prev => [...prev, loadingMessage]);
+
+    try {
+      // Call AI Assistant API
+      const response = await fetch('/api/ai-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          tweetData: currentTweet
+        })
+      });
+
+      const data = await response.json();
+      
+      // Remove loading message
+      setAiMessages(prev => prev.slice(0, -1));
+      
+      if (data.success) {
+        const aiResponse = {
+          type: 'ai',
+          content: data.response,
+          suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं', 'स्थान जोड़ें']
+        };
+        setAiMessages(prev => [...prev, aiResponse]);
+      } else {
+        throw new Error(data.error || 'AI Assistant error');
+      }
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      // Remove loading message
+      setAiMessages(prev => prev.slice(0, -1));
+      
+      const errorResponse = {
+        type: 'ai',
+        content: 'क्षमा करें, मैं इस समय आपकी सहायता नहीं कर सकता। कृपया बाद में पुनः प्रयास करें।',
+        suggestions: ['पुनः प्रयास करें']
+      };
+      setAiMessages(prev => [...prev, errorResponse]);
+    }
+  };
+
+  const handleSkip = () => {
+    setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1));
+    setEditMode(false);
+    setEditedData({});
+    setCorrectionReason('');
+  };
+
+  const handleApprove = async () => {
+    try {
+      // First, learn from human feedback if there were corrections
+      if (Object.keys(editedData).length > 0) {
+        const learningResponse = await fetch('/api/learning', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'learn_from_feedback',
+            data: {
+              tweetId: currentTweet.tweet_id,
+              originalParsed: currentTweet,
+              humanCorrection: { ...currentTweet, ...editedData },
+              reviewer: 'human'
+            }
+          })
+        });
+
+        if (learningResponse.ok) {
+          const learningResult = await learningResponse.json();
+          console.log('Learning from feedback:', learningResult);
+        }
+      }
+
+      // Update the parsed event status
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          review_status: 'approved',
+          needs_review: false,
+          ...editedData
+        })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setTweets(prev => prev.map(tweet => 
+          tweet.id === currentTweet.id 
+            ? { ...tweet, review_status: 'approved', needs_review: false, ...editedData }
+            : tweet
+        ));
+        
+        // Move to next tweet
+        handleSkip();
+      } else {
+        console.error('Failed to approve tweet');
+      }
+    } catch (error) {
+      console.error('Error approving tweet:', error);
+    }
+  };
+
+  const addTag = (tag: string) => {
+    setTags(prev => [...prev, tag]);
+    setAvailableTags(prev => prev.filter(t => t !== tag));
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(prev => prev.filter(t => t !== tag));
+    setAvailableTags(prev => [...prev, tag]);
+  };
   const [showSchemeSuggestions, setShowSchemeSuggestions] = useState(false);
   const [showEventSuggestions, setShowEventSuggestions] = useState(false);
+  const [intelligentSuggestions, setIntelligentSuggestions] = useState<any>(null);
+
+  // Fetch intelligent suggestions when entering edit mode
+  const fetchIntelligentSuggestions = async () => {
+    try {
+      const response = await fetch('/api/learning', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'get_suggestions',
+          data: {
+            tweetText: `Tweet ID: ${currentTweet.tweet_id}`, // We don't have tweet text in parsed data
+            currentParsed: currentTweet
+          }
+        })
+      });
+
+      if (response.ok) {
+        const suggestions = await response.json();
+        setIntelligentSuggestions(suggestions);
+        console.log('Intelligent suggestions:', suggestions);
+      }
+    } catch (error) {
+      console.error('Error fetching intelligent suggestions:', error);
+    }
+  };
 
   // Fetch suggestions as user types
   const fetchSuggestions = async (type: string, query: string) => {
@@ -261,6 +422,9 @@ export default function ReviewQueueNew() {
       schemes: currentTweet.schemes_mentioned || [],
     });
     setCorrectionReason('');
+    
+    // Fetch intelligent suggestions when entering edit mode
+    fetchIntelligentSuggestions();
   };
 
   const handleSave = async () => {
@@ -273,88 +437,8 @@ export default function ReviewQueueNew() {
     setCorrectionReason('');
   };
 
-  const handleApprove = async () => {
-    if (!currentTweet) return;
-    
-    try {
-      // Update via API
-      const response = await fetch('/api/parsed-events', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: currentTweet.id,
-          updates: {
-            review_status: 'approved',
-            needs_review: false
-          }
-        })
-      });
 
-      if (response.ok) {
-        // Update local state
-        const updatedTweets = [...tweets];
-        updatedTweets[currentIndex] = {
-          ...currentTweet,
-          review_status: 'approved',
-          needs_review: false
-        };
-        setTweets(updatedTweets);
-        
-        // Move to next tweet
-        if (currentIndex < tweets.length - 1) {
-          setCurrentIndex(currentIndex + 1);
-        }
-        
-        console.log('✅ Tweet approved successfully');
-      } else {
-        console.error('❌ Failed to approve tweet');
-        alert('ट्वीट को अनुमोदित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
-      }
-    } catch (error) {
-      console.error('Error approving tweet:', error);
-      alert('ट्वीट को अनुमोदित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
-    }
-  };
 
-  const handleSkip = async () => {
-    if (!currentTweet) return;
-    setTweets(prev => prev.filter((_, idx) => idx !== currentIndex));
-  };
-
-  const handleAISend = () => {
-    if (!aiInput.trim()) return;
-    
-    const newMessage = {
-      type: 'user',
-      content: aiInput,
-      suggestions: []
-    };
-    
-    setAiMessages(prev => [...prev, newMessage]);
-    setAiInput('');
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        type: 'ai',
-        content: 'समझ गया। मैंने आपके अनुरोध के अनुसार अपडेट कर दिया है। क्या आप कुछ और बदलना चाहेंगे?',
-        suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं']
-      };
-      setAiMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
-
-  const addTag = (tag: string) => {
-    setTags(prev => [...prev, tag]);
-    setAvailableTags(prev => prev.filter(t => t !== tag));
-  };
-
-  const removeTag = (tag: string) => {
-    setTags(prev => prev.filter(t => t !== tag));
-    setAvailableTags(prev => [...prev, tag]);
-  };
 
   if (loading) {
     return (
@@ -624,169 +708,13 @@ export default function ReviewQueueNew() {
         </div>
       </div>
 
-      {/* AI Assistant Modal */}
-      {showAIAssistant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-5xl rounded-xl shadow-2xl bg-[#192734] text-gray-100 flex max-h-[90vh] overflow-hidden">
-            <div className="flex flex-col flex-1">
-              <div className="flex items-center justify-between p-6 border-b border-gray-800">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Brain className="w-6 h-6 text-[#13a4ec]" />
-                  विशेषज्ञ संपादक AI सहायक
-                </h2>
-                <button 
-                  onClick={() => setShowAIAssistant(false)}
-                  className="p-1 rounded-full hover:bg-gray-800 transition-colors"
-                >
-                  <CloseIcon className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-4 overflow-y-auto flex flex-col-reverse flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <input 
-                      className="w-full rounded-full border-gray-700 bg-gray-800 focus:ring-[#13a4ec] focus:border-[#13a4ec] text-gray-100 py-2 px-4"
-                      placeholder="अपनी प्रतिक्रिया टाइप करें..."
-                      value={aiInput}
-                      onChange={(e) => setAiInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAISend()}
-                    />
-                  </div>
-                  <button 
-                    onClick={handleAISend}
-                    className="flex-shrink-0 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[#13a4ec] hover:bg-[#13a4ec]/90 transition-colors h-10 w-10 flex items-center justify-center"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-                
-                <div className="space-y-4 flex flex-col">
-                  {aiMessages.map((message, index) => (
-                    <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`p-3 rounded-lg max-w-xs md:max-w-md ${
-                        message.type === 'user' 
-                          ? 'bg-[#13a4ec]/20 text-blue-300' 
-                          : 'bg-gray-800 text-gray-200'
-                      }`}>
-                        {message.content}
-                        {message.suggestions && (
-                          <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                            {message.suggestions.map((suggestion, i) => (
-                              <span 
-                                key={i}
-                                className="bg-gray-700 text-gray-300 px-2 py-1 rounded-full cursor-pointer hover:bg-gray-600"
-                              >
-                                {suggestion}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-6 border-t border-gray-800">
-                <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm text-gray-400">ट्वीट {currentIndex + 1} में से {tweets.length}</span>
-                  <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">रद्द करें</button>
-                  <button className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">सहेजें</button>
-                  <button className="rounded-lg px-4 py-2 text-sm font-semibold text-white bg-[#13a4ec] hover:bg-[#13a4ec]/90 transition-colors">सहेजें और स्वीकृत करें</button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Sidebar */}
-            <div className="w-full md:w-2/5 border-l border-gray-800 flex flex-col p-6 overflow-y-auto bg-gray-900">
-              <h3 className="text-lg font-bold text-gray-100 mb-4">ट्वीट विवरण</h3>
-              <div className="space-y-4 text-sm">
-                <p className="text-gray-400">ट्वीट आईडी: <span className="text-gray-200 font-mono">{currentTweet.id}</span></p>
-                <p className="text-gray-400">समय: <span className="text-gray-200">{formatDate(currentTweet.timestamp)}</span></p>
-                <div className="p-2 rounded-lg bg-green-900/50 flex items-center gap-2 w-fit">
-                  <Check className="w-4 h-4 text-green-400" />
-                  <p className="text-sm font-bold text-green-300">{Math.round(confidence * 100)}% विश्वास</p>
-                </div>
-                <div className="rounded-lg border border-gray-700 bg-gray-800 p-3">
-                  <p className="text-gray-200 leading-relaxed text-sm">{tweetText}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">कार्यक्रम का प्रकार</p>
-                    <p className="font-semibold text-gray-200">{getEventTypeHindi(currentTweet.parsed?.event_type) || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">स्थान</p>
-                    <p className="font-semibold text-gray-200">{(currentTweet.parsed?.locations || []).map((l: any) => l.name || l).join(', ') || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">लोग</p>
-                    <p className="font-semibold text-gray-200">{(currentTweet.parsed?.people || []).join(', ') || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">संगठन</p>
-                    <p className="font-semibold text-gray-200">{(currentTweet.parsed?.organizations || []).join(', ') || '—'}</p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <p className="text-sm font-bold text-gray-100 mb-2">जोड़े गए टैग</p>
-                  <div className="relative mb-3">
-                    <div className="relative">
-                      <input 
-                        className="w-full rounded-md border-gray-700 bg-gray-800 focus:ring-[#13a4ec] focus:border-[#13a4ec] text-gray-100 py-2 pl-10 pr-4 text-sm"
-                        placeholder="टैग, स्थान, या लोग खोजें..."
-                      />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 min-h-[6rem] p-3 border border-gray-700 rounded-md bg-gray-800 relative">
-                    {tags.map((tag, index) => (
-                      <span key={index} className="flex items-center gap-1 bg-[#13a4ec]/20 text-blue-300 px-2 py-1 rounded-full text-xs cursor-grab hover:bg-[#13a4ec]/30 active:cursor-grabbing" draggable="true">
-                        {tag}
-                        <button 
-                          onClick={() => removeTag(tag)}
-                          className="text-blue-300 hover:text-blue-100 ml-1"
-                        >
-                          <CloseIcon className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    {availableTags.map((tag, index) => (
-                      <span key={index} className="flex items-center gap-1 bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs cursor-grab hover:bg-gray-600 active:cursor-grabbing" draggable="true">
-                        {tag}
-                        <button 
-                          onClick={() => addTag(tag)}
-                          className="text-gray-400 hover:text-gray-100 ml-1"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    <div className="absolute bottom-3 right-3 p-2 rounded-full bg-red-800/50 text-red-300 border border-red-700 hover:bg-red-700/50 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 flex items-center justify-center size-8">
-                      <Trash2 className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* AI Assistant Modal */}
       <AIAssistantModal 
         isOpen={showAIAssistant}
         onClose={() => setShowAIAssistant(false)}
         currentTweet={currentTweet}
+        onSend={handleAISend}
       />
     </div>
   );

@@ -5,9 +5,10 @@ interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTweet: any;
+  onSend?: (message: string) => Promise<void>;
 }
 
-export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAssistantModalProps) {
+export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend }: AIAssistantModalProps) {
   const [aiInput, setAiInput] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -45,14 +46,22 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
   const handleSend = async () => {
     if (!aiInput.trim()) return;
 
+    const userInput = aiInput;
+    setAiInput('');
+
+    // If onSend prop is provided, use it (for API calls)
+    if (onSend) {
+      await onSend(userInput);
+      return;
+    }
+
+    // Otherwise, use internal logic (for testing/fallback)
     const newMessage = {
       type: 'user',
-      content: aiInput
+      content: userInput
     };
 
     setMessages(prev => [...prev, newMessage]);
-    const userInput = aiInput;
-    setAiInput('');
 
     // Add loading message
     const loadingMessage = {
@@ -193,23 +202,22 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
         {/* Right Panel: Tweet Details */}
         <div className="w-full md:w-2/5 bg-[#0d1117] p-6 overflow-y-auto">
           <h3 className="text-lg font-bold text-gray-100 mb-4">ट्वीट विवरण</h3>
-          <p className="text-gray-400 text-sm mb-1">ट्वीट आईडी: <span className="text-gray-200 font-mono">{currentTweet?.id || '1706013219808358808'}</span></p>
-          <p className="text-gray-400 text-sm mb-3">समय: <span className="text-gray-200">{currentTweet ? new Date(currentTweet.timestamp).toLocaleString('hi-IN') : '24 सितंबर 2023, रात 08:30'}</span></p>
+          <p className="text-gray-400 text-sm mb-1">ट्वीट आईडी: <span className="text-gray-200 font-mono">{currentTweet?.tweet_id || currentTweet?.id || '1706013219808358808'}</span></p>
+          <p className="text-gray-400 text-sm mb-3">समय: <span className="text-gray-200">{currentTweet ? new Date(currentTweet.event_date || currentTweet.timestamp).toLocaleString('hi-IN') : '24 सितंबर 2023, रात 08:30'}</span></p>
           <div className="flex items-center gap-2 bg-green-900/50 w-fit px-2 py-1 rounded-lg mb-4">
             <span className="material-symbols-outlined text-green-400 text-sm">verified</span>
-            <p className="text-green-300 text-sm font-semibold">{currentTweet ? Math.round((currentTweet.confidence || 0) * 100) : 95}% विश्वास</p>
+            <p className="text-green-300 text-sm font-semibold">{currentTweet ? Math.round(parseFloat(currentTweet.overall_confidence || currentTweet.confidence || 0) * 100) : 95}% विश्वास</p>
           </div>
           <div className="bg-gray-800 border border-gray-700 p-4 rounded-lg mb-4">
             <p className="text-gray-200 text-sm leading-relaxed">
-              {currentTweet?.content || 'Just attended an incredible workshop on sustainable urban development. So many innovative ideas for creating greener, more livable cities. Feeling inspired to make a change in my community!'}
-              <a href="#" className="text-blue-400 hover:underline">#Sustainability #UrbanPlanning</a>
+              {currentTweet?.content || `Tweet ID: ${currentTweet?.tweet_id || currentTweet?.id || '1706013219808358808'}`}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
-            <div><p className="text-gray-400">कार्यक्रम का प्रकार:</p><p className="text-gray-200 font-semibold">कार्यशाला</p></div>
-            <div><p className="text-gray-400">स्थान:</p><p className="text-gray-200 font-semibold">—</p></div>
-            <div><p className="text-gray-400">लोग:</p><p className="text-gray-200 font-semibold">—</p></div>
-            <div><p className="text-gray-400">संगठन:</p><p className="text-gray-200 font-semibold">—</p></div>
+            <div><p className="text-gray-400">कार्यक्रम का प्रकार:</p><p className="text-gray-200 font-semibold">{currentTweet?.event_type || 'कार्यशाला'}</p></div>
+            <div><p className="text-gray-400">स्थान:</p><p className="text-gray-200 font-semibold">{(currentTweet?.locations || []).join(', ') || '—'}</p></div>
+            <div><p className="text-gray-400">लोग:</p><p className="text-gray-200 font-semibold">{(currentTweet?.people_mentioned || []).join(', ') || '—'}</p></div>
+            <div><p className="text-gray-400">संगठन:</p><p className="text-gray-200 font-semibold">{(currentTweet?.organizations || []).join(', ') || '—'}</p></div>
           </div>
           <div>
             <p className="text-gray-300 font-bold text-sm mb-2">जोड़े गए टैग</p>
