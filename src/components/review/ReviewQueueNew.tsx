@@ -19,84 +19,8 @@ import {
 } from 'lucide-react';
 import AIAssistantModal from './AIAssistantModal';
 
-// Real data from deployment
-const parsedTweets = [
-  {
-    "id": "1979087135895621683",
-    "timestamp": "2025-10-17T07:28:37",
-    "content": "अंतागढ़ विधानसभा के लोकप्रिय विधायक एवं छत्तीसगढ़ भाजपा के पूर्व अध्यक्ष माननीय श्री विक्रम उसेंडी जी को जन्मदिन की हार्दिक बधाई एवं शुभकामनायें।\nप्रभु श्रीराम जी से आपके उत्तम स्वास्थ्य एवं दीर्घायु जीवन की कामना करता हूं।\n\n@VikramUsendi https://t.co/YroOSRmZhO",
-    "parsed": {
-      "event_type": "birthday_wishes",
-      "event_date": "2025-10-17",
-      "locations": [
-        {
-          "name": "छत्तीसगढ़",
-          "confidence": 0.8
-        },
-        {
-          "name": "अंतागढ़",
-          "confidence": 0.8
-        }
-      ],
-      "people": [
-        "विक्रम उसेंडी जी को"
-      ],
-      "organizations": [
-        "भाजपा"
-      ],
-      "schemes": []
-    },
-    "confidence": 0.78,
-    "needs_review": false,
-    "review_status": "pending"
-  },
-  {
-    "id": "1979074268907606480",
-    "timestamp": "2025-10-17T06:37:29",
-    "content": "यह दीपावली उन लाखों परिवारों के लिए खास होने वाली है, जिनके पास कभी अपना घर नहीं था। इस बार उनके द्वार पर पहली बार रंगोली सजेगी, दीवारों पर झालरें टंगेगी और आंगन दीपों की ज्योति से जगमगाएंगे। प्रधानमंत्री आवास योजना से इन परिवारों को केवल एक घर ही नहीं, बल्कि गरिमा, सम्मान और https://t.co/PKHyYhNv8v",
-    "parsed": {
-      "event_type": "scheme_announcement",
-      "event_date": "2025-10-17",
-      "locations": [],
-      "people": [],
-      "organizations": [],
-      "schemes": [
-        "प्रधानमंत्री आवास योजना"
-      ]
-    },
-    "confidence": 0.55,
-    "needs_review": true,
-    "review_status": "pending"
-  },
-  {
-    "id": "1979049036633010349",
-    "timestamp": "2025-10-17T05:15:42",
-    "content": "रायपुर में आज मुख्यमंत्री श्री भूपेश बघेल जी ने नई शिक्षा नीति के तहत स्कूलों में डिजिटल क्लासरूम का उद्घाटन किया। इस अवसर पर शिक्षा मंत्री श्री प्रेमसाय सिंह टेकाम जी भी उपस्थित रहे।",
-    "parsed": {
-      "event_type": "inauguration",
-      "event_date": "2025-10-17",
-      "locations": [
-        {
-          "name": "रायपुर",
-          "confidence": 0.9
-        }
-      ],
-      "people": [
-        "भूपेश बघेल",
-        "प्रेमसाय सिंह टेकाम"
-      ],
-      "organizations": [
-        "छत्तीसगढ़ सरकार"
-      ],
-      "schemes": [
-        "नई शिक्षा नीति"
-      ]
-    },
-    "confidence": 0.85,
-    "needs_review": false,
-    "review_status": "approved"
-  }
-];
+// Empty array - will be populated from API
+const initialTweets: any[] = [];
 
 const getEventTypeHindi = (eventType: string) => {
   const translations: Record<string, string> = {
@@ -124,7 +48,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ReviewQueueNew() {
-  const [tweets, setTweets] = useState(parsedTweets);
+  const [tweets, setTweets] = useState(initialTweets);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
@@ -142,6 +66,30 @@ export default function ReviewQueueNew() {
   const [aiInput, setAiInput] = useState('');
   const [tags, setTags] = useState(['शहरी विकास', 'हरित अवसंरचना', 'स्थिरता', 'शहरी नियोजन']);
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch tweets from API on component mount
+  useEffect(() => {
+    const fetchTweets = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/parsed-events?limit=200');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          setTweets(result.data);
+        } else {
+          console.error('Failed to fetch tweets:', result.error);
+        }
+      } catch (error) {
+        console.error('Error fetching tweets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTweets();
+  }, []);
 
   const currentTweet = tweets[currentIndex];
   
@@ -180,12 +128,46 @@ export default function ReviewQueueNew() {
   const handleApprove = async () => {
     if (!currentTweet) return;
     
-    const updatedTweets = [...tweets];
-    updatedTweets[currentIndex] = {
-      ...currentTweet,
-      review_status: 'approved',
-    };
-    setTweets(updatedTweets);
+    try {
+      // Update via API
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          updates: {
+            review_status: 'approved',
+            needs_review: false
+          }
+        })
+      });
+
+      if (response.ok) {
+        // Update local state
+        const updatedTweets = [...tweets];
+        updatedTweets[currentIndex] = {
+          ...currentTweet,
+          review_status: 'approved',
+          needs_review: false
+        };
+        setTweets(updatedTweets);
+        
+        // Move to next tweet
+        if (currentIndex < tweets.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+        }
+        
+        console.log('✅ Tweet approved successfully');
+      } else {
+        console.error('❌ Failed to approve tweet');
+        alert('ट्वीट को अनुमोदित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+      }
+    } catch (error) {
+      console.error('Error approving tweet:', error);
+      alert('ट्वीट को अनुमोदित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+    }
   };
 
   const handleSkip = async () => {
@@ -225,6 +207,17 @@ export default function ReviewQueueNew() {
     setTags(prev => prev.filter(t => t !== tag));
     setAvailableTags(prev => [...prev, tag]);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">समीक्षा डेटा लोड हो रहा है...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentTweet) {
     return (

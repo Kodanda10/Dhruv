@@ -54,6 +54,14 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
     const userInput = aiInput;
     setAiInput('');
 
+    // Add loading message
+    const loadingMessage = {
+      type: 'ai',
+      content: 'सोच रहा हूँ...',
+      suggestions: []
+    };
+    setMessages(prev => [...prev, loadingMessage]);
+
     try {
       // Call AI Assistant API
       const response = await fetch('/api/ai-assistant', {
@@ -69,11 +77,14 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
 
       const data = await response.json();
       
+      // Remove loading message
+      setMessages(prev => prev.slice(0, -1));
+      
       if (data.success) {
         const aiResponse = {
           type: 'ai',
           content: data.response,
-          suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं']
+          suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं', 'स्थान जोड़ें']
         };
         setMessages(prev => [...prev, aiResponse]);
       } else {
@@ -81,6 +92,9 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
       }
     } catch (error) {
       console.error('AI Assistant error:', error);
+      // Remove loading message
+      setMessages(prev => prev.slice(0, -1));
+      
       const errorResponse = {
         type: 'ai',
         content: 'क्षमा करें, मैं इस समय आपकी सहायता नहीं कर सकता। कृपया बाद में पुनः प्रयास करें।',
@@ -90,10 +104,8 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
     }
   };
 
-  const toggleTag = (tagName: string) => {
-    setTags(prev => prev.map(tag => 
-      tag.name === tagName ? { ...tag, active: !tag.active } : tag
-    ));
+  const handleSuggestionClick = (suggestion: string) => {
+    setAiInput(suggestion);
   };
 
   if (!isOpen) return null;
@@ -143,18 +155,19 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet }: AIAs
                       : 'bg-gray-800'
                   }`}>
                     {message.content}
-                    {message.suggestions && (
-                      <div className="mt-2 flex gap-2 text-sm">
-                        {message.suggestions.map((suggestion, i) => (
-                          <button 
-                            key={i}
-                            className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded-full"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                           {message.suggestions && (
+                             <div className="mt-2 flex gap-2 text-sm">
+                               {message.suggestions.map((suggestion, i) => (
+                                 <button
+                                   key={i}
+                                   onClick={() => handleSuggestionClick(suggestion)}
+                                   className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded-full cursor-pointer"
+                                 >
+                                   {suggestion}
+                                 </button>
+                               ))}
+                             </div>
+                           )}
                   </div>
                 </div>
               ))}
