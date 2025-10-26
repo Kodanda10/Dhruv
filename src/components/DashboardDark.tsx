@@ -62,8 +62,35 @@ export default function DashboardDark() {
 
   const parsed = useMemo(() => {
     const source = serverRows || parsedTweets;
-    return source.map((p: Post) => {
-      if (p.parsed && p.parsed.event_type) {
+    return source.map((p: any) => {
+      // Handle both old parsed structure and new database structure
+      const isDbData = p.locations !== undefined; // Database data has locations directly
+      
+      if (isDbData) {
+        // Database structure
+        const locations = (p.locations || []).map((l: any) => l.name || l);
+        const people = p.people_mentioned || [];
+        const orgs = p.organizations || [];
+        const schemes = p.schemes_mentioned || [];
+        
+        return {
+          id: p.id,
+          ts: p.event_date || p.parsed_at,
+          when: formatHindiDate(p.event_date || p.parsed_at),
+          where: locations,
+          what: [p.event_type || 'अन्य'],
+          which: {
+            mentions: people,
+            hashtags: [...orgs, ...schemes],
+          },
+          schemes: schemes,
+          how: p.content || `Tweet ID: ${p.tweet_id}`,
+          confidence: p.confidence,
+          needs_review: p.needs_review,
+          review_status: p.review_status,
+        };
+      } else if (p.parsed && p.parsed.event_type) {
+        // Old parsed structure
         const locations = (p.parsed.locations || []).map((l: any) => l.name || l);
         const people = p.parsed.people || [];
         const orgs = p.parsed.organizations || [];
@@ -81,11 +108,13 @@ export default function DashboardDark() {
           },
           schemes: schemes,
           how: p.content,
-          confidence: p.confidence,
+          confidence: p.parsed.confidence,
           needs_review: p.needs_review,
           review_status: p.review_status,
         };
       }
+      
+      // Fallback for unparsed data
       return {
         id: p.id,
         ts: p.timestamp,

@@ -22,12 +22,13 @@ export async function GET(request: NextRequest) {
         text,
         created_at,
         author_handle,
-        author_name,
-        lang,
         retweet_count,
         reply_count,
         like_count,
-        quote_count
+        quote_count,
+        hashtags,
+        mentions,
+        urls
       FROM raw_tweets 
       WHERE author_handle = 'OPChoudhary_Ind'
       ORDER BY created_at DESC

@@ -68,6 +68,68 @@ export default function ReviewQueueNew() {
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
   const [loading, setLoading] = useState(true);
 
+  // Add autocomplete for schemes/events
+  const [schemeSuggestions, setSchemeSuggestions] = useState<any[]>([]);
+  const [eventSuggestions, setEventSuggestions] = useState<any[]>([]);
+  const [showSchemeSuggestions, setShowSchemeSuggestions] = useState(false);
+  const [showEventSuggestions, setShowEventSuggestions] = useState(false);
+
+  // Fetch suggestions as user types
+  const fetchSuggestions = async (type: string, query: string) => {
+    try {
+      const response = await fetch(`/api/reference/learn?type=${type}&q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        if (type === 'scheme') {
+          setSchemeSuggestions(data.suggestions);
+          setShowSchemeSuggestions(true);
+        } else if (type === 'event_type') {
+          setEventSuggestions(data.suggestions);
+          setShowEventSuggestions(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    }
+  };
+
+  // When user adds new value, save to learning system
+  const handleAddNewValue = async (type: string, valueHi: string, valueEn?: string) => {
+    try {
+      const response = await fetch('/api/reference/learn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entity_type: type,
+          value_hi: valueHi,
+          value_en: valueEn || valueHi,
+          source_tweet_id: currentTweet?.tweet_id,
+          approved_by: 'human'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Show success message
+        alert('नया मान जोड़ा गया और सुझावों में सहेजा गया!');
+        
+        // Refresh suggestions
+        if (type === 'scheme') {
+          fetchSuggestions('scheme', '');
+        } else if (type === 'event_type') {
+          fetchSuggestions('event_type', '');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving new value:', error);
+      alert('नया मान सहेजने में त्रुटि हुई');
+    }
+  };
+
   // Fetch tweets from API on component mount
   useEffect(() => {
     const fetchTweets = async () => {
@@ -311,7 +373,110 @@ export default function ReviewQueueNew() {
 
           {/* Edit Mode */}
           {editMode && (
-            <div className="mt-6 flex flex-col">
+            <div className="mt-6 flex flex-col space-y-4">
+              {/* Event Type with Autocomplete */}
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-300 mb-2">घटना प्रकार</label>
+                <input
+                  type="text"
+                  className="w-full rounded-lg border border-gray-700 bg-[#0d1117] p-3 text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                  placeholder="घटना प्रकार खोजें..."
+                  value={editedData.event_type || ''}
+                  onChange={(e) => {
+                    setEditedData({...editedData, event_type: e.target.value});
+                    if (e.target.value.length > 1) {
+                      fetchSuggestions('event_type', e.target.value);
+                    }
+                  }}
+                  onFocus={() => setShowEventSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowEventSuggestions(false), 200)}
+                />
+                {showEventSuggestions && eventSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {eventSuggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className="p-3 hover:bg-gray-800 cursor-pointer text-gray-200 border-b border-gray-700 last:border-b-0"
+                        onClick={() => {
+                          setEditedData({...editedData, event_type: suggestion.name_hi});
+                          setShowEventSuggestions(false);
+                        }}
+                      >
+                        <div className="font-medium">{suggestion.name_hi}</div>
+                        <div className="text-sm text-gray-400">{suggestion.name_en} ({suggestion.category})</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Schemes with Autocomplete */}
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-300 mb-2">योजनाएं</label>
+                <input
+                  type="text"
+                  className="w-full rounded-lg border border-gray-700 bg-[#0d1117] p-3 text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                  placeholder="योजना खोजें..."
+                  value={editedData.schemes || ''}
+                  onChange={(e) => {
+                    setEditedData({...editedData, schemes: e.target.value});
+                    if (e.target.value.length > 1) {
+                      fetchSuggestions('scheme', e.target.value);
+                    }
+                  }}
+                  onFocus={() => setShowSchemeSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSchemeSuggestions(false), 200)}
+                />
+                {showSchemeSuggestions && schemeSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {schemeSuggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className="p-3 hover:bg-gray-800 cursor-pointer text-gray-200 border-b border-gray-700 last:border-b-0"
+                        onClick={() => {
+                          setEditedData({...editedData, schemes: suggestion.name_hi});
+                          setShowSchemeSuggestions(false);
+                        }}
+                      >
+                        <div className="font-medium">{suggestion.name_hi}</div>
+                        <div className="text-sm text-gray-400">{suggestion.name_en} ({suggestion.category})</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add New Value Button */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const newEventType = prompt('नया घटना प्रकार (हिंदी):');
+                    const newEventTypeEn = prompt('नया घटना प्रकार (अंग्रेजी):');
+                    if (newEventType) {
+                      handleAddNewValue('event_type', newEventType, newEventTypeEn);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  नया घटना प्रकार जोड़ें
+                </button>
+                <button
+                  onClick={() => {
+                    const newScheme = prompt('नई योजना (हिंदी):');
+                    const newSchemeEn = prompt('नई योजना (अंग्रेजी):');
+                    if (newScheme) {
+                      handleAddNewValue('scheme', newScheme, newSchemeEn);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  नई योजना जोड़ें
+                </button>
+              </div>
+
+              {/* Correction Reason */}
               <label className="flex flex-col">
                 <p className="pb-2 text-sm font-medium leading-normal text-gray-300">सुधार क्षेत्र</p>
                 <textarea 

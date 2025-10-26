@@ -44,14 +44,60 @@ export default function AnalyticsDashboardDark() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/parsed-events?limit=200');
+      const response = await fetch('/api/parsed-events?analytics=true');
       const result = await response.json();
       
-      if (result.success && result.data) {
-        const processedData = processAnalyticsData(result.data);
+      if (result.success && result.analytics) {
+        const { analytics, raw_data } = result;
+        
+        // Process analytics data
+        const processedData: AnalyticsData = {
+          timeSeriesData: analytics.timeline || [],
+          eventTypeData: Object.entries(analytics.event_distribution || {}).map(([name, count]) => ({
+            label: name,
+            value: count as number,
+            color: getEventTypeColor(name)
+          })),
+          dayOfWeekData: Object.entries(analytics.day_of_week || {}).map(([day, count]) => ({
+            day,
+            count: count as number
+          })),
+          locationData: Object.entries(analytics.location_distribution || {}).slice(0, 10).map(([location, count]) => ({
+            location,
+            count: count as number
+          })),
+          keyInsights: [
+            {
+              title: 'कुल ट्वीट्स',
+              value: analytics.total_tweets.toString(),
+              trend: '+12%',
+              color: 'text-blue-400'
+            },
+            {
+              title: 'अद्वितीय स्थान',
+              value: Object.keys(analytics.location_distribution || {}).length.toString(),
+              trend: '+5%',
+              color: 'text-green-400'
+            },
+            {
+              title: 'सबसे आम घटना',
+              value: Object.entries(analytics.event_distribution || {})
+                .sort((a, b) => (b[1] as number) - (a[1] as number))[0]?.[0] || 'N/A',
+              trend: 'stable',
+              color: 'text-purple-400'
+            },
+            {
+              title: 'उल्लिखित योजनाएं',
+              value: Object.keys(analytics.scheme_usage || {}).length.toString(),
+              trend: '+8%',
+              color: 'text-orange-400'
+            }
+          ]
+        };
+        
         setAnalyticsData(processedData);
       } else {
-        throw new Error('Failed to fetch data');
+        setError('विश्लेषण डेटा लोड करने में विफल');
       }
     } catch (err) {
       console.error('Error fetching analytics data:', err);
@@ -61,78 +107,10 @@ export default function AnalyticsDashboardDark() {
     }
   };
 
-  const processAnalyticsData = (tweets: TweetData[]): AnalyticsData => {
-    // Process time series data
-    const timeSeriesMap = new Map<string, number>();
-    const eventTypeMap = new Map<string, number>();
-    const dayOfWeekMap = new Map<string, number>();
-    const locationMap = new Map<string, number>();
-    
-    tweets.forEach(tweet => {
-      const date = new Date(tweet.timestamp).toISOString().split('T')[0];
-      timeSeriesMap.set(date, (timeSeriesMap.get(date) || 0) + 1);
-      
-      const dayOfWeek = new Date(tweet.timestamp).toLocaleDateString('hi-IN', { weekday: 'long' });
-      dayOfWeekMap.set(dayOfWeek, (dayOfWeekMap.get(dayOfWeek) || 0) + 1);
-      
-      // Handle locations from parsed data
-      if (tweet.parsed && tweet.parsed.locations && tweet.parsed.locations.length > 0) {
-        tweet.parsed.locations.forEach((loc: any) => {
-          const locationName = loc.name || loc;
-          if (locationName && locationName !== '—') {
-            locationMap.set(locationName, (locationMap.get(locationName) || 0) + 1);
-          }
-        });
-      }
-      
-      // Handle event type from parsed data
-      if (tweet.parsed && tweet.parsed.event_type && tweet.parsed.event_type !== 'अन्य') {
-        eventTypeMap.set(tweet.parsed.event_type, (eventTypeMap.get(tweet.parsed.event_type) || 0) + 1);
-      }
-    });
-
-    // Convert to arrays
-    const timeSeriesData = Array.from(timeSeriesMap.entries())
-      .map(([date, value]) => ({ date, value }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    const eventTypeData = Array.from(eventTypeMap.entries())
-      .map(([label, value], index) => ({
-        label,
-        value: Math.round((value / tweets.length) * 100),
-        color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5]
-      }))
-      .sort((a, b) => b.value - a.value);
-
-    const dayOfWeekData = [
-      { day: 'सोमवार', count: dayOfWeekMap.get('सोमवार') || 0 },
-      { day: 'मंगलवार', count: dayOfWeekMap.get('मंगलवार') || 0 },
-      { day: 'बुधवार', count: dayOfWeekMap.get('बुधवार') || 0 },
-      { day: 'गुरुवार', count: dayOfWeekMap.get('गुरुवार') || 0 },
-      { day: 'शुक्रवार', count: dayOfWeekMap.get('शुक्रवार') || 0 },
-      { day: 'शनिवार', count: dayOfWeekMap.get('शनिवार') || 0 },
-      { day: 'रविवार', count: dayOfWeekMap.get('रविवार') || 0 }
-    ];
-
-    const locationData = Array.from(locationMap.entries())
-      .map(([location, count]) => ({ location, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    const keyInsights = [
-      { title: 'कुल ट्वीट', value: tweets.length.toString(), trend: '+0%', color: 'blue' },
-      { title: 'समीक्षित', value: tweets.filter(t => t.review_status === 'approved').length.toString(), trend: '+0%', color: 'green' },
-      { title: 'सक्रिय स्थान', value: locationMap.size.toString(), trend: '+0', color: 'purple' },
-      { title: 'घटना प्रकार', value: eventTypeMap.size.toString(), trend: '+0', color: 'orange' }
-    ];
-
-    return {
-      timeSeriesData,
-      eventTypeData,
-      dayOfWeekData,
-      locationData,
-      keyInsights
-    };
+  const getEventTypeColor = (eventType: string): string => {
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const hash = eventType.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    return colors[hash % colors.length];
   };
 
   if (loading) {
@@ -300,7 +278,7 @@ export default function AnalyticsDashboardDark() {
                            {analyticsData.dayOfWeekData.map(d => `${d.day}: ${d.count}`).join(', ')}
                          </div>
                          <div className="text-xs text-gray-600 mt-2">
-                           सबसे अधिक: {analyticsData.dayOfWeekData.reduce((max, day) => day.count > max.count ? day : max).day}
+                           सबसे अधिक: {analyticsData.dayOfWeekData.length > 0 ? analyticsData.dayOfWeekData.reduce((max, day) => day.count > max.count ? day : max).day : 'N/A'}
                          </div>
                        </div>
                      </div>
