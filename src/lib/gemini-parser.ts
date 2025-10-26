@@ -379,29 +379,59 @@ export async function saveParsedTweetToDatabase(tweetId: string, parsedData: any
     // Determine if review is needed (confidence < 0.7)
     const needsReview = confidence < 0.7;
 
-    // Insert into parsed_events table
+    // Insert into parsed_events table with all enhanced fields
     const insertQuery = `
       INSERT INTO parsed_events (
-        tweet_id, event_type, event_date, locations, people_mentioned, 
-        organizations, schemes_mentioned, overall_confidence, needs_review, 
-        review_status, parsed_at, parsed_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), 'gemini')
-      RETURNING id, tweet_id, event_type, event_date, locations, 
-                people_mentioned, organizations, schemes_mentioned, 
-                overall_confidence, needs_review, review_status, parsed_at
+        tweet_id, event_type, event_type_en, event_code, event_date, 
+        locations, people_mentioned, organizations, schemes_mentioned, schemes_en,
+        overall_confidence, needs_review, review_status, reasoning,
+        matched_scheme_ids, matched_event_id, generated_hashtags,
+        parsed_at, parsed_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), $18)
+      ON CONFLICT (tweet_id) DO UPDATE SET
+        event_type = EXCLUDED.event_type,
+        event_type_en = EXCLUDED.event_type_en,
+        event_code = EXCLUDED.event_code,
+        event_date = EXCLUDED.event_date,
+        locations = EXCLUDED.locations,
+        people_mentioned = EXCLUDED.people_mentioned,
+        organizations = EXCLUDED.organizations,
+        schemes_mentioned = EXCLUDED.schemes_mentioned,
+        schemes_en = EXCLUDED.schemes_en,
+        overall_confidence = EXCLUDED.overall_confidence,
+        needs_review = EXCLUDED.needs_review,
+        review_status = EXCLUDED.review_status,
+        reasoning = EXCLUDED.reasoning,
+        matched_scheme_ids = EXCLUDED.matched_scheme_ids,
+        matched_event_id = EXCLUDED.matched_event_id,
+        generated_hashtags = EXCLUDED.generated_hashtags,
+        parsed_at = NOW(),
+        parsed_by = EXCLUDED.parsed_by
+      RETURNING id, tweet_id, event_type, event_type_en, event_code, event_date, 
+                locations, people_mentioned, organizations, schemes_mentioned, schemes_en,
+                overall_confidence, needs_review, review_status, reasoning,
+                matched_scheme_ids, matched_event_id, generated_hashtags, parsed_at
     `;
 
     const result = await pool.query(insertQuery, [
       tweetId,
       event_type,
+      event_type_en,
+      event_code,
       date,
       JSON.stringify(locations),
       people,
       organizations,
       schemes,
+      schemes_en,
       confidence.toString(),
       needsReview,
-      'pending'
+      'pending',
+      reasoning,
+      JSON.stringify(matched_scheme_ids || []),
+      matched_event_id,
+      JSON.stringify(parsedData.generated_hashtags || []),
+      'gemini'
     ]);
 
     return result.rows[0];
