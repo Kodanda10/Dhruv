@@ -7,13 +7,14 @@ import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getEventTypeHindi } from '@/lib/eventTypes';
+import { useSortableTable, SortField } from '@/hooks/useSortableTable';
+import { usePolling } from '@/hooks/usePolling';
 import type { Route } from 'next';
 
 type Post = { id: string | number; timestamp: string; content: string; parsed?: any; confidence?: number; needs_review?: boolean; review_status?: string };
 
 export default function DashboardDark() {
   const [locFilter, setLocFilter] = useState('');
-  const [serverRows, setServerRows] = useState<any[] | null>(null);
   const [tagFilter, setTagFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -35,19 +36,29 @@ export default function DashboardDark() {
     setActionFilter(action);
   }, [searchParams]);
 
-  // Fetch server-side parsed events (if API available)
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
-        if (mounted && res.success) setServerRows(res.data);
-      } catch {
-        // ignore; fallback to local file
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
+  // Fetch server-side parsed events with polling
+  const fetchParsedEvents = async () => {
+    try {
+      const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
+      if (res.success) return res.data;
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const { 
+    data: serverRows, 
+    isLoading: isPolling, 
+    hasNewData, 
+    clearNewDataNotification 
+  } = usePolling(fetchParsedEvents, {
+    interval: 30000, // 30 seconds
+    enabled: true,
+    onNewData: (newData, previousData) => {
+      console.log(`New tweets detected: ${newData.length - previousData.length} new tweets`);
+    }
+  });
 
   const parsed = useMemo(() => {
     const source = serverRows || parsedTweets;
@@ -130,11 +141,49 @@ export default function DashboardDark() {
     return rows;
   }, [parsed, locFilter, tagFilter, actionFilter, fromDate, toDate]);
 
+  // Add sorting functionality
+  const getFieldValue = (item: any, field: SortField) => {
+    switch (field) {
+      case 'date':
+        return new Date(item.ts).getTime();
+      case 'location':
+        return item.where?.[0] || '';
+      case 'event_type':
+        return item.what?.[0] || '';
+      case 'tags':
+        return [...(item.which?.hashtags || []), ...(item.which?.mentions || [])].join(' ');
+      case 'content':
+        return item.how || '';
+      default:
+        return '';
+    }
+  };
+
+  const { sortedData, handleSort, getSortIcon } = useSortableTable(filtered, getFieldValue);
+
   const totalCount = parsed.length;
   const shownCount = filtered.length;
 
   return (
     <section>
+      {/* New Data Notification */}
+      {hasNewData && (
+        <div className="mb-4 bg-green-900/50 border border-green-700 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-green-400">refresh</span>
+            <span className="text-green-300 text-sm font-medium">
+              नए ट्वीट उपलब्ध हैं! पेज रिफ्रेश करें या नीचे स्क्रॉल करें।
+            </span>
+          </div>
+          <button
+            onClick={clearNewDataNotification}
+            className="text-green-400 hover:text-green-300 text-sm underline"
+          >
+            छुपाएं
+          </button>
+        </div>
+      )}
+
       <div className="mb-4 flex items-end gap-4 flex-wrap bg-[#192734] border border-gray-800 rounded-xl p-4 shadow-sm">
         <label className="text-sm font-medium text-gray-300">
           स्थान फ़िल्टर
@@ -207,15 +256,85 @@ export default function DashboardDark() {
           </colgroup>
           <thead className="bg-[#0d1117] text-gray-300">
             <tr>
-              <th className="text-left font-semibold p-2 border-b border-gray-700">दिन / दिनांक</th>
-              <th className="text-left font-semibold p-2 border-b border-l border-gray-700">स्थान</th>
-              <th className="text-left font-semibold p-2 border-b border-l border-gray-700">दौरा / कार्यक्रम</th>
-              <th className="text-left font-semibold p-2 border-b border-l border-gray-700 w-[14%]">कौन/टैग</th>
-              <th className="text-left font-semibold p-2 border-b border-l border-gray-700 w-[38%]">विवरण</th>
+              <th 
+                className="text-center font-semibold p-2 border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => handleSort('date')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSort('date');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Sort by date"
+              >
+                दिन / दिनांक {getSortIcon('date')}
+              </th>
+              <th 
+                className="text-center font-semibold p-2 border-b border-l border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => handleSort('location')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSort('location');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Sort by location"
+              >
+                स्थान {getSortIcon('location')}
+              </th>
+              <th 
+                className="text-center font-semibold p-2 border-b border-l border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => handleSort('event_type')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSort('event_type');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Sort by event type"
+              >
+                दौरा / कार्यक्रम {getSortIcon('event_type')}
+              </th>
+              <th 
+                className="text-center font-semibold p-2 border-b border-l border-gray-700 w-[14%] cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => handleSort('tags')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSort('tags');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Sort by tags"
+              >
+                कौन/टैग {getSortIcon('tags')}
+              </th>
+              <th 
+                className="text-center font-semibold p-2 border-b border-l border-gray-700 w-[38%] cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => handleSort('content')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSort('content');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Sort by content"
+              >
+                विवरण {getSortIcon('content')}
+              </th>
             </tr>
           </thead>
           <tbody className="bg-[#192734]" data-testid="tbody">
-            {filtered.map((row, index) => (
+            {sortedData.map((row, index) => (
               <tr key={row.id} className={`align-top hover:bg-gray-800`}>
                 <td className="p-2 border-b border-gray-700 whitespace-nowrap">{row.when}</td>
                 <td className="p-2 border-b border-l border-gray-700">{row.where.join(', ') || '—'}</td>
