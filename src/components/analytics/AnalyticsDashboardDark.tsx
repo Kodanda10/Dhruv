@@ -44,7 +44,7 @@ export default function AnalyticsDashboardDark() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/parsed-events?analytics=true');
+      const response = await fetch('/api/analytics');
       const result = await response.json();
       
       if (result.success && result.analytics) {
@@ -237,68 +237,131 @@ export default function AnalyticsDashboardDark() {
             {/* Time Series Chart */}
             <div className="lg:col-span-2">
               <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4 text-white">समय के साथ गतिविधि</h3>
-                     <div className="h-64 bg-[#0d1117] rounded-lg flex items-center justify-center">
-                       <div className="text-center">
-                         <p className="text-gray-400 mb-2">समय के साथ गतिविधि</p>
-                         <div className="text-sm text-gray-500">
-                           {analyticsData.timeSeriesData.slice(-5).map(d => `${d.date}: ${d.value}`).join(', ')}
-                         </div>
-                         <div className="text-xs text-gray-600 mt-2">
-                           कुल {analyticsData.timeSeriesData.length} दिनों का डेटा
-                         </div>
-                       </div>
-                     </div>
+                <h3 className="text-lg font-semibold mb-4 text-white">समय के साथ गतिविधि (30 दिन)</h3>
+                <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
+                  <div className="space-y-2">
+                    {analyticsData.timeSeriesData.slice(-10).map((d, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-800 rounded">
+                        <span className="text-sm text-gray-300">{d.date}</span>
+                        <div className="flex items-center">
+                          <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{ width: `${(d.count / Math.max(...analyticsData.timeSeriesData.map(t => t.count))) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-white font-medium">{d.count}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Event Type Pie Chart */}
+            {/* Event Type Distribution */}
             <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">घटना प्रकार वितरण</h3>
-                     <div className="h-64 bg-[#0d1117] rounded-lg flex items-center justify-center">
-                       <div className="text-center">
-                         <p className="text-gray-400 mb-2">घटना प्रकार वितरण</p>
-                         <div className="text-sm text-gray-500">
-                           {analyticsData.eventTypeData.map(d => `${d.label}: ${d.value}%`).join(', ')}
-                         </div>
-                         <div className="text-xs text-gray-600 mt-2">
-                           कुल {analyticsData.eventTypeData.length} प्रकार
-                         </div>
-                       </div>
-                     </div>
+              <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
+                <div className="space-y-3">
+                  {analyticsData.eventTypeData.map((d, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-3" 
+                          style={{ backgroundColor: d.color }}
+                        ></div>
+                        <span className="text-sm text-gray-300">{d.label}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-16 bg-gray-700 rounded-full h-2 mr-2">
+                          <div 
+                            className="h-2 rounded-full" 
+                            style={{ 
+                              width: `${(d.value / analyticsData.keyInsights[0].value) * 100}%`,
+                              backgroundColor: d.color
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-white font-medium">{d.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Day of Week Chart */}
             <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">सप्ताह के दिन के अनुसार गतिविधि</h3>
-                     <div className="h-64 bg-[#0d1117] rounded-lg flex items-center justify-center">
-                       <div className="text-center">
-                         <p className="text-gray-400 mb-2">सप्ताह के दिन के अनुसार गतिविधि</p>
-                         <div className="text-sm text-gray-500">
-                           {analyticsData.dayOfWeekData.map(d => `${d.day}: ${d.count}`).join(', ')}
-                         </div>
-                         <div className="text-xs text-gray-600 mt-2">
-                           सबसे अधिक: {analyticsData.dayOfWeekData.length > 0 ? analyticsData.dayOfWeekData.reduce((max, day) => day.count > max.count ? day : max).day : 'N/A'}
-                         </div>
-                       </div>
-                     </div>
+              <div className="h-64 bg-[#0d1117] rounded-lg p-4">
+                <div className="space-y-3">
+                  {analyticsData.dayOfWeekData.map((d, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-300">{d.day}</span>
+                      <div className="flex items-center">
+                        <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full" 
+                            style={{ width: `${(d.count / Math.max(...analyticsData.dayOfWeekData.map(day => day.count))) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-white font-medium">{d.count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Location Section */}
+          {/* Location Distribution */}
           <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">स्थान वितरण</h3>
-                   <div className="h-64 bg-[#0d1117] rounded-lg flex items-center justify-center">
-                     <div className="text-center">
-                       <p className="text-gray-400 mb-2">स्थान वितरण</p>
-                       <div className="text-sm text-gray-500">
-                         {analyticsData.locationData.map(d => `${d.location}: ${d.count}`).join(', ')}
-                       </div>
-                       <div className="text-xs text-gray-600 mt-2">
-                         कुल {analyticsData.locationData.length} स्थान
-                       </div>
-                     </div>
-                   </div>
+            <h3 className="text-lg font-semibold mb-4 text-white">स्थान वितरण (Top 10)</h3>
+            <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
+              <div className="space-y-3">
+                {analyticsData.locationData.slice(0, 10).map((d, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-300">{d.location}</span>
+                    <div className="flex items-center">
+                      <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
+                        <div 
+                          className="bg-purple-500 h-2 rounded-full" 
+                          style={{ width: `${(d.count / Math.max(...analyticsData.locationData.map(loc => loc.count))) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-white font-medium">{d.count}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Scheme Usage */}
+          <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4 text-white">योजना उपयोग (Top 10)</h3>
+            <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
+              <div className="space-y-3">
+                {Object.entries(analyticsData.scheme_usage || {})
+                  .sort((a, b) => (b[1] as number) - (a[1] as number))
+                  .slice(0, 10)
+                  .map(([scheme, count], index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-300">{scheme}</span>
+                      <div className="flex items-center">
+                        <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
+                          <div 
+                            className="bg-orange-500 h-2 rounded-full" 
+                            style={{ width: `${(count as number / Math.max(...Object.values(analyticsData.scheme_usage || {}))) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-white font-medium">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
