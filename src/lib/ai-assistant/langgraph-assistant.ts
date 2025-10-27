@@ -99,9 +99,13 @@ export class LangGraphAIAssistant {
   async processMessage(
     message: string, 
     tweetData: TweetData,
-    useBothModels: boolean = false
-  ): Promise<AIResponse> {
+    useBothModels: boolean = false,
+    sessionId?: string
+  ): Promise<AIResponse & { sessionId: string; modelUsed: string; context: ConversationContext }> {
     try {
+      // Generate session ID if not provided
+      const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       // Update state with current tweet
       this.state.currentTweet = tweetData;
       
@@ -128,11 +132,23 @@ export class LangGraphAIAssistant {
         model: this.state.modelUsed
       });
       
-      return response;
+      // Return response with session ID, model used, and context
+      return {
+        ...response,
+        sessionId: currentSessionId,
+        modelUsed: this.state.modelUsed,
+        context: { ...this.state.context }
+      };
       
     } catch (error) {
       console.error('AI Assistant error:', error);
-      return this.handleError(error);
+      const errorResponse = this.handleError(error);
+      return {
+        ...errorResponse,
+        sessionId: sessionId || `error_session_${Date.now()}`,
+        modelUsed: 'error',
+        context: { ...this.state.context }
+      };
     }
   }
 
@@ -180,35 +196,68 @@ export class LangGraphAIAssistant {
   }
 
   /**
-   * Simple fallback intent parsing
+   * Simple fallback intent parsing with Hindi/English support
    */
   private simpleIntentParsing(message: string): ParsedIntent {
     const lowerMessage = message.toLowerCase();
     
-    if (lowerMessage.includes('add') && lowerMessage.includes('location')) {
+    // Hindi keywords for location
+    const locationKeywords = ['स्थान', 'location', 'जोड़ें', 'add'];
+    const eventKeywords = ['कार्यक्रम', 'दौरा', 'event', 'type', 'change', 'बदलें'];
+    const schemeKeywords = ['योजना', 'scheme', 'program'];
+    
+    // Check for location intent (Hindi or English)
+    if ((lowerMessage.includes('स्थान') || lowerMessage.includes('location')) && 
+        (lowerMessage.includes('जोड़ें') || lowerMessage.includes('add'))) {
+      // Extract locations from message
+      const locations: string[] = [];
+      const locationPattern = /(?:स्थान.*?|location.*?)(?:जोड़ें|add).*?((?:रायपुर|बिलासपुर|दुर्ग|रायगढ़|अंतागढ़|छत्तीसगढ़|[A-Z][a-z]+)(?:,\s*(?:रायपुर|बिलासपुर|दुर्ग|रायगढ़|अंतागढ़|छत्तीसगढ़|[A-Z][a-z]+))*)/i;
+      const match = message.match(locationPattern);
+      if (match) {
+        locations.push(...match[1].split(/[,\s]+/).filter(l => l.trim()));
+      }
+      
       return {
         intent: 'add_location',
-        entities: { locations: [], event_types: [], schemes: [], people: [] },
+        entities: { locations, event_types: [], schemes: [], people: [] },
         actions: ['addLocation'],
-        confidence: 0.7
+        confidence: 0.8
       };
     }
     
-    if (lowerMessage.includes('change') && lowerMessage.includes('event')) {
+    // Check for event type change intent
+    if ((eventKeywords.some(keyword => message.includes(keyword))) && 
+        (lowerMessage.includes('change') || lowerMessage.includes('बदलें'))) {
+      const eventTypes: string[] = [];
+      const eventPattern = /(?:change|बदलें).*?(?:to|से|में).*?((?:बैठक|कार्यक्रम|रैली|शिलान्यास|उद्घाटन|बैठक|meeting|event|rally))/i;
+      const match = message.match(eventPattern);
+      if (match) {
+        eventTypes.push(match[1]);
+      }
+      
       return {
         intent: 'change_event',
-        entities: { locations: [], event_types: [], schemes: [], people: [] },
+        entities: { locations: [], event_types: eventTypes, schemes: [], people: [] },
         actions: ['changeEventType'],
-        confidence: 0.7
+        confidence: 0.8
       };
     }
     
-    if (lowerMessage.includes('add') && lowerMessage.includes('scheme')) {
+    // Check for scheme addition intent
+    if ((lowerMessage.includes('योजना') || lowerMessage.includes('scheme')) && 
+        (lowerMessage.includes('add') || lowerMessage.includes('जोड़ें'))) {
+      const schemes: string[] = [];
+      const schemePattern = /(?:add|जोड़ें).*?((?:PM Kisan|Ayushman|Ujjwala|PM Kisan|मुख्यमंत्री|युवा).*?)/i;
+      const match = message.match(schemePattern);
+      if (match) {
+        schemes.push(match[1]);
+      }
+      
       return {
         intent: 'add_scheme',
-        entities: { locations: [], event_types: [], schemes: [], people: [] },
+        entities: { locations: [], event_types: [], schemes, people: [] },
         actions: ['addScheme'],
-        confidence: 0.7
+        confidence: 0.8
       };
     }
     
@@ -301,17 +350,29 @@ export class LangGraphAIAssistant {
     for (const action of intent.actions) {
       switch (action) {
         case 'addLocation':
-          const locationResult = await this.addLocation(intent.entities.locations);
+          // If entities were extracted, use them; otherwise use suggestions
+          const locations = intent.entities.locations.length > 0 
+            ? intent.entities.locations 
+            : suggestions.locations.slice(0, 3); // Top 3 suggestions
+          const locationResult = await this.addLocation(locations);
           if (locationResult) pendingChanges.push(locationResult);
           break;
           
         case 'changeEventType':
-          const eventResult = await this.changeEventType(intent.entities.event_types);
+          // If entities were extracted, use them; otherwise use suggestions
+          const eventTypes = intent.entities.event_types.length > 0 
+            ? intent.entities.event_types 
+            : suggestions.eventTypes.slice(0, 1); // Top 1 suggestion
+          const eventResult = await this.changeEventType(eventTypes);
           if (eventResult) pendingChanges.push(eventResult);
           break;
           
         case 'addScheme':
-          const schemeResult = await this.addScheme(intent.entities.schemes);
+          // If entities were extracted, use them; otherwise use suggestions
+          const schemes = intent.entities.schemes.length > 0 
+            ? intent.entities.schemes 
+            : suggestions.schemes.slice(0, 3); // Top 3 suggestions
+          const schemeResult = await this.addScheme(schemes);
           if (schemeResult) pendingChanges.push(schemeResult);
           break;
           
@@ -344,20 +405,28 @@ export class LangGraphAIAssistant {
     }
     
     try {
-      const suggestions = await this.learningSystem.getIntelligentSuggestions(
-        this.state.currentTweet.tweet_id,
-        this.state.currentTweet.text
-      );
+      // Call dynamic learning system with proper LearningContext
+      const suggestions = await this.learningSystem.getIntelligentSuggestions({
+        tweetText: this.state.currentTweet.text,
+        currentParsed: this.state.currentTweet
+      });
       
+      // Transform SuggestionResult to AISuggestions format
       return {
-        locations: suggestions.locations || [],
-        eventTypes: suggestions.eventTypes || [],
-        schemes: suggestions.schemes || [],
+        locations: (suggestions.locations || []).map(l => l.value_hi || l.value_en || l.value),
+        eventTypes: (suggestions.eventTypes || []).map(e => e.name_hi || e.name_en || e),
+        schemes: (suggestions.schemes || []).map(s => s.name_hi || s.name_en || s),
         hashtags: suggestions.hashtags || []
       };
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      return { locations: [], eventTypes: [], schemes: [], hashtags: [] };
+      // Return fallback suggestions based on current tweet data
+      return {
+        locations: this.state.currentTweet.locations || [],
+        eventTypes: this.state.currentTweet.event_type ? [this.state.currentTweet.event_type] : [],
+        schemes: this.state.currentTweet.schemes_mentioned || [],
+        hashtags: this.state.currentTweet.hashtags || []
+      };
     }
   }
 

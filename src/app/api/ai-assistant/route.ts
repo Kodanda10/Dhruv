@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     const aiResponse = await aiAssistant.processMessage(
       message,
       tweetData || {},
-      useBothModels
+      useBothModels,
+      currentSessionId
     );
 
     // Update conversation context
