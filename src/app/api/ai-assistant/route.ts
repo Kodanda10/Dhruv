@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { aiAssistant } from '@/lib/ai-assistant/langgraph-assistant';
+import { getAIAssistant } from '@/lib/ai-assistant/langgraph-assistant';
 import { contextManager } from '@/lib/ai-assistant/context-manager';
 import { modelOrchestrator } from '@/lib/ai-assistant/model-manager';
 
@@ -26,8 +26,11 @@ export async function POST(request: NextRequest) {
     // Get or create conversation context
     const context = contextManager.getOrCreateContext(currentSessionId, tweetData?.tweet_id);
 
+    // Get session-aware AI Assistant instance
+    const aiAssistantInstance = getAIAssistant(currentSessionId);
+
     // Process message with AI Assistant
-    const aiResponse = await aiAssistant.processMessage(
+    const aiResponse = await aiAssistantInstance.processMessage(
       message,
       tweetData || {},
       useBothModels,

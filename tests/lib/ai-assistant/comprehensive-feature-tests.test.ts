@@ -293,22 +293,28 @@ describe('Feature 5: Conversation Context Management', () => {
     const tweet = realTweets[0];
     const sessionId = `persistent-session-${Date.now()}`;
     
-    // First interaction
-    await aiAssistant.processMessage(
+    // First interaction with session
+    const result1 = await aiAssistant.processMessage(
       'add location रायपुर',
       tweet,
-      false
+      false,
+      sessionId
     );
+    
+    expect(result1.pendingChanges.length).toBeGreaterThan(0);
     
     // Second interaction with same session
-    const result = await aiAssistant.processMessage(
+    const result2 = await aiAssistant.processMessage(
       'what did I just add?',
       tweet,
-      false
+      false,
+      sessionId
     );
     
-    expect(result.context?.stage).toBeDefined();
-    expect(result.context?.focusField).toBeDefined();
+    // Session should maintain context
+    expect(result2.context?.stage).toBeDefined();
+    expect(result2.sessionId).toBe(sessionId);
+    expect(result2.context?.previousActions.length).toBeGreaterThan(0);
   });
 });
 

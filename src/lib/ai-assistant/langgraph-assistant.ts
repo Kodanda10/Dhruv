@@ -67,30 +67,59 @@ export interface ConversationContext {
   previousActions: string[];
 }
 
+// Session storage (in production, use Redis or database)
+const sessionStore = new Map<string, AIAssistantState>();
+
 // AI Assistant Core Class
 export class LangGraphAIAssistant {
   private gemini: GoogleGenerativeAI;
   private learningSystem: DynamicLearningSystem;
   private state: AIAssistantState;
   private ollamaEndpoint: string;
+  private currentSessionId: string;
 
-  constructor() {
+  constructor(sessionId?: string) {
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     this.learningSystem = new DynamicLearningSystem();
     this.ollamaEndpoint = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    this.currentSessionId = sessionId || '';
     
-    this.state = {
-      conversationHistory: [],
-      currentTweet: null,
-      pendingChanges: [],
-      context: {
-        stage: 'analyzing',
-        previousActions: []
-      },
-      modelUsed: 'gemini',
-      lastAction: '',
-      confidence: 0
-    };
+    // Initialize or restore state
+    if (sessionId && sessionStore.has(sessionId)) {
+      this.state = sessionStore.get(sessionId)!;
+    } else {
+      this.state = {
+        conversationHistory: [],
+        currentTweet: null,
+        pendingChanges: [],
+        context: {
+          stage: 'analyzing',
+          previousActions: []
+        },
+        modelUsed: 'gemini',
+        lastAction: '',
+        confidence: 0
+      };
+    }
+  }
+
+  /**
+   * Save current state to session store
+   */
+  private saveState(): void {
+    if (this.currentSessionId) {
+      sessionStore.set(this.currentSessionId, { ...this.state });
+    }
+  }
+
+  /**
+   * Restore state from session store
+   */
+  private restoreState(sessionId: string): void {
+    if (sessionStore.has(sessionId)) {
+      this.state = sessionStore.get(sessionId)!;
+      this.currentSessionId = sessionId;
+    }
   }
 
   /**
@@ -103,8 +132,15 @@ export class LangGraphAIAssistant {
     sessionId?: string
   ): Promise<AIResponse & { sessionId: string; modelUsed: string; context: ConversationContext }> {
     try {
-      // Generate session ID if not provided
+      // Generate or restore session ID
       const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Restore state if this is an existing session
+      if (sessionId && this.currentSessionId !== sessionId) {
+        this.restoreState(sessionId);
+      }
+      
+      this.currentSessionId = currentSessionId;
       
       // Update state with current tweet
       this.state.currentTweet = tweetData;
@@ -132,6 +168,9 @@ export class LangGraphAIAssistant {
         model: this.state.modelUsed
       });
       
+      // Save state to session store
+      this.saveState();
+      
       // Return response with session ID, model used, and context
       return {
         ...response,
@@ -143,6 +182,7 @@ export class LangGraphAIAssistant {
     } catch (error) {
       console.error('AI Assistant error:', error);
       const errorResponse = this.handleError(error);
+      this.saveState(); // Save state even on error
       return {
         ...errorResponse,
         sessionId: sessionId || `error_session_${Date.now()}`,
@@ -586,6 +626,11 @@ export interface AISuggestions {
   hashtags: string[];
 }
 
-// Export singleton instance
+// Export factory function for session-aware instances
+export function getAIAssistant(sessionId?: string): LangGraphAIAssistant {
+  return new LangGraphAIAssistant(sessionId);
+}
+
+// Export singleton for backward compatibility (no session)
 export const aiAssistant = new LangGraphAIAssistant();
 
