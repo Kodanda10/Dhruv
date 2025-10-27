@@ -120,7 +120,7 @@ export default function HumanReviewSimple() {
             {editingId === tweet.id ? (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-teal-200 mb-1">घटना प्रकार (Event Type)</label>
+                  <label className="block text-sm text-teal-200 mb-1">दौरा/कार्यक्रम (Event Type)</label>
                   <input
                     type="text"
                     value={editForm.event_type}

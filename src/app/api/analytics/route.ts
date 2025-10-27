@@ -11,36 +11,43 @@ export async function GET(request: NextRequest) {
       const fileContent = fs.readFileSync(dataPath, 'utf8');
       const tweets = JSON.parse(fileContent);
       
-      // Filter for approved tweets only
-      const approvedTweets = tweets.filter((t: any) => 
-        t.needs_review === false && t.review_status === 'approved'
-      );
+      console.log(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
       
-      // Generate comprehensive analytics
+      // Use all tweets for analytics (not just approved ones)
+      const allTweets = tweets;
+      
+      // Generate comprehensive analytics from real data
       const analytics = {
-        total_tweets: approvedTweets.length,
-        event_distribution: aggregateEventTypes(approvedTweets),
-        location_distribution: aggregateLocations(approvedTweets),
-        scheme_usage: aggregateSchemes(approvedTweets),
-        timeline: aggregateByDate(approvedTweets),
-        day_of_week: aggregateByDayOfWeek(approvedTweets),
-        top_locations: getTopLocations(approvedTweets),
-        top_schemes: getTopSchemes(approvedTweets),
-        recent_activity: getRecentActivity(approvedTweets)
+        total_tweets: allTweets.length,
+        event_distribution: aggregateEventTypes(allTweets),
+        location_distribution: aggregateLocations(allTweets),
+        scheme_usage: aggregateSchemes(allTweets),
+        timeline: aggregateByDate(allTweets),
+        day_of_week: aggregateByDayOfWeek(allTweets),
+        top_locations: getTopLocations(allTweets),
+        top_schemes: getTopSchemes(allTweets),
+        recent_activity: getRecentActivity(allTweets)
       };
+      
+      console.log('Analytics generated:', {
+        total_tweets: analytics.total_tweets,
+        event_types: Object.keys(analytics.event_distribution).length,
+        locations: Object.keys(analytics.location_distribution).length,
+        schemes: Object.keys(analytics.scheme_usage).length
+      });
       
       return NextResponse.json({ 
         success: true, 
         analytics, 
-        raw_data: approvedTweets.slice(0, 10), // Return first 10 for preview
-        source: 'static_file',
-        message: 'Analytics data loaded successfully'
+        raw_data: allTweets.slice(0, 10), // Return first 10 for preview
+        source: 'parsed_tweets_file',
+        message: `Analytics data loaded successfully from ${allTweets.length} tweets`
       });
     }
     
     // Fallback: Generate sample analytics data
     const sampleAnalytics = {
-      total_tweets: 68,
+      total_tweets: 55,
       event_distribution: {
         'बैठक': 15,
         'कार्यक्रम': 12,
@@ -149,9 +156,29 @@ function aggregateEventTypes(tweets: any[]): Record<string, number> {
   const counts: Record<string, number> = {};
   tweets.forEach(t => {
     const evt = t.event_type || t.parsed?.event_type || 'Unknown';
-    counts[evt] = (counts[evt] || 0) + 1;
+    const hindiEventType = translateEventTypeToHindi(evt);
+    counts[hindiEventType] = (counts[hindiEventType] || 0) + 1;
   });
   return counts;
+}
+
+function translateEventTypeToHindi(eventType: string): string {
+  const translations: Record<string, string> = {
+    'birthday_wishes': 'जन्मदिन शुभकामनाएं',
+    'scheme_announcement': 'योजना घोषणा',
+    'other': 'अन्य',
+    'condolence': 'शोक संदेश',
+    'event': 'घटना',
+    'rally': 'रैली',
+    'meeting': 'बैठक',
+    'inauguration': 'उद्घाटन',
+    'ceremony': 'समारोह',
+    'कार्यक्रम': 'कार्यक्रम',
+    'शिलान्यास': 'शिलान्यास',
+    'Unknown': 'अज्ञात'
+  };
+  
+  return translations[eventType] || eventType;
 }
 
 function aggregateLocations(tweets: any[]): Record<string, number> {

@@ -115,7 +115,7 @@ export default function AnalyticsDashboard({
             {/* Event Type Pie Chart */}
             <EventTypePieChart
               data={eventTypeData}
-              title="घटना प्रकार वितरण"
+              title="दौरा/कार्यक्रम वितरण"
               width={400}
               height={400}
             />

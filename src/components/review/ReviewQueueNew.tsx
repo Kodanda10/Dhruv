@@ -520,7 +520,7 @@ export default function ReviewQueueNew() {
           {/* Parsed Data */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">घटना प्रकार</p>
+              <p className="text-sm font-medium text-gray-400 mb-1">दौरा/कार्यक्रम</p>
               <p className="font-semibold text-gray-200">{getEventTypeHindi(currentTweet.event_type) || '—'}</p>
             </div>
             <div>
@@ -546,11 +546,11 @@ export default function ReviewQueueNew() {
             <div className="mt-6 flex flex-col space-y-4">
               {/* Event Type with Autocomplete */}
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-300 mb-2">घटना प्रकार</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">दौरा/कार्यक्रम</label>
                 <input
                   type="text"
                   className="w-full rounded-lg border border-gray-700 bg-[#0d1117] p-3 text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
-                  placeholder="घटना प्रकार खोजें..."
+                  placeholder="दौरा/कार्यक्रम खोजें..."
                   value={editedData.event_type || ''}
                   onChange={(e) => {
                     setEditedData({...editedData, event_type: e.target.value});
@@ -620,8 +620,8 @@ export default function ReviewQueueNew() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const newEventType = prompt('नया घटना प्रकार (हिंदी):');
-                    const newEventTypeEn = prompt('नया घटना प्रकार (अंग्रेजी):');
+                    const newEventType = prompt('नया दौरा/कार्यक्रम (हिंदी):');
+                    const newEventTypeEn = prompt('नया दौरा/कार्यक्रम (अंग्रेजी):');
                     if (newEventType) {
                       handleAddNewValue('event_type', newEventType, newEventTypeEn);
                     }
@@ -629,7 +629,7 @@ export default function ReviewQueueNew() {
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  नया घटना प्रकार जोड़ें
+                  नया दौरा/कार्यक्रम जोड़ें
                 </button>
                 <button
                   onClick={() => {

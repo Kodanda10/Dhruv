@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 interface TweetData {
   id: string;
@@ -22,7 +23,7 @@ interface AnalyticsData {
   eventTypeData: { label: string; value: number; color: string }[];
   dayOfWeekData: { day: string; count: number }[];
   locationData: { location: string; count: number }[];
-  keyInsights: { title: string; value: string; trend: string; color: string }[];
+  schemeData: { scheme: string; count: number }[];
 }
 
 export default function AnalyticsDashboardDark() {
@@ -66,33 +67,10 @@ export default function AnalyticsDashboardDark() {
             location,
             count: count as number
           })),
-          keyInsights: [
-            {
-              title: 'कुल ट्वीट्स',
-              value: analytics.total_tweets.toString(),
-              trend: '+12%',
-              color: 'text-blue-400'
-            },
-            {
-              title: 'अद्वितीय स्थान',
-              value: Object.keys(analytics.location_distribution || {}).length.toString(),
-              trend: '+5%',
-              color: 'text-green-400'
-            },
-            {
-              title: 'सबसे आम घटना',
-              value: Object.entries(analytics.event_distribution || {})
-                .sort((a, b) => (b[1] as number) - (a[1] as number))[0]?.[0] || 'N/A',
-              trend: 'stable',
-              color: 'text-purple-400'
-            },
-            {
-              title: 'उल्लिखित योजनाएं',
-              value: Object.keys(analytics.scheme_usage || {}).length.toString(),
-              trend: '+8%',
-              color: 'text-orange-400'
-            }
-          ]
+          schemeData: Object.entries(analytics.scheme_usage || {}).map(([scheme, count]) => ({
+            scheme,
+            count: count as number
+          }))
         };
         
         setAnalyticsData(processedData);
@@ -111,6 +89,26 @@ export default function AnalyticsDashboardDark() {
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
     const hash = eventType.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     return colors[hash % colors.length];
+  };
+
+  const getHindiDayName = (day: string): string => {
+    const hindiDays: Record<string, string> = {
+      'Sunday': 'रविवार',
+      'Monday': 'सोमवार',
+      'Tuesday': 'मंगलवार',
+      'Wednesday': 'बुधवार',
+      'Thursday': 'गुरुवार',
+      'Friday': 'शुक्रवार',
+      'Saturday': 'शनिवार',
+      'रविवार': 'रविवार',
+      'सोमवार': 'सोमवार',
+      'मंगलवार': 'मंगलवार',
+      'बुधवार': 'बुधवार',
+      'गुरुवार': 'गुरुवार',
+      'शुक्रवार': 'शुक्रवार',
+      'शनिवार': 'शनिवार'
+    };
+    return hindiDays[day] || day;
   };
 
   if (loading) {
@@ -155,7 +153,7 @@ export default function AnalyticsDashboardDark() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">एनालिटिक्स डैशबोर्ड</h1>
-          <p className="text-gray-400">डेटा विश्लेषण और अंतर्दृष्टि ({analyticsData.keyInsights[0].value} ट्वीट)</p>
+          <p className="text-gray-400">डेटा विश्लेषण और अंतर्दृष्टि</p>
         </div>
 
         <div className="space-y-8" data-testid="analytics-dashboard">
@@ -188,7 +186,7 @@ export default function AnalyticsDashboardDark() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">घटना प्रकार</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">दौरा/कार्यक्रम</label>
                 <select 
                   value={filters.eventType} 
                   onChange={(e) => setFilters({...filters, eventType: e.target.value})}
@@ -214,103 +212,108 @@ export default function AnalyticsDashboardDark() {
             </div>
           </div>
 
-          {/* Key Insights */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {analyticsData.keyInsights.map((insight, index) => (
-              <div key={index} className="bg-[#192734] border border-gray-800 rounded-xl p-6 text-center">
-                <div className={`text-3xl font-bold mb-2 ${
-                  insight.color === 'blue' ? 'text-blue-400' :
-                  insight.color === 'green' ? 'text-green-400' :
-                  insight.color === 'purple' ? 'text-purple-400' :
-                  'text-orange-400'
-                }`}>
-                  {insight.value}
-                </div>
-                <div className="text-sm text-gray-400 mb-1">{insight.title}</div>
-                <div className="text-xs text-green-400">{insight.trend}</div>
-              </div>
-            ))}
-          </div>
-
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Time Series Chart */}
             <div className="lg:col-span-2">
               <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4 text-white">समय के साथ गतिविधि (30 दिन)</h3>
-                <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
-                  <div className="space-y-2">
-                    {analyticsData.timeSeriesData.slice(-10).map((d, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                        <span className="text-sm text-gray-300">{d.date}</span>
-                        <div className="flex items-center">
-                          <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-blue-500 h-2 rounded-full" 
-                              style={{ width: `${(d.count / Math.max(...analyticsData.timeSeriesData.map(t => t.count))) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-white font-medium">{d.count}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={analyticsData.timeSeriesData.slice(-30)}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#9CA3AF"
+                        fontSize={12}
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('hi-IN', { month: 'short', day: 'numeric' })}
+                      />
+                      <YAxis stroke="#9CA3AF" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1F2937', 
+                          border: '1px solid #374151', 
+                          borderRadius: '8px',
+                          color: '#F9FAFB'
+                        }}
+                        labelFormatter={(value) => new Date(value).toLocaleDateString('hi-IN')}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#3B82F6" 
+                        strokeWidth={2}
+                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
 
             {/* Event Type Distribution */}
             <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">घटना प्रकार वितरण</h3>
-              <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
-                <div className="space-y-3">
-                  {analyticsData.eventTypeData.map((d, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-3" 
-                          style={{ backgroundColor: d.color }}
-                        ></div>
-                        <span className="text-sm text-gray-300">{d.label}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-700 rounded-full h-2 mr-2">
-                          <div 
-                            className="h-2 rounded-full" 
-                            style={{ 
-                              width: `${(d.value / analyticsData.keyInsights[0].value) * 100}%`,
-                              backgroundColor: d.color
-                            }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-white font-medium">{d.value}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <h3 className="text-lg font-semibold mb-4 text-white">दौरा/कार्यक्रम वितरण</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={analyticsData.eventTypeData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ label, value }) => `${label}\n${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {analyticsData.eventTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151', 
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                      formatter={(value: number, name: string) => [
+                        `${value}`,
+                        name
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
             {/* Day of Week Chart */}
             <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">सप्ताह के दिन के अनुसार गतिविधि</h3>
-              <div className="h-64 bg-[#0d1117] rounded-lg p-4">
-                <div className="space-y-3">
-                  {analyticsData.dayOfWeekData.map((d, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-300">{d.day}</span>
-                      <div className="flex items-center">
-                        <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${(d.count / Math.max(...analyticsData.dayOfWeekData.map(day => day.count))) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-white font-medium">{d.count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analyticsData.dayOfWeekData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="#9CA3AF"
+                      fontSize={12}
+                      tickFormatter={(value) => getHindiDayName(value)}
+                    />
+                    <YAxis stroke="#9CA3AF" fontSize={12} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151', 
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                      labelFormatter={(value) => getHindiDayName(value)}
+                    />
+                    <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -318,49 +321,67 @@ export default function AnalyticsDashboardDark() {
           {/* Location Distribution */}
           <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-white">स्थान वितरण (Top 10)</h3>
-            <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
-              <div className="space-y-3">
-                {analyticsData.locationData.slice(0, 10).map((d, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">{d.location}</span>
-                    <div className="flex items-center">
-                      <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
-                        <div 
-                          className="bg-purple-500 h-2 rounded-full" 
-                          style={{ width: `${(d.count / Math.max(...analyticsData.locationData.map(loc => loc.count))) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-white font-medium">{d.count}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analyticsData.locationData.slice(0, 10)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis 
+                    dataKey="location" 
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis stroke="#9CA3AF" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151', 
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Scheme Usage */}
           <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">योजना उपयोग (Top 10)</h3>
-            <div className="h-64 bg-[#0d1117] rounded-lg p-4 overflow-y-auto">
-              <div className="space-y-3">
-                {Object.entries(analyticsData.scheme_usage || {})
-                  .sort((a, b) => (b[1] as number) - (a[1] as number))
-                  .slice(0, 10)
-                  .map(([scheme, count], index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-300">{scheme}</span>
-                      <div className="flex items-center">
-                        <div className="w-20 bg-gray-700 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-orange-500 h-2 rounded-full" 
-                            style={{ width: `${(count as number / Math.max(...Object.values(analyticsData.scheme_usage || {}))) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-white font-medium">{count}</span>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+            <h3 className="text-lg font-semibold mb-4 text-white">योजना उपयोग</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analyticsData.schemeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="count"
+                    label={({ scheme, value }) => `${scheme} (${value})`}
+                  >
+                    {analyticsData.schemeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 60}, 70%, 50%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151', 
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                    formatter={(value: number, name: string) => [
+                      `${value} ट्वीट्स`,
+                      name
+                    ]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

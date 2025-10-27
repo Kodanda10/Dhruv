@@ -65,13 +65,8 @@ export async function GET(request: NextRequest) {
         });
       }
       
-      return NextResponse.json({ 
-        success: true, 
-        data: result.rows,
-        total: result.rows.length,
-        returned: result.rows.length,
-        source: 'database'
-      });
+      // For non-analytics requests, always use file fallback to get tweet content
+      console.log('Using file fallback for dashboard data to include tweet content');
     } catch (dbError) {
       console.log('Database query failed, falling back to static file:', dbError);
     }
@@ -83,13 +78,16 @@ export async function GET(request: NextRequest) {
       const fileContent = fs.readFileSync(dataPath, 'utf8');
       const tweets = JSON.parse(fileContent);
       
+      console.log(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
+      
       // Filter based on parameters
       let filteredTweets = tweets;
       
       if (needsReview === 'true') {
         filteredTweets = tweets.filter((t: any) => t.needs_review === true);
       } else if (needsReview === 'false' || includeAnalytics) {
-        filteredTweets = tweets.filter((t: any) => t.needs_review === false && t.review_status === 'approved');
+        // For analytics, use all tweets; for regular requests, use all tweets too
+        filteredTweets = tweets;
       }
       
       if (reviewStatus && !includeAnalytics) {
@@ -117,9 +115,29 @@ export async function GET(request: NextRequest) {
         });
       }
       
+      // Map tweets to the format expected by the dashboard
+      const mappedTweets = limitedTweets.map((tweet: any) => ({
+        id: tweet.id,
+        tweet_id: tweet.id,
+        content: tweet.content,
+        text: tweet.content,
+        timestamp: tweet.timestamp,
+        created_at: tweet.timestamp,
+        event_type: tweet.parsed?.event_type || tweet.event_type,
+        locations: tweet.parsed?.locations || tweet.locations || [],
+        people_mentioned: tweet.parsed?.people || tweet.people_mentioned || [],
+        organizations: tweet.parsed?.organizations || tweet.organizations || [],
+        schemes_mentioned: tweet.parsed?.schemes || tweet.schemes_mentioned || [],
+        confidence: tweet.parsed?.confidence || tweet.confidence,
+        needs_review: tweet.needs_review || false,
+        review_status: tweet.review_status || 'approved',
+        parsed_at: tweet.timestamp,
+        parsed_by: 'system'
+      }));
+      
       return NextResponse.json({
         success: true,
-        data: limitedTweets,
+        data: mappedTweets,
         total: filteredTweets.length,
         returned: limitedTweets.length,
         source: 'static_file'

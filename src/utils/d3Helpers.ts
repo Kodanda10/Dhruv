@@ -161,7 +161,7 @@ export function generateInsights(
   if (currentData.eventTypes && currentData.eventTypes.length > 0) {
     const topEventType = currentData.eventTypes[0];
     insights.push({
-      title: 'सबसे आम घटना प्रकार',
+      title: 'सबसे आम दौरा/कार्यक्रम',
       value: `${topEventType.label} (${topEventType.percentage}%)`,
       trend: 'neutral' as const,
       trendValue: '',

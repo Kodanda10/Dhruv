@@ -487,7 +487,7 @@ export default function ReviewQueue() {
                 {/* Event Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    🎯 घटना प्रकार (Event Type)
+                    🎯 दौरा/कार्यक्रम (Event Type)
                   </label>
                   <AutocompleteInput
                     fieldName="event_type"
@@ -633,7 +633,7 @@ export default function ReviewQueue() {
               {/* View Mode */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">🎯 घटना प्रकार</div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">🎯 दौरा/कार्यक्रम</div>
                   <div className="text-sm font-semibold text-gray-900">
                     {getEventTypeHindi(currentTweet.parsed?.event_type)}
                   </div>
