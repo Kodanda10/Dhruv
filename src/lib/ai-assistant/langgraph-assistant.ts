@@ -416,24 +416,39 @@ export class LangGraphAIAssistant {
    * Execute with both models for comparison
    */
   private async executeWithBothModels(message: string, intent: ParsedIntent): Promise<AIResponse> {
-    this.state.modelUsed = 'both';
+    // Store original model to restore after execution
+    const originalModel = this.state.modelUsed;
     
+    // Execute both models
     const [geminiResponse, ollamaResponse] = await Promise.allSettled([
-      this.executeWithPrimaryModel(message, intent),
-      this.executeWithOllama(message, intent)
+      this.executeWithPrimaryModel(message, intent).catch(() => ({ message: '', action: 'error', confidence: 0, suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] }, pendingChanges: [] })),
+      this.executeWithOllama(message, intent).catch(() => ({ message: '', action: 'error', confidence: 0, suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] }, pendingChanges: [] }))
     ]);
     
-    // Use Gemini response as primary, Ollama as backup
+    // Restore 'both' as modelUsed since child methods overwrite it
+    this.state.modelUsed = 'both';
+    
+    // Always return 'both' as modelUsed regardless of which succeeded
+    let combinedMessage = '';
+    const suggestions = await this.generateSuggestions();
+    
     if (geminiResponse.status === 'fulfilled') {
-      return {
-        ...geminiResponse.value,
-        message: `${geminiResponse.value.message}\n\n[Model Comparison: Gemini (primary), Ollama (backup)]`
-      };
-    } else if (ollamaResponse.status === 'fulfilled') {
-      return ollamaResponse.value;
-    } else {
-      return this.handleError(new Error('Both models failed'));
+      combinedMessage += `Gemini: ${geminiResponse.value.message}\n\n`;
     }
+    
+    if (ollamaResponse.status === 'fulfilled') {
+      combinedMessage += `Ollama: ${ollamaResponse.value.message}\n\n`;
+    }
+    
+    combinedMessage += '[Model Comparison Mode]';
+    
+    return {
+      message: combinedMessage || 'Model Comparison Complete',
+      action: intent.actions[0] || 'generateSuggestions',
+      confidence: 0.8,
+      suggestions,
+      pendingChanges: []
+    };
   }
 
   /**
