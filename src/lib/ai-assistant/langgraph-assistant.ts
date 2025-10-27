@@ -271,6 +271,22 @@ export class LangGraphAIAssistant {
       };
     }
     
+    // Check for location change intent (from X to Y)
+    if ((lowerMessage.includes('from') || lowerMessage.includes('से')) && 
+        (lowerMessage.includes('to') || lowerMessage.includes('में') || lowerMessage.includes('को'))) {
+      const locationChangePattern = /(?:location|स्थान).*?(?:from|से).*?(\w+).*?(?:to|में|को).*?(\w+)/i;
+      const match = message.match(locationChangePattern);
+      if (match) {
+        const newLocation = match[2].trim();
+        return {
+          intent: 'change_location',
+          entities: { locations: [newLocation], event_types: [], schemes: [], people: [] },
+          actions: ['addLocation'],
+          confidence: 0.8
+        };
+      }
+    }
+
     // Check for event type change intent
     if ((eventKeywords.some(keyword => message.includes(keyword))) && 
         (lowerMessage.includes('change') || lowerMessage.includes('बदलें'))) {
@@ -517,11 +533,14 @@ export class LangGraphAIAssistant {
   private async addLocation(locations: string[]): Promise<PendingChange | null> {
     if (locations.length === 0) return null;
     
+    // Determine source: 'user' if explicit request, 'ai_suggestion' if suggested
+    const source = this.state.context.userIntent?.includes('change') ? 'user' : 'ai_suggestion';
+    
     return {
       field: 'locations',
       value: locations,
       confidence: 0.8,
-      source: 'ai_suggestion',
+      source,
       timestamp: new Date()
     };
   }
