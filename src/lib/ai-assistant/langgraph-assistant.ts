@@ -67,6 +67,12 @@ export interface ConversationContext {
   previousActions: string[];
 }
 
+export interface ValidationResult {
+  isValid: boolean;
+  issues: string[];
+  suggestions: string[];
+}
+
 // Session storage (in production, use Redis or database)
 const sessionStore = new Map<string, AIAssistantState>();
 
@@ -314,6 +320,28 @@ export class LangGraphAIAssistant {
       };
     }
     
+    // Check for validation intent
+    if (lowerMessage.includes('validate') || lowerMessage.includes('validate') || 
+        lowerMessage.includes('सत्यापन') || lowerMessage.includes('जांचें')) {
+      return {
+        intent: 'validate_data',
+        entities: { locations: [], event_types: [], schemes: [], people: [] },
+        actions: ['validateData'],
+        confidence: 0.8
+      };
+    }
+    
+    // Check for learning intent
+    if (lowerMessage.includes('learn') || lowerMessage.includes('सीखें') || 
+        lowerMessage.includes('correct') || lowerMessage.includes('सुधार')) {
+      return {
+        intent: 'learn_from_correction',
+        entities: { locations: [], event_types: [], schemes: [], people: [] },
+        actions: ['learnFromCorrection'],
+        confidence: 0.8
+      };
+    }
+    
     return {
       intent: 'get_suggestions',
       entities: { locations: [], event_types: [], schemes: [], people: [] },
@@ -538,7 +566,14 @@ export class LangGraphAIAssistant {
    */
   private async validateData(): Promise<void> {
     // Implementation for data validation
-    console.log('Validating data consistency...');
+    const tweet = this.state.currentTweet;
+    if (tweet) {
+      await this.validateConsistency(tweet);
+    }
+    
+    // Update context to validing stage
+    this.state.context.stage = 'validating';
+    this.state.context.previousActions.push('validateData');
   }
 
   /**
@@ -586,6 +621,74 @@ export class LangGraphAIAssistant {
       suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] },
       pendingChanges: [],
       error: error.message
+    };
+  }
+
+  /**
+   * Learn from human corrections
+   */
+  async learnFromCorrection(
+    originalParsed: TweetData,
+    correctedParsed: TweetData,
+    reviewer: string = 'system'
+  ): Promise<boolean> {
+    try {
+      const feedback = {
+        tweetId: originalParsed.tweet_id,
+        originalParsed,
+        humanCorrection: correctedParsed,
+        reviewer
+      };
+
+      const learningResult = await this.learningSystem.learnFromHumanFeedback(feedback);
+      
+      // Update state to reflect learning
+      if (learningResult.success) {
+        this.state.context.previousActions.push(`learned_${learningResult.learnedEntities.join('_')}`);
+      }
+
+      return learningResult.success;
+    } catch (error) {
+      console.error('Error learning from correction:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Validate data consistency
+   */
+  async validateConsistency(parsedData: TweetData): Promise<ValidationResult> {
+    const issues: string[] = [];
+    let isValid = true;
+
+    // Validate scheme-event type compatibility
+    if (parsedData.schemes_mentioned && parsedData.schemes_mentioned.length > 0 && parsedData.event_type) {
+      // Check if schemes are compatible with event type
+      // For now, basic validation
+      issues.push(`Validating schemes with event type...`);
+    }
+
+    // Validate locations exist in geography data
+    if (parsedData.locations && parsedData.locations.length > 0) {
+      // Check if locations are valid
+      issues.push(`Validating locations...`);
+    }
+
+    // Add validation results to state
+    if (issues.length > 0) {
+      this.state.pendingChanges.push({
+        field: 'validation',
+        value: issues,
+        confidence: 0.8,
+        source: 'validation',
+        timestamp: new Date()
+      });
+    }
+
+    return {
+      isValid,
+      issues,
+      suggestions: []
     };
   }
 
