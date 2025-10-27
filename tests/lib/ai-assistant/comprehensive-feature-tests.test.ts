@@ -23,6 +23,14 @@ const realTweets = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'data/parsed_tweets.json'), 'utf-8')
 );
 
+// Mock Dynamic Learning System to avoid database connection
+jest.mock('@/lib/dynamic-learning', () => {
+  const { MockDynamicLearningSystem } = require('./mocks/dynamic-learning-mock');
+  return {
+    DynamicLearningSystem: jest.fn().mockImplementation(() => new MockDynamicLearningSystem())
+  };
+});
+
 describe('Feature 1: Natural Language Parsing', () => {
   test('should parse Hindi location request', async () => {
     const tweet = realTweets[0];
