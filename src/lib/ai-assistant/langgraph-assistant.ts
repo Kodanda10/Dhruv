@@ -460,6 +460,9 @@ export class LangGraphAIAssistant {
     
     // Execute actions based on intent
     for (const action of intent.actions) {
+      // Track actions for session persistence
+      this.state.context.previousActions.push(action);
+      
       switch (action) {
         case 'addLocation':
           // If entities were extracted, use them; otherwise use suggestions
