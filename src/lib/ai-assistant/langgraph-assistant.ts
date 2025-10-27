@@ -287,10 +287,23 @@ export class LangGraphAIAssistant {
     if ((lowerMessage.includes('योजना') || lowerMessage.includes('scheme')) && 
         (lowerMessage.includes('add') || lowerMessage.includes('जोड़ें'))) {
       const schemes: string[] = [];
-      const schemePattern = /(?:add|जोड़ें).*?((?:PM Kisan|Ayushman|Ujjwala|PM Kisan|मुख्यमंत्री|युवा).*?)/i;
+      // Extract multiple schemes (comma or "and" separated)
+      const schemePattern = /(?:add|जोड़ें|schemes?)[\s,]*((?:[^,और]+(?:,\s*| और | and |\s*))\s*(?:[^,और]+)*)/i;
       const match = message.match(schemePattern);
       if (match) {
-        schemes.push(match[1]);
+        // Split by comma, "and", or space
+        schemes.push(...match[1].split(/[,\sऔरand]+/).filter(s => s.trim()));
+      }
+      
+      // If no schemes found, try extracting individual scheme names
+      if (schemes.length === 0) {
+        const individualSchemes = ['PM Kisan', 'Ayushman Bharat', 'Ujjwala', 'Mukhyamantri', 'Yuva', 
+                                    'Pradhan Mantri', 'पीएम किसान', 'आयुष्मान', 'उज्ज्वला'];
+        for (const scheme of individualSchemes) {
+          if (lowerMessage.includes(scheme.toLowerCase())) {
+            schemes.push(scheme);
+          }
+        }
       }
       
       return {
@@ -506,9 +519,14 @@ export class LangGraphAIAssistant {
   private async addScheme(schemes: string[]): Promise<PendingChange | null> {
     if (schemes.length === 0) return null;
     
+    // Filter out empty strings and normalize
+    const validSchemes = schemes.filter(s => s && s.trim().length > 0).map(s => s.trim());
+    
+    if (validSchemes.length === 0) return null;
+    
     return {
       field: 'schemes_mentioned',
-      value: schemes,
+      value: validSchemes,
       confidence: 0.8,
       source: 'ai_suggestion',
       timestamp: new Date()
