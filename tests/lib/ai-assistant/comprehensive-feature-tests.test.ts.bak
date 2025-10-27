@@ -207,8 +207,8 @@ describe('Feature 3: Event Type Suggestion', () => {
       tweet
     );
     
-    expect(Array.isArray(result.suggestions.eventTypes)).toBe(true);
-    expect(result.confidence).toBeGreaterThanOrEqual(0);
+    expect(result.suggestions.eventTypes.length).toBeGreaterThan(0);
+    expect(result.confidence).toBeGreaterThan(0.5);
   });
 });
 

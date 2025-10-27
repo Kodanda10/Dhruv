@@ -60,7 +60,7 @@ export class MockDynamicLearningSystem {
 
   async getIntelligentSuggestions(context: { tweetText: string; currentParsed: any }): Promise<any> {
     // Return mock suggestions based on tweet text
-    const tweetText = context.tweetText.toLowerCase();
+    const tweetText = context?.tweetText?.toLowerCase() || '';
     
     return {
       eventTypes: this.getRelevantEventTypes(tweetText),
