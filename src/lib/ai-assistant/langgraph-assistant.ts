@@ -164,7 +164,12 @@ export class LangGraphAIAssistant {
       if (useBothModels) {
         response = await this.executeWithBothModels(message, intent);
       } else {
-        response = await this.executeWithPrimaryModel(message, intent);
+        try {
+          response = await this.executeWithPrimaryModel(message, intent);
+        } catch (error) {
+          console.warn('Primary model failed, falling back to Ollama:', error);
+          response = await this.executeWithOllama(message, intent);
+        }
       }
       
       // Add assistant response to conversation history
@@ -722,19 +727,30 @@ export class LangGraphAIAssistant {
   /**
    * Validate data consistency
    */
-  async validateConsistency(parsedData: TweetData): Promise<ValidationResult> {
+  async validateConsistency(parsedData?: TweetData): Promise<ValidationResult> {
     const issues: string[] = [];
     let isValid = true;
 
+    // Use current tweet data if no parameter provided
+    const data = parsedData || this.state.currentTweet;
+    
+    if (!data) {
+      return {
+        isValid: false,
+        issues: ['No tweet data available for validation'],
+        suggestions: []
+      };
+    }
+
     // Validate scheme-event type compatibility
-    if (parsedData.schemes_mentioned && parsedData.schemes_mentioned.length > 0 && parsedData.event_type) {
+    if (data.schemes_mentioned && data.schemes_mentioned.length > 0 && data.event_type) {
       // Check if schemes are compatible with event type
       // For now, basic validation
       issues.push(`Validating schemes with event type...`);
     }
 
     // Validate locations exist in geography data
-    if (parsedData.locations && parsedData.locations.length > 0) {
+    if (data.locations && data.locations.length > 0) {
       // Check if locations are valid
       issues.push(`Validating locations...`);
     }

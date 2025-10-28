@@ -18,6 +18,7 @@ import {
   Trash2 
 } from 'lucide-react';
 import AIAssistantModal from './AIAssistantModal';
+import GeoHierarchyTree from './GeoHierarchyTree';
 
 // Empty array - will be populated from API
 const initialTweets: any[] = [];
@@ -108,12 +109,6 @@ export default function ReviewQueueNew() {
   const handleAISend = async (message: string) => {
     if (!message.trim()) return;
 
-    const newMessage = {
-      type: 'user',
-      content: message
-    };
-
-    setAiMessages(prev => [...prev, newMessage]);
     const userInput = message;
 
     // Add loading message
@@ -541,6 +536,22 @@ export default function ReviewQueueNew() {
             </div>
           </div>
 
+          {/* Geographic Hierarchy */}
+          {(currentTweet.locations && currentTweet.locations.length > 0) && (
+            <GeoHierarchyTree 
+              locations={currentTweet.locations}
+              tweetText={tweetText}
+              onHierarchyUpdate={(hierarchies) => {
+                // Update the tweet data with geo-hierarchy information
+                setTweets(prev => prev.map(tweet => 
+                  tweet.id === currentTweet.id 
+                    ? { ...tweet, geo_hierarchy: hierarchies }
+                    : tweet
+                ));
+              }}
+            />
+          )}
+
           {/* Edit Mode */}
           {editMode && (
             <div className="mt-6 flex flex-col space-y-4">
@@ -715,6 +726,8 @@ export default function ReviewQueueNew() {
         onClose={() => setShowAIAssistant(false)}
         currentTweet={currentTweet}
         onSend={handleAISend}
+        messages={aiMessages}
+        setMessages={setAiMessages}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Pool } from 'pg';
+import { GeoHierarchyResolver, GeoHierarchy } from './geo-extraction/hierarchy-resolver';
 
 // Initialize Gemini AI
 const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -245,6 +246,149 @@ function generateContextualHashtags(parsedData: any): string[] {
   return [...new Set(hashtags)];
 }
 
+// Geo-extraction service instance
+let geoResolver: GeoHierarchyResolver | null = null;
+
+async function getGeoResolver(): Promise<GeoHierarchyResolver> {
+  if (!geoResolver) {
+    geoResolver = new GeoHierarchyResolver();
+    await geoResolver.initialize();
+  }
+  return geoResolver;
+}
+
+async function performGeoExtraction(tweetText: string, parsedData: any): Promise<{
+  geo_hierarchy: GeoHierarchy[];
+  gram_panchayats: string[];
+  ulb_wards: Array<{ulb: string, ward_no: number}>;
+  blocks: string[];
+  assemblies: string[];
+  districts: string[];
+  confidence: number;
+}> {
+  try {
+    const resolver = await getGeoResolver();
+    const locations = parsedData.locations || [];
+    
+    // Phase 1: Primary geo-extraction using Gemini's location detection
+    const geoHierarchies: GeoHierarchy[] = [];
+    const gramPanchayats = new Set<string>();
+    const ulbWards: Array<{ulb: string, ward_no: number}> = [];
+    const blocks = new Set<string>();
+    const assemblies = new Set<string>();
+    const districts = new Set<string>();
+    
+    for (const location of locations) {
+      try {
+        const hierarchies = await resolver.resolveVillage(location);
+        geoHierarchies.push(...hierarchies);
+        
+        // Extract hierarchy components
+        for (const hierarchy of hierarchies) {
+          if (hierarchy.gram_panchayat) {
+            gramPanchayats.add(hierarchy.gram_panchayat);
+          }
+          if (hierarchy.is_urban && hierarchy.ulb && hierarchy.ward_no) {
+            ulbWards.push({
+              ulb: hierarchy.ulb,
+              ward_no: hierarchy.ward_no
+            });
+          }
+          blocks.add(hierarchy.block);
+          assemblies.add(hierarchy.assembly);
+          districts.add(hierarchy.district);
+        }
+      } catch (error) {
+        console.warn(`Failed to resolve location "${location}":`, error);
+      }
+    }
+    
+    // Phase 2: Fallback - extract additional locations from tweet text
+    const additionalLocations = await extractAdditionalLocations(tweetText, resolver);
+    for (const location of additionalLocations) {
+      try {
+        const hierarchies = await resolver.resolveVillage(location);
+        geoHierarchies.push(...hierarchies);
+        
+        // Extract hierarchy components
+        for (const hierarchy of hierarchies) {
+          if (hierarchy.gram_panchayat) {
+            gramPanchayats.add(hierarchy.gram_panchayat);
+          }
+          if (hierarchy.is_urban && hierarchy.ulb && hierarchy.ward_no) {
+            ulbWards.push({
+              ulb: hierarchy.ulb,
+              ward_no: hierarchy.ward_no
+            });
+          }
+          blocks.add(hierarchy.block);
+          assemblies.add(hierarchy.assembly);
+          districts.add(hierarchy.district);
+        }
+      } catch (error) {
+        console.warn(`Failed to resolve additional location "${location}":`, error);
+      }
+    }
+    
+    // Phase 3: Validation and confidence scoring
+    const confidence = calculateGeoConfidence(geoHierarchies, locations.length);
+    
+    return {
+      geo_hierarchy: geoHierarchies,
+      gram_panchayats: Array.from(gramPanchayats),
+      ulb_wards: ulbWards,
+      blocks: Array.from(blocks),
+      assemblies: Array.from(assemblies),
+      districts: Array.from(districts),
+      confidence
+    };
+    
+  } catch (error) {
+    console.error('Geo-extraction error:', error);
+    return {
+      geo_hierarchy: [],
+      gram_panchayats: [],
+      ulb_wards: [],
+      blocks: [],
+      assemblies: [],
+      districts: [],
+      confidence: 0.0
+    };
+  }
+}
+
+async function extractAdditionalLocations(tweetText: string, resolver: GeoHierarchyResolver): Promise<string[]> {
+  // Simple pattern matching for common location indicators
+  const locationPatterns = [
+    /([\u0900-\u097F]+(?:गढ़|पुर|गढ़|नगर|शहर|बाजार|ग्राम|पंचायत))/g,
+    /([A-Za-z]+(?:garh|pur|nagar|city|bazar|gram|panchayat))/gi
+  ];
+  
+  const additionalLocations: string[] = [];
+  
+  for (const pattern of locationPatterns) {
+    const matches = tweetText.match(pattern);
+    if (matches) {
+      additionalLocations.push(...matches);
+    }
+  }
+  
+  return [...new Set(additionalLocations)]; // Remove duplicates
+}
+
+function calculateGeoConfidence(geoHierarchies: GeoHierarchy[], originalLocationCount: number): number {
+  if (geoHierarchies.length === 0) return 0.0;
+  
+  // Base confidence from hierarchy resolution
+  const avgConfidence = geoHierarchies.reduce((sum, h) => sum + h.confidence, 0) / geoHierarchies.length;
+  
+  // Bonus for resolving all original locations
+  const resolutionBonus = originalLocationCount > 0 ? 
+    Math.min(0.2, geoHierarchies.length / originalLocationCount * 0.2) : 0;
+  
+  return Math.min(1.0, avgConfidence + resolutionBonus);
+}
+
 export async function parseTweetWithGemini(tweetText: string, tweetId: string): Promise<any> {
   try {
     // Load reference data
@@ -337,6 +481,16 @@ Return ONLY valid JSON, no extra text.
     // Generate hashtags
     parsed.generated_hashtags = generateContextualHashtags(parsed);
 
+    // Phase 2: Geo-extraction (Primary + Fallback)
+    const geoExtractionResult = await performGeoExtraction(tweetText, parsed);
+    parsed.geo_hierarchy = geoExtractionResult.geo_hierarchy;
+    parsed.gram_panchayats = geoExtractionResult.gram_panchayats;
+    parsed.ulb_wards = geoExtractionResult.ulb_wards;
+    parsed.blocks = geoExtractionResult.blocks;
+    parsed.assemblies = geoExtractionResult.assemblies;
+    parsed.districts = geoExtractionResult.districts;
+    parsed.geo_extraction_confidence = geoExtractionResult.confidence;
+
     return parsed;
 
   } catch (error) {
@@ -353,7 +507,14 @@ Return ONLY valid JSON, no extra text.
       date: null,
       confidence: 0.0,
       error: error instanceof Error ? error.message : 'Unknown error',
-      generated_hashtags: []
+      generated_hashtags: [],
+      geo_hierarchy: [],
+      gram_panchayats: [],
+      ulb_wards: [],
+      blocks: [],
+      assemblies: [],
+      districts: [],
+      geo_extraction_confidence: 0.0
     };
   }
 }

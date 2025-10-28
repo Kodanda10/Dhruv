@@ -168,5 +168,14 @@ export class MockDynamicLearningSystem {
 
     return hashtags;
   }
+
+  async learnFromHumanFeedback(feedback: any): Promise<any> {
+    // Mock learning from human feedback
+    return {
+      success: true,
+      learnedEntities: ['locations', 'schemes'],
+      confidence: 0.9
+    };
+  }
 }
 

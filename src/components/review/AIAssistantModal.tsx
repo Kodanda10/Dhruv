@@ -6,9 +6,11 @@ interface AIAssistantModalProps {
   onClose: () => void;
   currentTweet: any;
   onSend?: (message: string) => Promise<void>;
+  messages?: any[];
+  setMessages?: (messages: any[]) => void;
 }
 
-export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend }: AIAssistantModalProps) {
+export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend, messages: propMessages, setMessages: propSetMessages }: AIAssistantModalProps) {
   const [aiInput, setAiInput] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -34,6 +36,10 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       suggestions: ['कार्यक्रम का प्रकार सेट करें', 'स्थान जोड़ें', 'टैग सुझाएं']
     }
   ]);
+  // Use prop messages if provided, otherwise use local state
+  const currentMessages = propMessages || messages;
+  const updateMessages = propSetMessages || setMessages;
+  
   const [tags, setTags] = useState([
     { name: 'शहरी विकास', active: true },
     { name: 'हरित अवसंरचना', active: true },
@@ -49,19 +55,18 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
     const userInput = aiInput;
     setAiInput('');
 
+    // Always add user message first
+    const newMessage = {
+      type: 'user',
+      content: userInput
+    };
+    updateMessages(prev => [...prev, newMessage]);
+
     // If onSend prop is provided, use it (for API calls)
     if (onSend) {
       await onSend(userInput);
       return;
     }
-
-    // Otherwise, use internal logic (for testing/fallback)
-    const newMessage = {
-      type: 'user',
-      content: userInput
-    };
-
-    setMessages(prev => [...prev, newMessage]);
 
     // Add loading message
     const loadingMessage = {
@@ -69,7 +74,7 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       content: 'सोच रहा हूँ...',
       suggestions: []
     };
-    setMessages(prev => [...prev, loadingMessage]);
+    updateMessages(prev => [...prev, loadingMessage]);
 
     try {
       // Call AI Assistant API
@@ -87,7 +92,7 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       const data = await response.json();
       
       // Remove loading message
-      setMessages(prev => prev.slice(0, -1));
+      updateMessages(prev => prev.slice(0, -1));
       
       if (data.success) {
         const aiResponse = {
@@ -95,21 +100,21 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
           content: data.response,
           suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं', 'स्थान जोड़ें']
         };
-        setMessages(prev => [...prev, aiResponse]);
+        updateMessages(prev => [...prev, aiResponse]);
       } else {
         throw new Error(data.error || 'AI Assistant error');
       }
     } catch (error) {
       console.error('AI Assistant error:', error);
       // Remove loading message
-      setMessages(prev => prev.slice(0, -1));
+      updateMessages(prev => prev.slice(0, -1));
       
       const errorResponse = {
         type: 'ai',
         content: 'क्षमा करें, मैं इस समय आपकी सहायता नहीं कर सकता। कृपया बाद में पुनः प्रयास करें।',
         suggestions: ['पुनः प्रयास करें']
       };
-      setMessages(prev => [...prev, errorResponse]);
+      updateMessages(prev => [...prev, errorResponse]);
     }
   };
 
@@ -151,7 +156,7 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
                 placeholder="अपनी प्रतिक्रिया टाइप करें..." 
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               />
               <button 
                 onClick={handleSend}
@@ -162,7 +167,7 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
             </div>
             
             <div className="space-y-4">
-              {messages.map((message, index) => (
+              {currentMessages.map((message, index) => (
                 <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`p-3 rounded-lg max-w-md ${
                     message.type === 'user' 

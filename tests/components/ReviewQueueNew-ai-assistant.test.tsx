@@ -74,14 +74,38 @@ describe('ReviewQueueNew - AI Assistant Modal Functionality', () => {
   });
 
   it('should send AI message when user types and presses Enter', async () => {
-    // Mock successful AI response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        response: 'मैंने आपकी प्रतिक्रिया को समझ लिया है। क्या आप कुछ और बताना चाहेंगे?'
+    // Mock all required API calls
+    (global.fetch as jest.Mock)
+      // Mock geo-extraction API calls
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchies: [],
+          ambiguous: [],
+          summary: { totalLocations: 0, resolvedLocations: 0, ambiguousLocations: 0, confidence: 0 }
+        })
       })
-    });
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchies: [],
+          ambiguous: [],
+          summary: { totalLocations: 0, resolvedLocations: 0, ambiguousLocations: 0, confidence: 0 }
+        })
+      })
+      // Mock parsed-events API call
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => []
+      })
+      // Mock AI Assistant API call
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          response: 'मैंने आपकी प्रतिक्रिया को समझ लिया है। क्या आप कुछ और बताना चाहेंगे?'
+        })
+      });
 
     render(<ReviewQueueNew />);
 
@@ -108,7 +132,7 @@ describe('ReviewQueueNew - AI Assistant Modal Functionality', () => {
     fireEvent.change(input, { target: { value: 'कार्यक्रम का प्रकार बैठक है' } });
 
     // Press Enter
-    fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     // Verify API was called
     await waitFor(() => {
@@ -128,8 +152,32 @@ describe('ReviewQueueNew - AI Assistant Modal Functionality', () => {
   });
 
   it('should handle AI Assistant API errors gracefully', async () => {
-    // Mock API error
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+    // Mock all required API calls
+    (global.fetch as jest.Mock)
+      // Mock geo-extraction API calls
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchies: [],
+          ambiguous: [],
+          summary: { totalLocations: 0, resolvedLocations: 0, ambiguousLocations: 0, confidence: 0 }
+        })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchies: [],
+          ambiguous: [],
+          summary: { totalLocations: 0, resolvedLocations: 0, ambiguousLocations: 0, confidence: 0 }
+        })
+      })
+      // Mock parsed-events API call
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => []
+      })
+      // Mock AI Assistant API error
+      .mockRejectedValueOnce(new Error('API Error'));
 
     render(<ReviewQueueNew />);
 
@@ -152,7 +200,7 @@ describe('ReviewQueueNew - AI Assistant Modal Functionality', () => {
 
     const input = screen.getByPlaceholderText('अपनी प्रतिक्रिया टाइप करें...');
     fireEvent.change(input, { target: { value: 'Test message' } });
-    fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     // Verify error message appears
     await waitFor(() => {
