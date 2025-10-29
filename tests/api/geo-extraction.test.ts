@@ -307,6 +307,9 @@ describe('Geo-Extraction API Endpoint', () => {
 
   describe('Error Handling', () => {
     test('should handle resolver initialization errors', async () => {
+      // Clear module cache to force re-import
+      jest.resetModules();
+      
       // Create a new mock resolver that fails initialization
       const failingResolver = {
         initialize: jest.fn().mockRejectedValue(new Error('Initialization failed')),
@@ -315,8 +318,12 @@ describe('Geo-Extraction API Endpoint', () => {
       };
 
       // Mock the GeoHierarchyResolver constructor to return the failing resolver
-      const { GeoHierarchyResolver } = require('@/lib/geo-extraction/hierarchy-resolver');
-      GeoHierarchyResolver.mockImplementationOnce(() => failingResolver);
+      jest.doMock('@/lib/geo-extraction/hierarchy-resolver', () => ({
+        GeoHierarchyResolver: jest.fn().mockImplementation(() => failingResolver)
+      }));
+
+      // Re-import the API route to get the mocked version
+      const { POST: MockedPOST } = await import('@/app/api/geo-extraction/route');
 
       const requestBody = {
         locations: ['पंडरी'],
@@ -331,7 +338,7 @@ describe('Geo-Extraction API Endpoint', () => {
         }
       });
 
-      const response = await POST(request);
+      const response = await MockedPOST(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
