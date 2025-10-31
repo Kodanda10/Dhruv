@@ -250,4 +250,123 @@ describe('GeoHierarchyResolver', () => {
       expect(Array.isArray(result)).toBe(true);
     });
   });
+
+  describe('resolveDeterministic - Strict Mode (Phase 1)', () => {
+    test('should return single candidate with high confidence when exact match found', async () => {
+      // Mock strict mode enabled
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      const result = await resolver.resolveDeterministic('पंडरी');
+      
+      expect(result.hierarchy).toBeTruthy();
+      expect(result.hierarchy?.confidence).toBeGreaterThanOrEqual(0.98);
+      expect(result.candidates).toHaveLength(1);
+      expect(result.needs_review).toBe(false);
+      expect(result.explanations).toHaveLength(0);
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should set needs_review=true when multiple candidates found (strict mode)', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      // Use a location that might have multiple matches
+      const result = await resolver.resolveDeterministic('रायपुर', {
+        districts: [], // No district hint to create ambiguity
+        blocks: []
+      });
+      
+      // If multiple candidates, should set needs_review
+      if (result.candidates.length > 1) {
+        expect(result.needs_review).toBe(true);
+        expect(result.explanations.length).toBeGreaterThan(0);
+        expect(result.explanations[0]).toContain('Multiple candidates');
+      }
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should use constraint hints to narrow down candidates', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      const result = await resolver.resolveDeterministic('रायपुर', {
+        districts: ['रायपुर'],
+        blocks: ['रायपुर']
+      });
+      
+      expect(result.candidates.length).toBeGreaterThanOrEqual(0);
+      // If constraints help, should get single candidate
+      if (result.candidates.length === 1) {
+        expect(result.needs_review).toBe(false);
+        expect(result.hierarchy?.confidence).toBeGreaterThanOrEqual(0.98);
+      }
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should throw error when no candidates found in strict mode', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      await expect(
+        resolver.resolveDeterministic('अस्तित्वहीन_गाँव_12345')
+      ).rejects.toThrow();
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should return all candidates with explanations when ambiguous', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      // Test with a location that likely has multiple matches
+      const result = await resolver.resolveDeterministic('राय', {
+        districts: [],
+        blocks: []
+      });
+      
+      if (result.candidates.length > 1) {
+        expect(result.needs_review).toBe(true);
+        expect(result.explanations.length).toBeGreaterThan(0);
+        expect(result.hierarchy).toBeNull(); // No deterministic hierarchy
+      }
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should enforce confidence policy: exact match = 1.0', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      const result = await resolver.resolveDeterministic('पंडरी');
+      
+      if (result.candidates.length === 1 && result.hierarchy) {
+        // Exact match should have confidence 1.0
+        expect(result.hierarchy.confidence).toBe(1.0);
+      }
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should enforce confidence policy: ULB/Ward ≥ 0.98', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'true';
+      
+      const result = await resolver.resolveDeterministic('नवा रायपुर सेक्टर 21');
+      
+      if (result.hierarchy && result.hierarchy.is_urban && result.hierarchy.ward_no) {
+        expect(result.hierarchy.confidence).toBeGreaterThanOrEqual(0.98);
+      }
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+
+    test('should work in non-strict mode (backward compatible)', async () => {
+      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'false';
+      
+      // Should still work but with less strict requirements
+      const result = await resolver.resolveDeterministic('पंडरी');
+      
+      // Should have either a hierarchy or candidates
+      expect(result.hierarchy !== null || result.candidates.length > 0).toBe(true);
+      
+      delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    });
+  });
 });

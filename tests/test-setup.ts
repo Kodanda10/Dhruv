@@ -32,6 +32,28 @@ if (typeof global.fetch === 'undefined') {
   global.fetch = fetch;
 }
 
+// Polyfill for ResizeObserver used by Recharts ResponsiveContainer
+if (typeof (global as any).ResizeObserver === 'undefined') {
+  (global as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+// Polyfill clearImmediate for undici timers in jsdom
+if (typeof (global as any).clearImmediate === 'undefined') {
+  (global as any).clearImmediate = (id: any) => clearTimeout(id as any);
+}
+
+// Ensure performance.markResourceTiming exists (noop)
+if (typeof (global as any).performance === 'undefined') {
+  (global as any).performance = { now: () => Date.now() } as any;
+}
+if (typeof (global as any).performance.markResourceTiming === 'undefined') {
+  (global as any).performance.markResourceTiming = () => {};
+}
+
 // Mock Next.js App Router hooks for unit tests
 jest.mock('next/navigation', () => {
   const params = new URLSearchParams('');

@@ -68,8 +68,8 @@ export type ActionType =
 // Natural Language Parser Class
 export class NaturalLanguageParser {
   private gemini: GoogleGenerativeAI;
-  private hindiKeywords: { [key: string]: string[] };
-  private englishKeywords: { [key: string]: string[] };
+  private hindiKeywords!: { [key: string]: string[] }; // Initialized in initializeKeywords()
+  private englishKeywords!: { [key: string]: string[] }; // Initialized in initializeKeywords()
 
   constructor() {
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -490,7 +490,7 @@ export class NaturalLanguageParser {
       actions: ['generateSuggestions'],
       confidence: 0.3,
       originalMessage: message,
-      language: 'unknown',
+      language: 'mixed',
       complexity: 'simple'
     };
   }

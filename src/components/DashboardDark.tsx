@@ -19,6 +19,8 @@ export default function DashboardDark() {
   // Move useEffect to the very beginning
   const [serverRows, setServerRows] = useState<any[]>([]);
   const [isPolling, setIsPolling] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   console.log('DashboardDark: About to call useEffect');
 
@@ -91,36 +93,57 @@ export default function DashboardDark() {
     const source = serverRows.length > 0 ? serverRows : parsedTweets;
     console.log('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
     
-    return source.map((p: any) => {
+    return source.map((p: any, index: number) => {
       // Handle both old parsed structure and new database structure
       const isDbData = p.locations !== undefined; // Database data has locations directly
       
       if (isDbData) {
-        // Database structure
-        const locations = (p.locations || []).map((l: any) => l.name || l);
+        // Database structure - ensure locations are always strings
+        const locations: string[] = (p.locations || [])
+          .map((l: any) => {
+            if (typeof l === 'string') return l.trim();
+            if (l && typeof l === 'object' && l !== null) {
+              const name = l.name || l.location || '';
+              return typeof name === 'string' ? name.trim() : '';
+            }
+            return '';
+          })
+          .filter((loc: string): loc is string => typeof loc === 'string' && loc.length > 0);
         const people = p.people_mentioned || [];
         const orgs = p.organizations || [];
         const schemes = p.schemes_mentioned || [];
         
+        // Handle timestamp field - try multiple possible field names
+        const timestamp = p.event_date || p.parsed_at || p.timestamp || p.created_at || new Date().toISOString();
+        
         return {
-          id: p.id,
-          ts: p.event_date || p.parsed_at,
-          when: formatHindiDate(p.event_date || p.parsed_at),
+          id: p.id || p.tweet_id || `tweet-${index}`,
+          ts: timestamp,
+          when: formatHindiDate(timestamp),
           where: locations,
-          what: [p.event_type || 'अन्य'],
+          what: [p.event_type || 'अन्य'].filter(Boolean),
           which: {
-            mentions: people,
-            hashtags: [...orgs, ...schemes],
+            mentions: Array.isArray(people) ? people : [],
+            hashtags: [...(Array.isArray(orgs) ? orgs : []), ...(Array.isArray(schemes) ? schemes : [])],
           },
-          schemes: schemes,
-          how: p.content || `Tweet ID: ${p.tweet_id}`,
-          confidence: p.confidence,
-          needs_review: p.needs_review,
-          review_status: p.review_status,
+          schemes: Array.isArray(schemes) ? schemes : [],
+          how: p.content || p.text || `Tweet ID: ${p.tweet_id || p.id}`,
+          confidence: p.confidence || 0,
+          needs_review: p.needs_review || false,
+          review_status: p.review_status || 'pending',
         };
       } else if (p.parsed && p.parsed.event_type) {
         // Old parsed structure
-        const locations = (p.parsed.locations || []).map((l: any) => l.name || l);
+        const locations: string[] = (p.parsed.locations || [])
+          .map((l: any) => {
+            if (typeof l === 'string') return l.trim();
+            if (l && typeof l === 'object' && l !== null) {
+              const name = l.name || l.location || '';
+              return typeof name === 'string' ? name.trim() : '';
+            }
+            return '';
+          })
+          .filter((loc: string): loc is string => typeof loc === 'string' && loc.length > 0);
         const people = p.parsed.people || [];
         const orgs = p.parsed.organizations || [];
         const schemes = p.parsed.schemes || [];
@@ -165,7 +188,13 @@ export default function DashboardDark() {
     console.log('DashboardDark: after skip filter:', rows.length);
     if (locFilter.trim()) {
       const q = locFilter.trim();
-      rows = rows.filter((r) => r.where.some((w: string) => matchTextFlexible(w, q)));
+      rows = rows.filter((r) => {
+        if (!Array.isArray(r.where)) return false;
+        return r.where.some((w: any) => {
+          const wStr = typeof w === 'string' ? w : (w?.name || String(w || ''));
+          return matchTextFlexible(wStr, q);
+        });
+      });
     }
     if (tagFilter.trim()) {
       const tokens = tagFilter
@@ -178,7 +207,10 @@ export default function DashboardDark() {
           tags.some((t) => matchTagFlexible(t, q)) ||
           matchTextFlexible(r.how, q) ||
           r.what.some((w) => matchTextFlexible(w, q)) ||
-          r.where.some((w: string) => matchTextFlexible(w, q))
+          r.where.some((w: any) => {
+            const wStr = typeof w === 'string' ? w : (w?.name || String(w || ''));
+            return matchTextFlexible(wStr, q);
+          })
         );
       });
     }
@@ -203,25 +235,93 @@ export default function DashboardDark() {
     return rows;
   }, [parsed, locFilter, tagFilter, actionFilter, fromDate, toDate]);
 
-  // Add sorting functionality
+  // Sanitize data before rendering to ensure no objects slip through
+  const sanitizedData = useMemo(() => {
+    return filtered.map((row: any) => {
+      // Ensure where is always string[]
+      const where: string[] = Array.isArray(row.where) 
+        ? row.where.map((w: any) => {
+            if (typeof w === 'string') return w;
+            if (w && typeof w === 'object' && w !== null) {
+              const name = w.name || w.location || '';
+              return typeof name === 'string' ? name.trim() : '';
+            }
+            return '';
+          }).filter((loc: string): loc is string => typeof loc === 'string' && loc.length > 0)
+        : [];
+      
+      // Ensure what is always string[]
+      const what: string[] = Array.isArray(row.what)
+        ? row.what.map((w: any) => {
+            if (typeof w === 'string') return w;
+            if (w && typeof w === 'object' && w !== null) {
+              const name = w.name || '';
+              return typeof name === 'string' ? name.trim() : '';
+            }
+            return '';
+          }).filter((evt: string): evt is string => typeof evt === 'string' && evt.length > 0)
+        : [];
+      
+      // Ensure how is always string
+      const how: string = typeof row.how === 'string' ? row.how : String(row.how || '');
+      
+      // Ensure when is always string
+      const when: string = typeof row.when === 'string' ? row.when : String(row.when || '');
+      
+      // Ensure which.mentions and hashtags are string[]
+      const mentions: string[] = Array.isArray(row.which?.mentions)
+        ? row.which.mentions.map((m: any) => {
+            if (typeof m === 'string') return m;
+            return String(m || '');
+          }).filter((m: string): m is string => typeof m === 'string' && m.length > 0)
+        : [];
+      const hashtags: string[] = Array.isArray(row.which?.hashtags)
+        ? row.which.hashtags.map((h: any) => {
+            if (typeof h === 'string') return h;
+            return String(h || '');
+          }).filter((h: string): h is string => typeof h === 'string' && h.length > 0)
+        : [];
+      
+      // Return only safe properties - don't spread ...row to avoid carrying over objects
+      return {
+        id: row.id,
+        ts: row.ts,
+        when,
+        where,
+        what,
+        which: {
+          mentions,
+          hashtags
+        },
+        schemes: Array.isArray(row.schemes) ? row.schemes.map((s: any) => typeof s === 'string' ? s : String(s || '')).filter(Boolean) : [],
+        how,
+        confidence: typeof row.confidence === 'number' ? row.confidence : 0,
+        needs_review: typeof row.needs_review === 'boolean' ? row.needs_review : false,
+        review_status: typeof row.review_status === 'string' ? row.review_status : 'pending',
+      };
+    });
+  }, [filtered]);
+
+  // Add sorting functionality - use sanitized data
   const getFieldValue = (item: any, field: SortField) => {
     switch (field) {
       case 'date':
         return new Date(item.ts).getTime();
       case 'location':
-        return item.where?.[0] || '';
+        return (Array.isArray(item.where) && item.where[0]) ? String(item.where[0]) : '';
       case 'event_type':
-        return item.what?.[0] || '';
+        return (Array.isArray(item.what) && item.what[0]) ? String(item.what[0]) : '';
       case 'tags':
-        return [...(item.which?.hashtags || []), ...(item.which?.mentions || [])].join(' ');
+        const tags = [...(item.which?.hashtags || []), ...(item.which?.mentions || [])];
+        return tags.map((t: any) => typeof t === 'string' ? t : String(t || '')).join(' ');
       case 'content':
-        return item.how || '';
+        return typeof item.how === 'string' ? item.how : String(item.how || '');
       default:
         return '';
     }
   };
 
-  const { sortedData, handleSort, getSortIcon } = useSortableTable(filtered, getFieldValue);
+  const { sortedData, handleSort, getSortIcon } = useSortableTable(sanitizedData, getFieldValue);
 
   const totalCount = parsed.length;
   const shownCount = filtered.length;
@@ -396,18 +496,52 @@ export default function DashboardDark() {
             </tr>
           </thead>
           <tbody className="bg-[#192734]" data-testid="tbody">
-            {sortedData.map((row, index) => (
-              <tr key={row.id} className={`align-top hover:bg-gray-800`}>
-                <td className="p-2 border-b border-gray-700 whitespace-nowrap">{row.when}</td>
-                <td className="p-2 border-b border-l border-gray-700">{row.where.join(', ') || '—'}</td>
-                <td className="p-2 border-b border-l border-gray-700">{row.what.length ? row.what.map((w:any) => getEventTypeHindi(w)).join(', ') : '—'}</td>
+            {!sanitizedData || sortedData.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-gray-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="material-symbols-outlined text-4xl text-gray-600">inbox</span>
+                    <p className="text-lg font-medium">कोई डेटा नहीं मिला</p>
+                    <p className="text-sm">कृपया फ़िल्टर सेटिंग्स जांचें या बाद में पुनः प्रयास करें।</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              sortedData.map((row, index) => (
+              <tr key={row.id || index} className={`align-top hover:bg-gray-800`}>
+                <td className="p-2 border-b border-gray-700 whitespace-nowrap">
+                  {typeof row.when === 'string' ? row.when : String(row.when || '')}
+                </td>
+                <td className="p-2 border-b border-l border-gray-700">
+                  {(() => {
+                    const locations = Array.isArray(row.where) 
+                      ? row.where.map((w: any) => {
+                          if (typeof w === 'string') return w;
+                          if (w && typeof w === 'object') return w.name || w.location || '';
+                          return String(w || '');
+                        }).filter((loc: string) => loc && loc.trim())
+                      : [];
+                    return locations.length > 0 ? locations.join(', ') : '—';
+                  })()}
+                </td>
+                <td className="p-2 border-b border-l border-gray-700">
+                  {(() => {
+                    const events = Array.isArray(row.what) 
+                      ? row.what.map((w: any) => {
+                          const evt = typeof w === 'string' ? w : (w?.name || String(w || ''));
+                          return getEventTypeHindi(evt);
+                        }).filter(Boolean)
+                      : [];
+                    return events.length > 0 ? events.join(', ') : '—';
+                  })()}
+                </td>
                 <td className="p-2 border-b border-l border-gray-700 align-top w-[14%]" aria-label="कौन/टैग">
                   {(() => {
                     const tags = [...row.which.mentions, ...row.which.hashtags];
                     if (!tags.length) return '—';
                     return (
                       <div className="flex gap-2 flex-wrap max-w-[14rem]">
-                        {tags.map((t, i) => {
+                        {tags.map((t: string, i: number) => {
                           const isSelected = tagFilter
                             .split(/[#,\s]+/)
                             .filter(Boolean)
@@ -448,7 +582,7 @@ export default function DashboardDark() {
                 <td
                   className="p-2 border-b border-l border-gray-700 align-top whitespace-pre-wrap break-words w-[38%]"
                   aria-label="विवरण"
-                  title={row.how}
+                  title={typeof row.how === 'string' ? row.how : String(row.how || '')}
                 >
                   {(() => {
                     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -472,7 +606,7 @@ export default function DashboardDark() {
                   })()}
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </div>

@@ -25,6 +25,8 @@ interface GeoExtractionResponse {
     possibleMatches: GeoHierarchy[];
     suggestedMatch: GeoHierarchy;
   }>;
+  needs_review?: boolean;
+  explanations?: string[];
   summary: {
     totalLocations: number;
     resolvedLocations: number;
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate summary statistics
+      // Calculate summary statistics
     const resolvedLocations = hierarchies.length;
     const ambiguousLocations = ambiguous.length;
     const totalLocations = locations.length;
@@ -125,9 +127,25 @@ export async function POST(request: NextRequest) {
     const resolutionRate = totalLocations > 0 ? resolvedLocations / totalLocations : 0;
     const confidence = avgConfidence * resolutionRate;
 
+      // Determine review need and explanations
+      const needsReview = ambiguousLocations > 0;
+      const explanations: string[] = [];
+      if (needsReview) {
+        for (const a of ambiguous) {
+          const count = a.possibleMatches?.length || 0;
+          if (count === 0) {
+            explanations.push(`No deterministic match for "${a.location}"`);
+          } else if (count > 1) {
+            explanations.push(`Multiple candidates for "${a.location}" — human confirmation required`);
+          }
+        }
+      }
+
     const response: GeoExtractionResponse = {
       hierarchies,
       ambiguous,
+        needs_review: needsReview,
+        explanations,
       summary: {
         totalLocations,
         resolvedLocations,

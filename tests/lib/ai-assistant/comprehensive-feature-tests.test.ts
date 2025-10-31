@@ -1,4 +1,7 @@
 /**
+ * @jest-environment node
+ */
+/**
  * Comprehensive Feature-by-Feature Tests for LangGraph AI Assistant
  * 
  * Tests all features using real tweet data from parsed_tweets.json (55 tweets)

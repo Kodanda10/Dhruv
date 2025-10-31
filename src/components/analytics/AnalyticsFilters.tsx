@@ -121,7 +121,7 @@ export default function AnalyticsFilters({
         {/* Event Type Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            दौरा/कार्यक्रम
+            घटना प्रकार
           </label>
           <select
             value={filters.eventType}

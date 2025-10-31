@@ -431,4 +431,101 @@ export class DynamicLearningSystem {
     `);
     return result.rows.map(row => row.hashtag);
   }
+
+  /**
+   * Learn from geo-hierarchy correction (Phase 3)
+   * 
+   * Persists geo-hierarchy corrections to the geo_corrections table
+   * and optionally updates geo_aliases.json for alias mappings.
+   * 
+   * @param original - Original location name and hierarchy (if any)
+   * @param corrected - Corrected geo-hierarchy
+   * @param reviewer - Reviewer who made the correction
+   * @param tweetId - Tweet ID associated with the correction
+   * @returns LearningResult indicating success/failure
+   */
+  async learnGeoCorrection(
+    original: { location: string; hierarchy: any | null },
+    corrected: any, // GeoHierarchy
+    reviewer: string,
+    tweetId: string
+  ): Promise<LearningResult> {
+    try {
+      // Check if correction differs from original
+      const isDifferent = !original.hierarchy || 
+        JSON.stringify(original.hierarchy) !== JSON.stringify(corrected);
+
+      if (!isDifferent) {
+        // No change, but still return success
+        return {
+          success: true,
+          learnedEntities: []
+        };
+      }
+
+      // Persist correction to geo_corrections table
+      await this.pool.query(`
+        INSERT INTO geo_corrections (
+          tweet_id,
+          field_name,
+          original_value,
+          corrected_value,
+          corrected_by,
+          correction_reason
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [
+        tweetId,
+        'geo_hierarchy',
+        JSON.stringify(original.hierarchy),
+        JSON.stringify(corrected),
+        reviewer,
+        `Geo-hierarchy correction: ${original.location} → ${corrected.village || corrected.ulb || 'unknown'}`
+      ]);
+
+      // Check if this is an alias correction (original location → corrected canonical)
+      if (original.location !== corrected.village && corrected.village) {
+        // This is an alias mapping - update geo_aliases.json would be handled
+        // by a separate process or API endpoint that manages the file
+        // For now, we log it in the correction_reason
+        await this.pool.query(`
+          UPDATE geo_corrections 
+          SET correction_reason = $1 
+          WHERE tweet_id = $2 AND field_name = 'geo_hierarchy'
+          ORDER BY corrected_at DESC LIMIT 1
+        `, [
+          `Alias correction: "${original.location}" maps to canonical "${corrected.village}"`,
+          tweetId
+        ]);
+      }
+
+      // Check if this is a ULB/ward correction
+      if (corrected.is_urban && corrected.ulb && corrected.ward_no) {
+        // ULB/ward mapping - could update ulb_wards.json via separate process
+        // Log in correction_reason for now
+        await this.pool.query(`
+          UPDATE geo_corrections 
+          SET correction_reason = $1 
+          WHERE tweet_id = $2 AND field_name = 'geo_hierarchy'
+          ORDER BY corrected_at DESC LIMIT 1
+        `, [
+          `ULB/Ward correction: ${corrected.ulb} Ward ${corrected.ward_no}`,
+          tweetId
+        ]);
+      }
+
+      return {
+        success: true,
+        learnedEntities: ['geo_hierarchy']
+      };
+
+    } catch (error) {
+      console.error('Error learning geo correction:', error);
+      return {
+        success: false,
+        learnedEntities: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 }

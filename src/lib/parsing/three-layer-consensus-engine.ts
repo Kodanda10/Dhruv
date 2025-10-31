@@ -36,6 +36,12 @@ export interface ConsensusResult {
   agreement_level: 'high' | 'medium' | 'low';
   conflicts: string[];
   geo_hierarchy_resolved: boolean;
+  geo_hierarchy?: any[];
+  gram_panchayats?: string[];
+  ulb_wards?: Array<{ulb: string, ward_no: number}>;
+  blocks?: string[];
+  assemblies?: string[];
+  districts?: string[];
 }
 
 export interface TweetData {
@@ -104,8 +110,109 @@ export class ThreeLayerConsensusEngine {
       errors.push(`Custom engine failed: ${error}`);
     }
 
-    // Apply consensus algorithm
+    // Apply consensus algorithm (synchronous)
     const consensusResult = this.applyConsensusAlgorithm(layerResults, tweet);
+
+    // Resolve geo-hierarchy deterministically after consensus (Phase 1: Strict Mode)
+    try {
+      if (consensusResult.final_result.locations.length > 0) {
+        const resolver = await this.ensureGeoResolver();
+        if (resolver) {
+          const allHierarchies: any[] = [];
+          const allCandidates: any[] = [];
+          let needsReview = false;
+          const explanations: string[] = [];
+
+          // Extract disambiguation hints from tweet text and other locations
+          const districtsSet = new Set<string>();
+          const blocksSet = new Set<string>();
+          
+          // Extract city/district names from tweet text
+          // Check for common district names in the tweet
+          const districtNames = ['रायपुर', 'बिलासपुर', 'दुर्ग', 'रायगढ़', 'कोरबा', 'जगदलपुर', 'नवा रायपुर'];
+          districtNames.forEach(district => {
+            if (tweet.tweet_text.includes(district)) {
+              districtsSet.add(district);
+            }
+          });
+
+          // Resolve each location deterministically
+          for (const loc of consensusResult.final_result.locations) {
+            try {
+              // Extract hints from tweet context
+              const hints = {
+                districts: districtsSet.size > 0 ? Array.from(districtsSet) : undefined,
+                blocks: blocksSet.size > 0 ? Array.from(blocksSet) : undefined,
+                context: tweet.tweet_text
+              };
+
+              const deterministicResult = await resolver.resolveDeterministic(loc, hints);
+
+              // Collect hierarchies and candidates
+              if (deterministicResult.hierarchy) {
+                allHierarchies.push(deterministicResult.hierarchy);
+              }
+              if (deterministicResult.candidates.length > 0) {
+                allCandidates.push(...deterministicResult.candidates);
+              }
+
+              // Track if any location needs review
+              if (deterministicResult.needs_review) {
+                needsReview = true;
+              }
+
+              // Collect explanations
+              if (deterministicResult.explanations.length > 0) {
+                explanations.push(...deterministicResult.explanations);
+              }
+
+              // Update hints based on resolved hierarchy
+              if (deterministicResult.hierarchy) {
+                districtsSet.add(deterministicResult.hierarchy.district);
+                blocksSet.add(deterministicResult.hierarchy.block);
+              }
+            } catch (e) {
+              // In strict mode, errors are thrown; in non-strict, log warning
+              const errorMessage = e instanceof Error ? e.message : String(e);
+              console.warn(`Geo resolve failed for "${loc}":`, errorMessage);
+              explanations.push(`Failed to resolve location "${loc}": ${errorMessage}`);
+              needsReview = true;
+            }
+          }
+
+          // Update consensus result with geo-hierarchy data
+          if (allHierarchies.length > 0) {
+            consensusResult.final_result.geo_hierarchy = allHierarchies;
+            consensusResult.geo_hierarchy_resolved = true;
+          }
+
+          // Set needs_review flag if any location needs review
+          if (needsReview && !consensusResult.final_result.hasOwnProperty('needs_review')) {
+            (consensusResult.final_result as any).needs_review = true;
+          }
+
+          // Add explanations to final result if any
+          if (explanations.length > 0) {
+            if (!consensusResult.final_result.hasOwnProperty('explanations')) {
+              (consensusResult.final_result as any).explanations = [];
+            }
+            (consensusResult.final_result as any).explanations.push(...explanations);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Geo-hierarchy resolution failed:', error);
+      // Set needs_review if resolution completely fails
+      if (!consensusResult.final_result.hasOwnProperty('needs_review')) {
+        (consensusResult.final_result as any).needs_review = true;
+      }
+      if (!consensusResult.final_result.hasOwnProperty('explanations')) {
+        (consensusResult.final_result as any).explanations = [];
+      }
+      (consensusResult.final_result as any).explanations.push(
+        `Geo-hierarchy resolution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
 
     return {
       final_result: consensusResult.final_result,
@@ -333,6 +440,19 @@ Respond in JSON format:
   /**
    * Apply 2/3 voting consensus algorithm
    */
+  private async ensureGeoResolver(): Promise<GeoHierarchyResolver | null> {
+    if (this.geoResolver) return this.geoResolver;
+    try {
+      const resolver = new GeoHierarchyResolver();
+      await resolver.initialize();
+      this.geoResolver = resolver;
+      return resolver;
+    } catch (error) {
+      console.warn('Geo resolver initialization failed:', error);
+      return null;
+    }
+  }
+
   private applyConsensusAlgorithm(
     layerResults: {
       gemini: ParsingResult | null;
@@ -386,16 +506,8 @@ Respond in JSON format:
       confidence: consensusScore,
     };
 
-    // Resolve geo-hierarchy if locations are available
-    let geoHierarchyResolved = false;
-    if (finalResult.locations.length > 0 && this.geoResolver) {
-      try {
-        // This would be async in real implementation
-        geoHierarchyResolved = true;
-      } catch (error) {
-        console.warn('Geo-hierarchy resolution failed:', error);
-      }
-    }
+    // Geo resolution happens after consensus in parseTweet
+    const geoHierarchyResolved = false;
 
     return {
       final_result: finalResult,

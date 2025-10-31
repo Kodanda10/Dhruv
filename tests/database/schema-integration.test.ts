@@ -62,7 +62,8 @@ describe('Database Schema Updates - Real Database', () => {
     const missingIndexes = requiredIndexes.filter(idx => !indexes.includes(idx));
     
     expect(missingIndexes).toHaveLength(0);
-    expect(indexes).toHaveLength(7); // Total number of indexes
+    // Allow additional indexes (geo/consensus) while ensuring required ones exist
+    expect(indexes.length).toBeGreaterThanOrEqual(7);
   });
 
   it('should have reference datasets properly seeded', async () => {

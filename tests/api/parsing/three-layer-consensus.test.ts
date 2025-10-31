@@ -162,6 +162,61 @@ describe('Three-Layer Consensus API Endpoint', () => {
       expect(response.status).toBe(500);
       expect(data.success).toBe(false);
     });
+
+    test('should include geo_hierarchy when resolved', async () => {
+      // Force mock to include geo_hierarchy and flag as resolved
+      mockParseTweet.mockResolvedValueOnce({
+        final_result: {
+          locations: ['पंडरी'],
+          event_type: 'बैठक',
+          schemes_mentioned: [],
+          hashtags: [],
+          people_mentioned: [],
+          geo_hierarchy: [
+            {
+              village: 'পंडरी',
+              gram_panchayat: 'रायपुर',
+              block: 'रायपुर',
+              assembly: 'रायपुर शहर उत्तर',
+              district: 'रायपुर',
+              is_urban: true,
+              ulb: 'रायपुर नगर निगम',
+              ward_no: 5,
+              confidence: 0.95
+            }
+          ],
+          confidence: 0.85,
+          parser_source: 'custom'
+        },
+        layer_results: { gemini: null, ollama: null, custom: null },
+        consensus_score: 0.85,
+        agreement_level: 'high',
+        conflicts: [],
+        geo_hierarchy_resolved: true
+      });
+
+      const requestBody = {
+        tweet_id: 'geo_123',
+        tweet_text: 'पंडरी में बैठक हुई',
+        created_at: '2024-01-01T00:00:00Z',
+        author_handle: 'test_user'
+      };
+
+      const request = new NextRequest('http://localhost:3000/api/parsing/three-layer-consensus', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(Array.isArray(data.result.parsed_data.geo_hierarchy)).toBe(true);
+      expect(data.result.parsed_data.geo_hierarchy.length).toBeGreaterThan(0);
+      expect(data.result.consensus_analysis.geo_hierarchy_resolved).toBe(true);
+    });
   });
 
   describe('GET /api/parsing/three-layer-consensus', () => {

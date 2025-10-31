@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         change.value,
         change.confidence,
         change.source,
-        change.reason
+        (change as any).reason // Optional field, may not exist in all PendingChange types
       );
     }
 
@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
     const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Generate auto-suggestions
-    const aiResponse = await aiAssistant.processMessage(
+    const aiResponse = await getAIAssistant(currentSessionId).processMessage(
       'Generate suggestions for this tweet',
       tweetData,
       false
@@ -180,7 +180,7 @@ export async function PATCH(request: NextRequest) {
     const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Validate data consistency
-    const aiResponse = await aiAssistant.processMessage(
+    const aiResponse = await getAIAssistant(currentSessionId).processMessage(
       'Validate data consistency',
       tweetData,
       false

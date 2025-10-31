@@ -1,4 +1,7 @@
 /**
+ * @jest-environment node
+ */
+/**
  * End-to-End Workflow Tests for AI Assistant
  * 
  * Tests complete user workflows using real tweet data
@@ -6,6 +9,18 @@
 
 import fs from 'fs';
 import path from 'path';
+import { NextResponse } from 'next/server';
+
+async function callAssistant(method: 'POST'|'PATCH', body: any) {
+  const mod = await import('@/app/api/ai-assistant/route');
+  const handler = method === 'PATCH' ? mod.PATCH : mod.POST;
+  const req = { json: async () => body } as any;
+  const res = await handler(req);
+  // NextResponse.json mock in tests maps .json() and status fields
+  const data = await (res as any).json();
+  (data as any).status = (res as any).status || 200;
+  return { ok: ((res as any).status || 200) < 400, json: async () => data } as any;
+}
 
 const realTweets = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'data/parsed_tweets.json'), 'utf-8')
@@ -22,13 +37,9 @@ describe('E2E Workflow 1: Edit Tweet with No Parsed Data', () => {
     };
     
     // Step 1: Request suggestions
-    const response1 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'generate suggestions',
-        tweetData: tweet
-      })
+    const response1 = await callAssistant('POST', {
+      message: 'generate suggestions',
+      tweetData: tweet
     });
     
     const data1 = await response1.json();
@@ -39,14 +50,10 @@ describe('E2E Workflow 1: Edit Tweet with No Parsed Data', () => {
     expect(data1.suggestions.schemes.length).toBeGreaterThan(0);
     
     // Step 2: Apply suggestions
-    const response2 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'apply all suggestions',
-        tweetData: tweet,
-        sessionId: data1.sessionId
-      })
+    const response2 = await callAssistant('POST', {
+      message: 'apply all suggestions',
+      tweetData: tweet,
+      sessionId: data1.sessionId
     });
     
     const data2 = await response2.json();
@@ -61,12 +68,8 @@ describe('E2E Workflow 2: Refine Existing Parsed Data', () => {
     const tweet = realTweets[0];
     
     // Step 1: Validate existing data
-    const response1 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tweetData: tweet
-      })
+    const response1 = await callAssistant('PATCH', {
+      tweetData: tweet
     });
     
     const validation = await response1.json();
@@ -75,13 +78,9 @@ describe('E2E Workflow 2: Refine Existing Parsed Data', () => {
     expect(validation.validation.isValid).toBeDefined();
     
     // Step 2: Get suggestions for improvements
-    const response2 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'suggest improvements',
-        tweetData: tweet
-      })
+    const response2 = await callAssistant('POST', {
+      message: 'suggest improvements',
+      tweetData: tweet
     });
     
     const suggestions = await response2.json();
@@ -96,13 +95,9 @@ describe('E2E Workflow 3: Multi-Turn Conversation', () => {
     const tweet = realTweets[0];
     
     // Turn 1: Add location
-    const turn1 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'add रायगढ़ location',
-        tweetData: tweet
-      })
+    const turn1 = await callAssistant('POST', {
+      message: 'add रायगढ़ location',
+      tweetData: tweet
     });
     
     const data1 = await turn1.json();
@@ -111,14 +106,10 @@ describe('E2E Workflow 3: Multi-Turn Conversation', () => {
     expect(data1.pendingChanges.some(c => c.field === 'locations')).toBe(true);
     
     // Turn 2: Add scheme
-    const turn2 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'also add PM Kisan scheme',
-        tweetData: tweet,
-        sessionId
-      })
+    const turn2 = await callAssistant('POST', {
+      message: 'also add PM Kisan scheme',
+      tweetData: tweet,
+      sessionId
     });
     
     const data2 = await turn2.json();
@@ -127,14 +118,10 @@ describe('E2E Workflow 3: Multi-Turn Conversation', () => {
     expect(data2.context.pendingChangesCount).toBeGreaterThan(1);
     
     // Turn 3: Validate everything
-    const turn3 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'validate all changes',
-        tweetData: tweet,
-        sessionId
-      })
+    const turn3 = await callAssistant('POST', {
+      message: 'validate all changes',
+      tweetData: tweet,
+      sessionId
     });
     
     const data3 = await turn3.json();
@@ -148,13 +135,9 @@ describe('E2E Workflow 4: Add Multiple Entities in One Message', () => {
   test('should parse and handle multiple entities at once', async () => {
     const tweet = realTweets[1];
     
-    const response = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'add रायगढ़, बिलासपुर as locations and PM Kisan, Ayushman Bharat as schemes',
-        tweetData: tweet
-      })
+    const response = await callAssistant('POST', {
+      message: 'add रायगढ़, बिलासपुर as locations and PM Kisan, Ayushman Bharat as schemes',
+      tweetData: tweet
     });
     
     const data = await response.json();
@@ -181,13 +164,9 @@ describe('E2E Workflow 5: Correct AI Suggestions', () => {
     const tweet = realTweets[2];
     
     // Step 1: Get AI suggestions
-    const response1 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'generate suggestions',
-        tweetData: tweet
-      })
+    const response1 = await callAssistant('POST', {
+      message: 'generate suggestions',
+      tweetData: tweet
     });
     
     const data1 = await response1.json();
@@ -196,14 +175,10 @@ describe('E2E Workflow 5: Correct AI Suggestions', () => {
     expect(data1.suggestions).toBeDefined();
     
     // Step 2: Correct a suggestion
-    const response2 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'change event type to बैठक instead of रैली',
-        tweetData: tweet,
-        sessionId
-      })
+    const response2 = await callAssistant('POST', {
+      message: 'change event type to बैठक instead of रैली',
+      tweetData: tweet,
+      sessionId
     });
     
     const data2 = await response2.json();
@@ -212,14 +187,10 @@ describe('E2E Workflow 5: Correct AI Suggestions', () => {
     expect(data2.action).toBe('changeEventType');
     
     // Step 3: Verify correction was accepted
-    const response3 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'what event type did I choose?',
-        tweetData: tweet,
-        sessionId
-      })
+    const response3 = await callAssistant('POST', {
+      message: 'what event type did I choose?',
+      tweetData: tweet,
+      sessionId
     });
     
     const data3 = await response3.json();
@@ -287,14 +258,10 @@ describe('E2E Workflow 8: Process All 55 Tweets', () => {
     
     for (const tweet of realTweets.slice(0, 10)) {
       try {
-        const response = await fetch('http://localhost:3000/api/ai-assistant', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: 'generate suggestions',
-            tweetData: tweet
-          })
-        });
+      const response = await callAssistant('POST', {
+        message: 'generate suggestions',
+        tweetData: tweet
+      });
         
         const data = await response.json();
         
@@ -324,13 +291,9 @@ describe('E2E Workflow 9: Handle Empty/Partial Data', () => {
       hashtags: []
     };
     
-    const response = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'generate suggestions',
-        tweetData: tweet
-      })
+    const response = await callAssistant('POST', {
+      message: 'generate suggestions',
+      tweetData: tweet
     });
     
     const data = await response.json();
@@ -346,13 +309,9 @@ describe('E2E Workflow 9: Handle Empty/Partial Data', () => {
       schemes_mentioned: []
     };
     
-    const response = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'suggest missing fields',
-        tweetData: tweet
-      })
+    const response = await callAssistant('POST', {
+      message: 'suggest missing fields',
+      tweetData: tweet
     });
     
     const data = await response.json();
@@ -368,28 +327,20 @@ describe('E2E Workflow 10: Error Recovery and State Persistence', () => {
     const sessionId = `error-test-${Date.now()}`;
     
     // First successful interaction
-    const response1 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'add location रायपुर',
-        tweetData: tweet,
-        sessionId
-      })
+    const response1 = await callAssistant('POST', {
+      message: 'add location रायपुर',
+      tweetData: tweet,
+      sessionId
     });
     
     const data1 = await response1.json();
     expect(data1.success).toBe(true);
     
     // Second interaction that might fail but state should be maintained
-    const response2 = await fetch('http://localhost:3000/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'invalid request causing error',
-        tweetData: tweet,
-        sessionId
-      })
+    const response2 = await callAssistant('POST', {
+      message: 'invalid request causing error',
+      tweetData: tweet,
+      sessionId
     });
     
     const data2 = await response2.json();

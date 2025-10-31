@@ -25,7 +25,29 @@ jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
   GeoHierarchyResolver: jest.fn().mockImplementation(() => ({
     initialize: jest.fn().mockResolvedValue(undefined),
     cleanup: jest.fn().mockResolvedValue(undefined),
-    resolveVillage: jest.fn().mockResolvedValue([])
+    resolveVillage: jest.fn().mockResolvedValue([]),
+    resolveDeterministic: jest.fn().mockResolvedValue({
+      hierarchy: {
+        village: 'पंडरी',
+        gram_panchayat: 'रायपुर',
+        block: 'रायपुर',
+        assembly: 'रायपुर शहर उत्तर',
+        district: 'रायपुर',
+        is_urban: false,
+        confidence: 1.0
+      },
+      candidates: [{
+        village: 'पंडरी',
+        gram_panchayat: 'रायपुर',
+        block: 'रायपुर',
+        assembly: 'रायपुर शहर उत्तर',
+        district: 'रायपुर',
+        is_urban: false,
+        confidence: 1.0
+      }],
+      needs_review: false,
+      explanations: []
+    })
   }))
 }));
 
@@ -307,6 +329,64 @@ describe('Three-Layer Consensus Engine', () => {
 
       await expect(engineWithoutGemini.parseTweet(mockTweet))
         .rejects.toThrow('All parsing layers failed');
+    });
+
+    test('should resolve geo hierarchy after consensus', async () => {
+      // Prepare engine with mocked geo resolver
+      const mockHierarchy = {
+        village: 'पंडरी',
+        gram_panchayat: 'रायपुर',
+        block: 'रायपुर',
+        assembly: 'रायपुर शहर उत्तर',
+        district: 'रायपुर',
+        is_urban: true,
+        ulb: 'रायपुर नगर निगम',
+        ward_no: 5,
+        confidence: 1.0
+      };
+      
+      const mockResolver = {
+        initialize: jest.fn().mockResolvedValue(undefined),
+        resolveVillage: jest.fn().mockResolvedValue([mockHierarchy]),
+        resolveDeterministic: jest.fn().mockResolvedValue({
+          hierarchy: mockHierarchy,
+          candidates: [mockHierarchy],
+          needs_review: false,
+          explanations: []
+        }),
+        cleanup: jest.fn().mockResolvedValue(undefined)
+      } as any;
+
+      // Inject resolver so ensureGeoResolver returns it without init
+      (engine as any).geoResolver = mockResolver;
+
+      // Mock layers: only custom returns locations
+      jest.spyOn(engine as any, 'parseWithGemini').mockResolvedValueOnce(null);
+      jest.spyOn(engine as any, 'parseWithOllama').mockResolvedValueOnce(null);
+      jest.spyOn(engine as any, 'parseWithCustomEngine').mockResolvedValueOnce({
+        locations: ['पंडरी'],
+        event_type: 'बैठक',
+        schemes_mentioned: [],
+        hashtags: [],
+        people_mentioned: [],
+        geo_hierarchy: [],
+        confidence: 0.6,
+        parser_source: 'custom',
+        raw_response: 'custom'
+      });
+
+      const result = await engine.parseTweet(mockTweet);
+
+      expect(result.geo_hierarchy_resolved).toBe(true);
+      expect(result.final_result.geo_hierarchy).toBeDefined();
+      expect(Array.isArray(result.final_result.geo_hierarchy)).toBe(true);
+      expect(result.final_result.geo_hierarchy.length).toBeGreaterThan(0);
+      expect(result.final_result.geo_hierarchy[0].village).toBeDefined();
+      // Verify resolveDeterministic was called (not resolveVillage)
+      const mockResolverInstance = (engine as any).geoResolver;
+      if (mockResolverInstance && mockResolverInstance.resolveDeterministic) {
+        expect(mockResolverInstance.resolveDeterministic).toHaveBeenCalled();
+      }
     });
   });
 

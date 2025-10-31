@@ -60,7 +60,11 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       type: 'user',
       content: userInput
     };
-    updateMessages(prev => [...prev, newMessage]);
+    if (propSetMessages) {
+      propSetMessages([...currentMessages, newMessage]);
+    } else {
+      setMessages(prev => [...prev, newMessage]);
+    }
 
     // If onSend prop is provided, use it (for API calls)
     if (onSend) {
@@ -74,7 +78,11 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       content: 'सोच रहा हूँ...',
       suggestions: []
     };
-    updateMessages(prev => [...prev, loadingMessage]);
+    if (propSetMessages) {
+      propSetMessages([...currentMessages, loadingMessage]);
+    } else {
+      setMessages(prev => [...prev, loadingMessage]);
+    }
 
     try {
       // Call AI Assistant API
@@ -92,7 +100,12 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
       const data = await response.json();
       
       // Remove loading message
-      updateMessages(prev => prev.slice(0, -1));
+      const updatedMessages = propMessages || messages;
+      if (propSetMessages) {
+        propSetMessages(updatedMessages.slice(0, -1));
+      } else {
+        setMessages(prev => prev.slice(0, -1));
+      }
       
       if (data.success) {
         const aiResponse = {
@@ -100,21 +113,34 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
           content: data.response,
           suggestions: ['अन्य फ़ील्ड की समीक्षा करें', 'नए टैग सुझाएं', 'स्थान जोड़ें']
         };
-        updateMessages(prev => [...prev, aiResponse]);
+        const messagesWithoutLoading = updatedMessages.slice(0, -1);
+        if (propSetMessages) {
+          propSetMessages([...messagesWithoutLoading, aiResponse]);
+        } else {
+          setMessages(prev => [...prev, aiResponse]);
+        }
       } else {
         throw new Error(data.error || 'AI Assistant error');
       }
     } catch (error) {
       console.error('AI Assistant error:', error);
       // Remove loading message
-      updateMessages(prev => prev.slice(0, -1));
+      const updatedMessages = propMessages || messages;
+      const messagesWithoutLoading = updatedMessages.slice(0, -1);
       
       const errorResponse = {
         type: 'ai',
         content: 'क्षमा करें, मैं इस समय आपकी सहायता नहीं कर सकता। कृपया बाद में पुनः प्रयास करें।',
         suggestions: ['पुनः प्रयास करें']
       };
-      updateMessages(prev => [...prev, errorResponse]);
+      if (propSetMessages) {
+        propSetMessages([...messagesWithoutLoading, errorResponse]);
+      } else {
+        setMessages(prev => {
+          const withoutLoading = prev.slice(0, -1);
+          return [...withoutLoading, errorResponse];
+        });
+      }
     }
   };
 
@@ -177,7 +203,7 @@ export default function AIAssistantModal({ isOpen, onClose, currentTweet, onSend
                     {message.content}
                            {message.suggestions && (
                              <div className="mt-2 flex gap-2 text-sm">
-                               {message.suggestions.map((suggestion, i) => (
+                               {message.suggestions.map((suggestion: string, i: number) => (
                                  <button
                                    key={i}
                                    onClick={() => handleSuggestionClick(suggestion)}

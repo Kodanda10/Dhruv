@@ -541,9 +541,9 @@ export class LangGraphAIAssistant {
       
       // Transform SuggestionResult to AISuggestions format
       const transformed = {
-        locations: (suggestions.locations || []).map(l => l.value_hi || l.value_en || l.value || l).filter(Boolean),
-        eventTypes: (suggestions.eventTypes || []).map(e => e.name_hi || e.name_en || e || e).filter(Boolean),
-        schemes: (suggestions.schemes || []).map(s => s.name_hi || s.name_en || s || s).filter(Boolean),
+        locations: (suggestions.locations || []).map(l => l.value_hi || l.value_en || (typeof l === 'string' ? l : '')).filter(Boolean),
+        eventTypes: (suggestions.eventTypes || []).map(e => (e.name_hi || e.name_en || (typeof e === 'string' ? e : ''))).filter(Boolean),
+        schemes: (suggestions.schemes || []).map(s => (s.name_hi || s.name_en || (typeof s === 'string' ? s : ''))).filter(Boolean),
         hashtags: (suggestions.hashtags || []).filter(Boolean)
       };
       

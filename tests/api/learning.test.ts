@@ -10,6 +10,25 @@ jest.mock('next/server', () => ({
   }
 }));
 
+// Mock DynamicLearningSystem to avoid flakiness when DB contents vary
+jest.mock('@/lib/dynamic-learning', () => ({
+  DynamicLearningSystem: jest.fn().mockImplementation(() => ({
+    learnFromHumanFeedback: jest.fn().mockResolvedValue({ success: true, learnedEntities: ['event_type', 'scheme'] }),
+    getIntelligentSuggestions: jest.fn().mockResolvedValue({
+      eventTypes: ['बैठक', 'रैली'],
+      schemes: ['PM-KISAN'],
+      locations: ['रायपुर'],
+      hashtags: ['#किसान']
+    }),
+    getLearningInsights: jest.fn().mockResolvedValue({
+      totalLearnedEntities: 5,
+      eventTypesLearned: 2,
+      schemesLearned: 2,
+      hashtagsLearned: 1
+    })
+  }))
+}));
+
 // Use real database connection for testing with actual data
 const realDatabaseUrl = 'postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db';
 

@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { parseTweetWithGemini } from '@/lib/gemini-parser';
 

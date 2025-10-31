@@ -237,6 +237,8 @@ export default function ReviewQueueNew() {
   };
   const [showSchemeSuggestions, setShowSchemeSuggestions] = useState(false);
   const [showEventSuggestions, setShowEventSuggestions] = useState(false);
+  const [schemeSuggestions, setSchemeSuggestions] = useState<Array<{name_hi: string; name_en: string; category: string}>>([]);
+  const [eventSuggestions, setEventSuggestions] = useState<Array<{name_hi: string; name_en: string; category: string}>>([]);
   const [intelligentSuggestions, setIntelligentSuggestions] = useState<any>(null);
 
   // Fetch intelligent suggestions when entering edit mode
@@ -399,7 +401,7 @@ export default function ReviewQueueNew() {
   const stats = useMemo(() => {
     const pending = tweets.filter(t => t.review_status !== 'approved').length;
     const reviewed = tweets.filter(t => t.review_status === 'approved').length;
-    const avgConfidence = tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / tweets.length;
+    const avgConfidence = tweets.reduce((sum, t) => sum + (parseFloat(t.overall_confidence) || 0), 0) / tweets.length;
     
     console.log('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
     return { pending, reviewed, avgConfidence };
@@ -634,7 +636,7 @@ export default function ReviewQueueNew() {
                     const newEventType = prompt('नया दौरा/कार्यक्रम (हिंदी):');
                     const newEventTypeEn = prompt('नया दौरा/कार्यक्रम (अंग्रेजी):');
                     if (newEventType) {
-                      handleAddNewValue('event_type', newEventType, newEventTypeEn);
+                      handleAddNewValue('event_type', newEventType, newEventTypeEn || undefined);
                     }
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -647,7 +649,7 @@ export default function ReviewQueueNew() {
                     const newScheme = prompt('नई योजना (हिंदी):');
                     const newSchemeEn = prompt('नई योजना (अंग्रेजी):');
                     if (newScheme) {
-                      handleAddNewValue('scheme', newScheme, newSchemeEn);
+                      handleAddNewValue('scheme', newScheme, newSchemeEn || undefined);
                     }
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"

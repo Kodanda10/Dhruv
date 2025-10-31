@@ -321,10 +321,12 @@ export class AIAssistantTools {
 
   private async getLocationSuggestions(tweetText: string, existingLocations: string[]): Promise<string[]> {
     try {
-      const suggestions = await this.learningSystem.getIntelligentSuggestions(
-        'temp', tweetText
-      );
-      return suggestions.locations?.filter(loc => !existingLocations.includes(loc)) || [];
+      const suggestions = await this.learningSystem.getIntelligentSuggestions({
+        tweetText,
+        currentParsed: {}
+      });
+      const locationStrings = (suggestions.locations || []).map(l => l.value_hi || l.value_en || '').filter(Boolean);
+      return locationStrings.filter(loc => !existingLocations.includes(loc));
     } catch (error) {
       return [];
     }
@@ -332,10 +334,11 @@ export class AIAssistantTools {
 
   private async getEventTypeSuggestions(tweetText: string): Promise<string[]> {
     try {
-      const suggestions = await this.learningSystem.getIntelligentSuggestions(
-        'temp', tweetText
-      );
-      return suggestions.eventTypes || [];
+      const suggestions = await this.learningSystem.getIntelligentSuggestions({
+        tweetText,
+        currentParsed: {}
+      });
+      return (suggestions.eventTypes || []).map(e => e.name_hi || e.name_en || '').filter(Boolean);
     } catch (error) {
       return [];
     }
@@ -413,10 +416,12 @@ export class AIAssistantTools {
 
   private async getSchemeSuggestions(tweetText: string, existingSchemes: string[]): Promise<string[]> {
     try {
-      const suggestions = await this.learningSystem.getIntelligentSuggestions(
-        'temp', tweetText
-      );
-      return suggestions.schemes?.filter(scheme => !existingSchemes.includes(scheme)) || [];
+      const suggestions = await this.learningSystem.getIntelligentSuggestions({
+        tweetText,
+        currentParsed: {}
+      });
+      const schemeStrings = (suggestions.schemes || []).map(s => s.name_hi || s.name_en || '').filter(Boolean);
+      return schemeStrings.filter(scheme => !existingSchemes.includes(scheme));
     } catch (error) {
       return [];
     }
@@ -463,9 +468,10 @@ export class AIAssistantTools {
 
   private async getLearnedHashtags(tweetText: string): Promise<string[]> {
     try {
-      const suggestions = await this.learningSystem.getIntelligentSuggestions(
-        'temp', tweetText
-      );
+      const suggestions = await this.learningSystem.getIntelligentSuggestions({
+        tweetText,
+        currentParsed: {}
+      });
       return suggestions.hashtags || [];
     } catch (error) {
       return [];
