@@ -97,13 +97,43 @@ export class NaturalLanguageParser {
       // Detect language
       const language = this.detectLanguage(message);
       
-      // Parse with Gemini for complex requests
-      if (this.isComplexRequest(message)) {
-        return await this.parseWithGemini(message, language);
+      // Extract entities first to check complexity
+      const entities = this.extractEntitiesWithRules(message);
+      const hasMultipleEntities = 
+        entities.locations.length > 1 || 
+        entities.schemes.length > 1 || 
+        entities.eventTypes.length > 1 ||
+        (entities.locations.length > 0 && entities.schemes.length > 0) ||
+        (entities.locations.length > 0 && entities.eventTypes.length > 0) ||
+        (entities.schemes.length > 0 && entities.eventTypes.length > 0);
+      
+      // Parse with Gemini for complex requests or multi-entity requests
+      if (this.isComplexRequest(message) || hasMultipleEntities) {
+        try {
+          const geminiResult = await this.parseWithGemini(message, language);
+          // Ensure complexity is set correctly
+          if (hasMultipleEntities && geminiResult.complexity !== 'complex') {
+            return { ...geminiResult, complexity: 'complex' };
+          }
+          return geminiResult;
+        } catch (error) {
+          // Fallback to rule-based if Gemini fails
+          const ruleResult = this.parseWithRules(message, language);
+          // Override complexity if multiple entities found
+          return {
+            ...ruleResult,
+            complexity: hasMultipleEntities ? 'complex' : ruleResult.complexity
+          };
+        }
       }
       
       // Use rule-based parsing for simple requests
-      return this.parseWithRules(message, language);
+      const result = this.parseWithRules(message, language);
+      // Override complexity if multiple entities found
+      return {
+        ...result,
+        complexity: hasMultipleEntities ? 'complex' : result.complexity
+      };
     } catch (error) {
       console.error('NL Parser error:', error);
       return this.createFallbackParse(message || '');
