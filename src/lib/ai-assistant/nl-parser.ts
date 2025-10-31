@@ -79,8 +79,21 @@ export class NaturalLanguageParser {
   /**
    * Parse natural language request
    */
-  async parseRequest(message: string): Promise<ParsedRequest> {
+  async parseRequest(message: string | null | undefined): Promise<ParsedRequest> {
     try {
+      // Handle null/undefined/empty input with low confidence
+      if (!message || (typeof message === 'string' && message.trim().length === 0)) {
+        return {
+          intent: 'get_suggestions',
+          entities: { locations: [], eventTypes: [], schemes: [], people: [], hashtags: [], numbers: [], dates: [] },
+          actions: ['generateSuggestions'],
+          confidence: 0.2, // Very low confidence for empty/null input
+          originalMessage: message || '',
+          language: 'mixed',
+          complexity: 'simple'
+        };
+      }
+      
       // Detect language
       const language = this.detectLanguage(message);
       
@@ -93,7 +106,7 @@ export class NaturalLanguageParser {
       return this.parseWithRules(message, language);
     } catch (error) {
       console.error('NL Parser error:', error);
-      return this.createFallbackParse(message);
+      return this.createFallbackParse(message || '');
     }
   }
 
@@ -204,11 +217,20 @@ export class NaturalLanguageParser {
       actions = ['generateSuggestions'];
     }
 
+    // Adjust confidence based on message clarity and length
+    let baseConfidence = 0.6;
+    if (entities.locations.length > 0 || entities.eventTypes.length > 0) {
+      baseConfidence = 0.75; // Higher confidence if clear entities found
+    }
+    if (message.trim().length < 5) {
+      baseConfidence = 0.4; // Lower confidence for very short messages
+    }
+    
     return {
       intent,
       entities,
       actions,
-      confidence: 0.6,
+      confidence: baseConfidence,
       originalMessage: message,
       language: language as 'hindi' | 'english' | 'mixed',
       complexity: 'simple'
