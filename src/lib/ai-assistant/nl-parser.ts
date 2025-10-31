@@ -214,18 +214,23 @@ export class NaturalLanguageParser {
     let intent: IntentType = 'unknown';
     let actions: ActionType[] = [];
     
-    if (this.containsKeywords(lowerMessage, this.hindiKeywords.add_location) || 
-        this.containsKeywords(lowerMessage, this.englishKeywords.add_location)) {
-      intent = 'add_location';
-      actions = ['addLocation'];
-    } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.change_event) || 
-               this.containsKeywords(lowerMessage, this.englishKeywords.change_event)) {
-      intent = 'change_event';
-      actions = ['changeEventType'];
+    // Priority order: help > scheme > event > location (more specific first)
+    if (this.containsKeywords(lowerMessage, this.hindiKeywords.help) || 
+        this.containsKeywords(lowerMessage, this.englishKeywords.help)) {
+      intent = 'help';
+      actions = ['showHelp'];
     } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.add_scheme) || 
                this.containsKeywords(lowerMessage, this.englishKeywords.add_scheme)) {
       intent = 'add_scheme';
       actions = ['addScheme'];
+    } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.change_event) || 
+               this.containsKeywords(lowerMessage, this.englishKeywords.change_event)) {
+      intent = 'change_event';
+      actions = ['changeEventType'];
+    } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.add_location) || 
+               this.containsKeywords(lowerMessage, this.englishKeywords.add_location)) {
+      intent = 'add_location';
+      actions = ['addLocation'];
     } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.generate_hashtags) || 
                this.containsKeywords(lowerMessage, this.englishKeywords.generate_hashtags)) {
       intent = 'generate_hashtags';
@@ -238,10 +243,6 @@ export class NaturalLanguageParser {
                this.containsKeywords(lowerMessage, this.englishKeywords.get_suggestions)) {
       intent = 'get_suggestions';
       actions = ['generateSuggestions'];
-    } else if (this.containsKeywords(lowerMessage, this.hindiKeywords.help) || 
-               this.containsKeywords(lowerMessage, this.englishKeywords.help)) {
-      intent = 'help';
-      actions = ['showHelp'];
     } else {
       intent = 'get_suggestions';
       actions = ['generateSuggestions'];

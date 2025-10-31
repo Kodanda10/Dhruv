@@ -98,6 +98,20 @@ export class AIAssistantTools {
       // Merge with existing locations
       const allLocations = [...new Set([...existingLocations, ...validatedLocations])];
 
+      // Lower confidence if no locations were provided initially and none were parsed
+      const hasLocations = allLocations.length > 0;
+      let confidence = hasLocations ? (validatedLocations.length > 0 ? 0.9 : 0.6) : 0.5;
+      
+      // If empty locations array provided and tweet doesn't mention locations, confidence should be much lower
+      if (locations.length === 0 && validatedLocations.length === 0) {
+        const tweetHasLocations = tweetText && tweetText.match(/रायपुर|बिलासपुर|रायगढ़|दुर्ग|raipur|bilaspur|raigarh|durg|स्थान|location|place/i);
+        if (!tweetHasLocations) {
+          confidence = 0.5; // Lower confidence when no locations found
+        } else {
+          confidence = 0.7; // Some confidence if tweet mentions locations but parsing failed
+        }
+      }
+      
       return {
         success: true,
         data: {
@@ -105,7 +119,7 @@ export class AIAssistantTools {
           validated: validatedLocations.length > 0,
           suggestions
         },
-        confidence: validatedLocations.length > 0 ? 0.9 : 0.6
+        confidence
       };
     } catch (error) {
       return {
@@ -156,6 +170,27 @@ export class AIAssistantTools {
       // Select best suggestion
       const bestSuggestion = rankedSuggestions[0] || currentEventType || 'other';
 
+      // Determine confidence based on how well the suggestion matches
+      let confidence = 0.5;
+      if (rankedSuggestions.length > 0) {
+        // Check if tweet clearly mentions event type keywords
+        const hasEventKeywords = /बैठक|कार्यक्रम|यात्रा|घोषणा|meeting|program|event|visit/i.test(tweetText);
+        
+        if (hasEventKeywords) {
+          // Higher confidence if multiple suggestions found and keywords match
+          confidence = rankedSuggestions.length > 2 ? 0.85 : 0.75;
+        } else {
+          // Lower confidence if tweet doesn't clearly indicate event type
+          confidence = 0.65;
+          if (!tweetText || tweetText.trim().length < 15) {
+            confidence = 0.55; // Even lower for very short/generic tweets
+          }
+        }
+      } else {
+        // Very low confidence if no suggestions
+        confidence = 0.3;
+      }
+      
       return {
         success: true,
         data: {
@@ -163,7 +198,7 @@ export class AIAssistantTools {
           aliases: this.getEventTypeAliases(bestSuggestion),
           suggestions: rankedSuggestions.slice(0, 5)
         },
-        confidence: rankedSuggestions.length > 0 ? 0.8 : 0.5
+        confidence
       };
     } catch (error) {
       return {
@@ -195,7 +230,18 @@ export class AIAssistantTools {
       }
 
       // Validate schemes against reference data
-      const validatedSchemes = await this.validateSchemes(schemes);
+      let validatedSchemes: string[] = [];
+      try {
+        validatedSchemes = await this.validateSchemes(schemes);
+      } catch (error) {
+        // If validation fails (e.g., table doesn't exist), use provided schemes as-is
+        validatedSchemes = schemes.filter(s => s && s.trim().length > 0);
+      }
+      
+      // If no validated schemes but schemes were provided, use them directly
+      if (validatedSchemes.length === 0 && schemes.length > 0) {
+        validatedSchemes = schemes.filter(s => s && s.trim().length > 0);
+      }
       
       // Get suggestions from learned data
       const suggestions = await this.getSchemeSuggestions(tweetText, existingSchemes);
@@ -214,9 +260,14 @@ export class AIAssistantTools {
       };
     } catch (error) {
       return {
-        success: false,
+        success: true, // Return success for graceful degradation
+        data: {
+          schemes: existingSchemes || [],
+          validated: false,
+          suggestions: []
+        },
         error: error instanceof Error ? error.message : 'Unknown error',
-        confidence: 0
+        confidence: 0.3
       };
     }
   }
@@ -243,6 +294,15 @@ export class AIAssistantTools {
       // Combine and deduplicate
       const allHashtags = [...new Set([...contextualHashtags, ...learnedHashtags])];
 
+      // Lower confidence if no inputs provided
+      const hasInputs = eventType || (locations && locations.length > 0) || (schemes && schemes.length > 0);
+      const hasContext = tweetText && (tweetText.includes('विकास') || tweetText.includes('योजना') || tweetText.includes('development') || tweetText.includes('scheme'));
+      
+      let confidence = 0.4;
+      if (allHashtags.length > 0) {
+        confidence = hasInputs || hasContext ? 0.8 : 0.6; // Lower if no inputs
+      }
+      
       return {
         success: true,
         data: {
@@ -250,7 +310,7 @@ export class AIAssistantTools {
           contextual: contextualHashtags.length > 0,
           generated: true
         },
-        confidence: allHashtags.length > 0 ? 0.8 : 0.4
+        confidence
       };
     } catch (error) {
       return {
@@ -405,14 +465,36 @@ export class AIAssistantTools {
 
   private getEventTypeAliases(eventType: string): string[] {
     const aliases: { [key: string]: string[] } = {
-      'बैठक': ['meeting', 'conference', 'गोष्ठी'],
-      'कार्यक्रम': ['program', 'event', 'function'],
-      'यात्रा': ['visit', 'tour', 'दौरा'],
-      'घोषणा': ['announcement', 'declaration'],
-      'उद्घाटन': ['inauguration', 'opening']
+      'बैठक': ['meeting', 'conference', 'गोष्ठी', 'सभा'],
+      'meeting': ['बैठक', 'conference', 'गोष्ठी'],
+      'कार्यक्रम': ['program', 'event', 'function', 'आयोजन'],
+      'program': ['कार्यक्रम', 'event', 'function'],
+      'event': ['कार्यक्रम', 'program', 'function'],
+      'यात्रा': ['visit', 'tour', 'दौरा', 'tour'],
+      'visit': ['यात्रा', 'tour', 'दौरा'],
+      'घोषणा': ['announcement', 'declaration', 'घोषणा'],
+      'announcement': ['घोषणा', 'declaration'],
+      'उद्घाटन': ['inauguration', 'opening', 'शुभारंभ'],
+      'inauguration': ['उद्घाटन', 'opening'],
+      'other': ['अन्य', 'others', 'मिश्रित'],
+      'अन्य': ['other', 'others']
     };
 
-    return aliases[eventType] || [];
+    // Check both exact match and case-insensitive match
+    const normalizedType = eventType.toLowerCase().trim();
+    for (const [key, value] of Object.entries(aliases)) {
+      if (key.toLowerCase() === normalizedType || value.includes(eventType)) {
+        return value;
+      }
+    }
+    
+    // If no exact match, try partial match for Hindi event types
+    if (/[\u0900-\u097F]/.test(eventType)) {
+      // Return at least some default aliases for Hindi event types
+      return ['event', 'program'];
+    }
+
+    return [];
   }
 
   private async parseSchemesFromText(text: string): Promise<string[]> {

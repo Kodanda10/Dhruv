@@ -9,12 +9,27 @@ import { aiAssistantTools } from '@/lib/ai-assistant/tools';
 // Mock the dependencies
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
-    query: jest.fn().mockResolvedValue({
-      rows: [
-        { name: 'रायपुर' },
-        { name: 'बिलासपुर' },
-        { name: 'रायगढ़' }
-      ]
+    query: jest.fn().mockImplementation((query: string, params?: any[]) => {
+      // Return different data based on query type
+      if (query.includes('ref_schemes') || query.includes('scheme')) {
+        return Promise.resolve({
+          rows: params && params[0] && Array.isArray(params[0]) 
+            ? params[0].filter((s: string) => !s.includes('Invalid')).map((s: string) => ({ name: s }))
+            : [
+                { name: 'PM Kisan' },
+                { name: 'Ayushman Bharat' },
+                { name: 'Ujjwala' }
+              ]
+        });
+      }
+      // Default: return location data
+      return Promise.resolve({
+        rows: [
+          { name: 'रायपुर' },
+          { name: 'बिलासपुर' },
+          { name: 'रायगढ़' }
+        ]
+      });
     })
   }))
 }));
