@@ -185,6 +185,7 @@ export class LangGraphAIAssistant {
       // Return response with session ID, model used, and context
       return {
         ...response,
+        success: !response.error && response.confidence > 0, // Compute success from error and confidence
         sessionId: currentSessionId,
         modelUsed: this.state.modelUsed,
         context: { ...this.state.context }
@@ -196,6 +197,7 @@ export class LangGraphAIAssistant {
       this.saveState(); // Save state even on error
       return {
         ...errorResponse,
+        success: false, // Explicitly set success to false on error
         sessionId: sessionId || `error_session_${Date.now()}`,
         modelUsed: 'error',
         context: { ...this.state.context }
