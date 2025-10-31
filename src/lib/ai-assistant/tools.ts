@@ -84,6 +84,9 @@ export class AIAssistantTools {
         locations = [];
       }
       
+      // Track if we started with empty array (before parsing)
+      const startedEmpty = locations.length === 0;
+      
       // Parse locations from tweet text if not provided
       if (locations.length === 0 && tweetText) {
         locations = await this.parseLocationsFromText(tweetText);
@@ -95,21 +98,31 @@ export class AIAssistantTools {
       // Get suggestions from learned data
       const suggestions = await this.getLocationSuggestions(tweetText || '', existingLocations);
 
-      // Merge with existing locations
+      // Merge with existing locations (only validated ones, not suggestions)
       const allLocations = [...new Set([...existingLocations, ...validatedLocations])];
 
-      // Lower confidence if no locations were provided initially and none were parsed
-      const hasLocations = allLocations.length > 0;
-      let confidence = hasLocations ? (validatedLocations.length > 0 ? 0.9 : 0.6) : 0.5;
+      // Calculate confidence based on what we actually found
+      let confidence: number;
       
-      // If empty locations array provided and tweet doesn't mention locations, confidence should be much lower
-      if (locations.length === 0 && validatedLocations.length === 0) {
+      if (allLocations.length > 0 && validatedLocations.length > 0) {
+        // We have validated locations - high confidence
+        confidence = 0.9;
+      } else if (allLocations.length > 0) {
+        // We have existing locations but no newly validated ones
+        confidence = 0.6;
+      } else if (startedEmpty && validatedLocations.length === 0) {
+        // Empty array provided and nothing found - lower confidence
         const tweetHasLocations = tweetText && tweetText.match(/रायपुर|बिलासपुर|रायगढ़|दुर्ग|raipur|bilaspur|raigarh|durg|स्थान|location|place/i);
-        if (!tweetHasLocations) {
-          confidence = 0.5; // Lower confidence when no locations found
+        if (/no locations|no.*location|कोई.*स्थान.*नहीं/i.test(tweetText || '')) {
+          confidence = 0.4; // Very low confidence when explicitly says no locations
+        } else if (!tweetHasLocations) {
+          confidence = 0.5; // Lower confidence when no locations found and tweet doesn't mention them
         } else {
           confidence = 0.7; // Some confidence if tweet mentions locations but parsing failed
         }
+      } else {
+        // Default fallback
+        confidence = 0.5;
       }
       
       return {
@@ -301,6 +314,9 @@ export class AIAssistantTools {
       let confidence = 0.4;
       if (allHashtags.length > 0) {
         confidence = hasInputs || hasContext ? 0.8 : 0.6; // Lower if no inputs
+      } else if (!hasInputs && !hasContext) {
+        // No hashtags generated and no inputs/context - very low confidence
+        confidence = 0.3;
       }
       
       return {

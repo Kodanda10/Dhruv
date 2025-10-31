@@ -22,6 +22,22 @@ jest.mock('pg', () => ({
               ]
         });
       }
+      // For cg_geography queries: check if params[0] (locations array) is empty
+      if (query.includes('cg_geography')) {
+        const locations = params && params[0];
+        if (!locations || (Array.isArray(locations) && locations.length === 0)) {
+          // Empty array provided - return no matches
+          return Promise.resolve({ rows: [] });
+        }
+        // Non-empty array: return matching locations
+        return Promise.resolve({
+          rows: [
+            { name: 'रायपुर' },
+            { name: 'बिलासपुर' },
+            { name: 'रायगढ़' }
+          ]
+        });
+      }
       // Default: return location data
       return Promise.resolve({
         rows: [
