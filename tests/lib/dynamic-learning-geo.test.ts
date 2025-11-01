@@ -37,7 +37,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
       const tweetId = 'test_tweet_123';
 
       // Mock successful insert
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any);
 
       const result = await learningSystem.learnGeoCorrection(
         { location: originalLocation, hierarchy: originalHierarchy },
@@ -71,7 +71,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 1.0
       };
 
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 }); // geo_corrections insert
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any); // geo_corrections insert
       // For alias updates, we'd need to check if fs.writeFile is called
       // For now, just verify geo_corrections is written
 
@@ -98,7 +98,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 0.98
       };
 
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any);
 
       const result = await learningSystem.learnGeoCorrection(
         { location: 'सेक्टर 21', hierarchy: null },
@@ -126,7 +126,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 1.0
       };
 
-      mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
+      mockQuery.mockRejectedValueOnce(new Error('Database connection failed') as any);
 
       const result = await learningSystem.learnGeoCorrection(
         { location: 'पंडरी', hierarchy: null },

@@ -62,7 +62,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.message).toBeDefined();
       expect(response.action).toBeDefined();
       expect(response.confidence).toBeGreaterThan(0);
@@ -75,7 +75,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.message).toContain('बैठक');
       expect(response.action).toBe('changeEventType');
     });
@@ -86,7 +86,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.suggestions).toBeDefined();
       expect(response.suggestions.locations).toBeInstanceOf(Array);
       expect(response.suggestions.eventTypes).toBeInstanceOf(Array);
@@ -100,7 +100,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.pendingChanges.length).toBeGreaterThan(0);
       // At least one action should be executed (location or scheme)
       const hasLocation = response.pendingChanges.some(c => c.field === 'locations');
@@ -124,7 +124,7 @@ describe('LangGraph AI Assistant', () => {
     test('should handle empty message gracefully', async () => {
       const response = await aiAssistant.processMessage('', mockTweetData);
       
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.message).toBeDefined();
       expect(response.action).toBe('generateSuggestions');
     });
@@ -135,7 +135,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.confidence).toBeLessThan(0.8);
     });
 
@@ -145,7 +145,7 @@ describe('LangGraph AI Assistant', () => {
         null as any
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.message).toBeDefined();
     });
   });
@@ -160,7 +160,7 @@ describe('LangGraph AI Assistant', () => {
       // Second message
       const response = await aiAssistant.processMessage('also add बिलासपुर', mockTweetData);
       
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.message).toBeDefined();
     });
 
@@ -179,7 +179,7 @@ describe('LangGraph AI Assistant', () => {
         mockTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.modelUsed).toBe('gemini');
     });
 
@@ -207,7 +207,7 @@ describe('LangGraph AI Assistant', () => {
       );
 
       // CRITICAL: Should succeed with rule-based parsing even if Gemini fails
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       // Model used could be gemini (if rule-based succeeds) or ollama (if full fallback)
       expect(['gemini', 'ollama']).toContain(response.modelUsed);
     });
@@ -235,7 +235,7 @@ describe('LangGraph AI Assistant', () => {
         realTweetData
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.action).toBe('validateData');
       expect(response.confidence).toBeGreaterThan(0.5);
     });
@@ -251,7 +251,7 @@ describe('LangGraph AI Assistant', () => {
         incompleteTweetData as any
       );
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(response.suggestions).toBeDefined();
       expect(response.pendingChanges.length).toBeGreaterThan(0);
     });
@@ -343,7 +343,7 @@ describe('LangGraph AI Assistant', () => {
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
-      expect(response.success).toBe(true);
+      expect((response as any).success).toBe(true);
       expect(responseTime).toBeLessThan(5000); // Should respond within 5 seconds
     });
 
@@ -355,7 +355,7 @@ describe('LangGraph AI Assistant', () => {
       const responses = await Promise.all(promises);
       
       responses.forEach(response => {
-        expect(response.success).toBe(true);
+        expect((response as any).success).toBe(true);
         expect(response.message).toBeDefined();
       });
     });

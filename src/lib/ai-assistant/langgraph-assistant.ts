@@ -879,6 +879,7 @@ export interface ParsedIntent {
 }
 
 export interface AIResponse {
+  success?: boolean; // Computed from error and confidence
   message: string;
   action: string;
   confidence: number;

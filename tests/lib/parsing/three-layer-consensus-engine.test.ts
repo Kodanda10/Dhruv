@@ -13,19 +13,19 @@ jest.mock('@google/generative-ai', () => ({
             schemes_mentioned: ['PM-Kisan'],
             hashtags: ['#test'],
             people_mentioned: ['श्री राम']
-          }))
+          })) as any
         }
-      })
-    })
+      } as any)
+    } as any)
   }))
 }));
 
 // Mock GeoHierarchyResolver
 jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
   GeoHierarchyResolver: jest.fn().mockImplementation(() => ({
-    initialize: jest.fn().mockResolvedValue(undefined),
-    cleanup: jest.fn().mockResolvedValue(undefined),
-    resolveVillage: jest.fn().mockResolvedValue([]),
+    initialize: jest.fn().mockResolvedValue(undefined as any),
+    cleanup: jest.fn().mockResolvedValue(undefined as any),
+    resolveVillage: jest.fn().mockResolvedValue([] as any),
     resolveDeterministic: jest.fn().mockResolvedValue({
       hierarchy: {
         village: 'पंडरी',
@@ -47,12 +47,12 @@ jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
       }],
       needs_review: false,
       explanations: []
-    })
+    } as any)
   }))
 }));
 
 // Mock fetch for Ollama
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 describe('Three-Layer Consensus Engine', () => {
   let engine: ThreeLayerConsensusEngine;
@@ -89,7 +89,7 @@ describe('Three-Layer Consensus Engine', () => {
                 people_mentioned: ['श्री राम']
               }))
             }
-          })
+          } as any)
         })
       };
 
@@ -117,7 +117,7 @@ describe('Three-Layer Consensus Engine', () => {
 
   describe('Layer 2: Ollama Local Model Parsing', () => {
     test('should parse tweet with Ollama successfully', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({
           response: JSON.stringify({
@@ -127,8 +127,8 @@ describe('Three-Layer Consensus Engine', () => {
             hashtags: ['#किसान'],
             people_mentioned: []
           })
-        })
-      });
+        }) as any
+      } as Response);
 
       const result = await (engine as any).parseWithOllama(mockTweet);
 
@@ -143,10 +143,10 @@ describe('Three-Layer Consensus Engine', () => {
     });
 
     test('should handle Ollama API errors gracefully', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: false,
         statusText: 'Connection refused'
-      });
+      } as Response);
 
       await expect((engine as any).parseWithOllama(mockTweet))
         .rejects.toThrow('Ollama API error: Connection refused');
@@ -275,7 +275,7 @@ describe('Three-Layer Consensus Engine', () => {
   describe('Complete Parsing Workflow', () => {
     test('should parse tweet with all three layers', async () => {
       // Mock Ollama response
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue({
           response: JSON.stringify({
@@ -285,8 +285,8 @@ describe('Three-Layer Consensus Engine', () => {
             hashtags: ['#किसान'],
             people_mentioned: []
           })
-        })
-      });
+        } as any) as any
+      } as Response);
 
       const result = await engine.parseTweet(mockTweet);
 
@@ -300,10 +300,10 @@ describe('Three-Layer Consensus Engine', () => {
 
     test('should handle partial layer failures gracefully', async () => {
       // Mock Ollama failure
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: false,
         statusText: 'Connection refused'
-      });
+      } as Response);
 
       const result = await engine.parseTweet(mockTweet);
 
@@ -316,10 +316,10 @@ describe('Three-Layer Consensus Engine', () => {
 
     test('should handle all layer failures', async () => {
       // Mock all failures
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: false,
         statusText: 'Connection refused'
-      });
+      } as Response);
 
       const engineWithoutGemini = new ThreeLayerConsensusEngine();
       // Don't initialize Gemini
@@ -346,15 +346,15 @@ describe('Three-Layer Consensus Engine', () => {
       };
       
       const mockResolver = {
-        initialize: jest.fn().mockResolvedValue(undefined),
-        resolveVillage: jest.fn().mockResolvedValue([mockHierarchy]),
-        resolveDeterministic: jest.fn().mockResolvedValue({
+        initialize: jest.fn(() => Promise.resolve(undefined)),
+        resolveVillage: jest.fn(() => Promise.resolve([mockHierarchy])),
+        resolveDeterministic: jest.fn(() => Promise.resolve({
           hierarchy: mockHierarchy,
           candidates: [mockHierarchy],
           needs_review: false,
           explanations: []
-        }),
-        cleanup: jest.fn().mockResolvedValue(undefined)
+        })),
+        cleanup: jest.fn(() => Promise.resolve(undefined))
       } as any;
 
       // Inject resolver so ensureGeoResolver returns it without init

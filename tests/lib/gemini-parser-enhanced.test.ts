@@ -7,8 +7,8 @@ import { parseTweetWithGemini } from '@/lib/gemini-parser';
 // Mock GeoHierarchyResolver
 jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
   GeoHierarchyResolver: jest.fn().mockImplementation(() => ({
-    initialize: jest.fn().mockResolvedValue(undefined),
-    cleanup: jest.fn().mockResolvedValue(undefined),
+    initialize: jest.fn().mockResolvedValue(undefined as any),
+    cleanup: jest.fn().mockResolvedValue(undefined as any),
     resolveVillage: jest.fn().mockImplementation(async (location: string) => {
       // Mock responses for specific locations
       const mockHierarchies: any[] = [];
@@ -68,7 +68,7 @@ jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
     getGenerativeModel: jest.fn().mockReturnValue({
-      generateContent: jest.fn().mockImplementation((prompt: string) => {
+      generateContent: jest.fn().mockImplementation((prompt: string): Promise<any> => {
         // Check if prompt contains "Invalid tweet" or "अज्ञात" for empty/no location cases
         const isEmptyCase = prompt.includes('Invalid tweet') || prompt.includes('अज्ञात');
         
@@ -115,7 +115,7 @@ jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
     query: jest.fn().mockResolvedValue({
       rows: []
-    })
+    } as any)
   }))
 }));
 

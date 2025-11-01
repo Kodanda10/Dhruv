@@ -16,7 +16,7 @@ jest.mock('next/server', () => ({
 }));
 
 // Make NextRequest available globally for tests
-global.NextRequest = mockNextRequest;
+(global as any).NextRequest = mockNextRequest;
 
 // Import the API route handlers
 import { POST, GET } from '@/app/api/reference/learn/route';
@@ -31,8 +31,8 @@ jest.mock('pg', () => ({
 }));
 
 // Mock Request and Response for Jest environment
-global.Request = jest.fn();
-global.Response = jest.fn();
+(global as any).Request = jest.fn();
+(global as any).Response = jest.fn() as any;
 
 describe('POST /api/reference/learn', () => {
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe('POST /api/reference/learn', () => {
         rows: [{ count: '1' }]
       });
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn', {
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn', {
       method: 'POST',
       body: JSON.stringify({
         entity_type: 'scheme',
@@ -88,7 +88,7 @@ describe('POST /api/reference/learn', () => {
         rows: []
       });
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn', {
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn', {
       method: 'POST',
       body: JSON.stringify({
         entity_type: 'event_type',
@@ -116,7 +116,7 @@ describe('POST /api/reference/learn', () => {
   it('should handle database errors gracefully', async () => {
     mockQueryFn.mockRejectedValueOnce(new Error('Database error'));
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn', {
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn', {
       method: 'POST',
       body: JSON.stringify({
         entity_type: 'scheme',
