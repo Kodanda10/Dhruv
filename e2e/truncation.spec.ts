@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test('कैसे column truncates with title containing full text', async ({ page }) => {
+test('विवरण column shows full text with wrapping and title mirrors content', async ({ page }) => {
   await page.goto('http://localhost:3000');
-  const cell = page.locator('td[aria-label="कैसे"]').first();
+  const cell = page.locator('td[aria-label="विवरण"]').first();
   const text = await cell.textContent();
   const title = await cell.getAttribute('title');
-  expect(text?.length || 0).toBeLessThanOrEqual(80);
-  expect((title?.length || 0) >= (text?.length || 0)).toBeTruthy();
+  // Full text should be visible (no truncation by length constraint now)
+  expect((text?.length || 0)).toBeGreaterThan(80);
+  // Title mirrors the full text for accessibility tooltip
+  expect(title).toBe(text);
 });
-

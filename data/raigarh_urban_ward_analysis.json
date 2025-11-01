@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "title": "Raigarh Assembly Constituency - Urban Ward Data Analysis",
+    "generated": "2025-10-10",
+    "status": "INCOMPLETE - Ward data not available in current dataset"
+  },
+  "assembly_constituency_analysis": {
+    "assembly_constituency": "रायगढ़",
+    "blocks": [
+      "रायगढ़"
+    ],
+    "total_gram_panchayats": 84,
+    "total_villages": 132,
+    "urban_areas_found": true,
+    "ulb_data": {
+      "रायगढ़": {
+        "block": "रायगढ़",
+        "ward_data_available": false,
+        "notes": "Ward data not available in current dataset"
+      }
+    },
+    "ward_data": {},
+    "data_gaps": [
+      "Ward-level data not available in current dataset",
+      "ULB boundaries not defined",
+      "Population data not included",
+      "Electoral ward mappings missing"
+    ]
+  },
+  "urban_indicators_found": {
+    "total_records": 0,
+    "potential_ulbs": [],
+    "urban_candidates": []
+  },
+  "ward_collection_template": {
+    "raigarh_ulb": {
+      "official_name": "रायगढ़ नगर पालिका/नगर निगम",
+      "type": "Municipal Corporation/Municipality",
+      "block": "रायगढ़",
+      "assembly_constituency": "रायगढ़",
+      "estimated_wards": "TBD",
+      "ward_template": {
+        "ward_number": "",
+        "ward_name_hindi": "",
+        "ward_name_english": "",
+        "area_description": "",
+        "population": "TBD",
+        "key_localities": [],
+        "boundaries": "TBD",
+        "councillor": "TBD"
+      },
+      "data_sources_needed": [
+        "Raigarh Municipal Corporation website",
+        "State Election Commission ward lists",
+        "Census 2011/2024 ward data",
+        "Local government gazettes"
+      ]
+    }
+  },
+  "official_sources_to_check": [
+    "https://raigarh.cgstate.gov.in - District administration",
+    "https://cgstate.gov.in/en/departments/urban-administration - Urban Admin Dept",
+    "Municipal Corporation of Raigarh official website",
+    "Chhattisgarh State Election Commission ward lists",
+    "Census 2011 ward data",
+    "Electoral roll with ward boundaries"
+  ],
+  "next_steps": [
+    "Contact Raigarh Municipal Corporation for official ward list",
+    "Obtain ward boundaries from local administration",
+    "Cross-reference with voter lists for ward verification",
+    "Implement automated data collection from official portals"
+  ],
+  "recommendations": {
+    "immediate": "Use existing rural data (84 GPs, 132 villages) for rural areas",
+    "short_term": "Collect ward data through official channels",
+    "long_term": "Implement continuous monitoring of administrative changes"
+  }
+}

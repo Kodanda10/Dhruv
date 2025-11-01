@@ -1,0 +1,241 @@
+{
+  "source": "Chhattisgarh SuShasan Portal — Filter Hierarchy",
+  "url": "https://sushasantihar.cg.nic.in/reports/sub-category-wise-application-filter-reports",
+  "fetched_at": "2025-09-12T10:24:56.417Z",
+  "params": {
+    "mode": "rural",
+    "limits": {
+      "maxDistricts": 2,
+      "maxBlocks": 2,
+      "maxPanchayats": 2,
+      "maxVillages": 2,
+      "maxULBs": 0,
+      "maxWards": 0,
+      "delay": 800
+    }
+  },
+  "rural": [
+    {
+      "hindi": "छत्तीसगढ़ जनदर्शन",
+      "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+      "english": "Chhatataisagadha Janadarashana",
+      "transliteration": "chhatataisagadha janadarashana",
+      "blocks": [
+        {
+          "hindi": "छत्तीसगढ़ जनदर्शन",
+          "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+          "english": "Chhatataisagadha Janadarashana",
+          "transliteration": "chhatataisagadha janadarashana",
+          "panchayats": [
+            {
+              "hindi": "छत्तीसगढ़ जनदर्शन",
+              "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+              "english": "Chhatataisagadha Janadarashana",
+              "transliteration": "chhatataisagadha janadarashana",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            },
+            {
+              "hindi": "छत्तीसगढ़ सीएमओ",
+              "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+              "english": "Chhatataisagadha Saiemao",
+              "transliteration": "chhatataisagadha saiemao",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "hindi": "छत्तीसगढ़ सीएमओ",
+          "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+          "english": "Chhatataisagadha Saiemao",
+          "transliteration": "chhatataisagadha saiemao",
+          "panchayats": [
+            {
+              "hindi": "छत्तीसगढ़ जनदर्शन",
+              "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+              "english": "Chhatataisagadha Janadarashana",
+              "transliteration": "chhatataisagadha janadarashana",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            },
+            {
+              "hindi": "छत्तीसगढ़ सीएमओ",
+              "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+              "english": "Chhatataisagadha Saiemao",
+              "transliteration": "chhatataisagadha saiemao",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "hindi": "छत्तीसगढ़ सीएमओ",
+      "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+      "english": "Chhatataisagadha Saiemao",
+      "transliteration": "chhatataisagadha saiemao",
+      "blocks": [
+        {
+          "hindi": "छत्तीसगढ़ जनदर्शन",
+          "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+          "english": "Chhatataisagadha Janadarashana",
+          "transliteration": "chhatataisagadha janadarashana",
+          "panchayats": [
+            {
+              "hindi": "छत्तीसगढ़ जनदर्शन",
+              "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+              "english": "Chhatataisagadha Janadarashana",
+              "transliteration": "chhatataisagadha janadarashana",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            },
+            {
+              "hindi": "छत्तीसगढ़ सीएमओ",
+              "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+              "english": "Chhatataisagadha Saiemao",
+              "transliteration": "chhatataisagadha saiemao",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "hindi": "छत्तीसगढ़ सीएमओ",
+          "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+          "english": "Chhatataisagadha Saiemao",
+          "transliteration": "chhatataisagadha saiemao",
+          "panchayats": [
+            {
+              "hindi": "छत्तीसगढ़ जनदर्शन",
+              "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+              "english": "Chhatataisagadha Janadarashana",
+              "transliteration": "chhatataisagadha janadarashana",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            },
+            {
+              "hindi": "छत्तीसगढ़ सीएमओ",
+              "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+              "english": "Chhatataisagadha Saiemao",
+              "transliteration": "chhatataisagadha saiemao",
+              "villages": [
+                {
+                  "hindi": "छत्तीसगढ़ जनदर्शन",
+                  "nukta_hindi": "छत्तीसगढ़ जनदर्शन",
+                  "english": "Chhatataisagadha Janadarashana",
+                  "transliteration": "chhatataisagadha janadarashana"
+                },
+                {
+                  "hindi": "छत्तीसगढ़ सीएमओ",
+                  "nukta_hindi": "छत्तीसगढ़ सीएमओ",
+                  "english": "Chhatataisagadha Saiemao",
+                  "transliteration": "chhatataisagadha saiemao"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "urban": [],
+  "summary": {
+    "rural": {
+      "districts": 2,
+      "blocks": 4,
+      "panchayats": 8,
+      "villages": 16
+    },
+    "urban": {
+      "districts": 0,
+      "ulbs": 0,
+      "wards": 0
+    }
+  }
+}

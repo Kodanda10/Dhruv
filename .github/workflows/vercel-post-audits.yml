@@ -1,0 +1,27 @@
+name: Vercel Post-Deploy Audits
+
+on:
+  deployment_status:
+    types: [success]
+
+jobs:
+  audit-deployment:
+    if: startsWith(github.event.deployment.environment, 'Production') || startsWith(github.event.deployment.environment, 'Preview')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Determine URL
+        id: url
+        run: |
+          echo "url=${{ github.event.deployment_status.target_url }}" >> $GITHUB_OUTPUT
+      - name: Lighthouse CI (deployed)
+        run: npx @lhci/cli@0.13.x autorun --collect.url=${{ steps.url.outputs.url }}
+      - name: Axe-core a11y (deployed)
+        env:
+          AXE_URL: ${{ steps.url.outputs.url }}
+        run: node scripts/axe-check.js
+

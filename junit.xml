@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="26" failures="0" errors="0" time="1.805">
+  <testsuite name="Metrics summary" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="0.717" tests="1">
+    <testcase classname="Metrics summary shows top locations and actions with counts in Hindi" name="Metrics summary shows top locations and actions with counts in Hindi" time="0.064">
+    </testcase>
+  </testsuite>
+  <testsuite name="Hardcoded dataset" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.106" tests="1">
+    <testcase classname="Hardcoded dataset exists and contains 48 posts with required fields" name="Hardcoded dataset exists and contains 48 posts with required fields" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="parse places (extended variants)" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.044" tests="2">
+    <testcase classname="parse places (extended variants) extracts multi-word places like नई दिल्ली" name="parse places (extended variants) extracts multi-word places like नई दिल्ली" time="0.001">
+    </testcase>
+    <testcase classname="parse places (extended variants) recognizes छत्तीसगढ़ and भारत mentions" name="parse places (extended variants) recognizes छत्तीसगढ़ and भारत mentions" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="Feature flag: FLAG_PARSE" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="0.942" tests="1">
+    <testcase classname="Feature flag: FLAG_PARSE when FLAG_PARSE=off, disables extraction (no hashtags) and shows placeholders" name="Feature flag: FLAG_PARSE when FLAG_PARSE=off, disables extraction (no hashtags) and shows placeholders" time="0.168">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard columns behavior" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="0.971" tests="2">
+    <testcase classname="Dashboard columns behavior renders placeholder (—) where location or actions are missing" name="Dashboard columns behavior renders placeholder (—) where location or actions are missing" time="0.115">
+    </testcase>
+    <testcase classname="Dashboard columns behavior truncates the &quot;विवरण&quot; column to 80 chars and exposes full text in title" name="Dashboard columns behavior truncates the &quot;विवरण&quot; column to 80 chars and exposes full text in title" time="0.049">
+    </testcase>
+  </testsuite>
+  <testsuite name="Homepage composition" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="0.998" tests="1">
+    <testcase classname="Homepage composition renders dashboard table and metrics summary" name="Homepage composition renders dashboard table and metrics summary" time="0.216">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard date range filter" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="1.068" tests="1">
+    <testcase classname="Dashboard date range filter filters rows by inclusive date range" name="Dashboard date range filter filters rows by inclusive date range" time="0.284">
+    </testcase>
+  </testsuite>
+  <testsuite name="Documentation presence" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.135" tests="1">
+    <testcase classname="Documentation presence runbook exists and mentions FLAG_PARSE and rollback" name="Documentation presence runbook exists and mentions FLAG_PARSE and rollback" time="0.028">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="1.068" tests="1">
+    <testcase classname="Dashboard renders a Hindi table with headers and 48 rows" name="Dashboard renders a Hindi table with headers and 48 rows" time="0.298">
+    </testcase>
+  </testsuite>
+  <testsuite name="tag search normalization" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.126" tests="3">
+    <testcase classname="tag search normalization builds keys for nukta and transliteration" name="tag search normalization builds keys for nukta and transliteration" time="0.001">
+    </testcase>
+    <testcase classname="tag search normalization matches #रोज़गार with #रोजगार (no nukta)" name="tag search normalization matches #रोज़गार with #रोजगार (no nukta)" time="0">
+    </testcase>
+    <testcase classname="tag search normalization matches #रोज़गार with #Rojgar and #Rojgaar (hinglish)" name="tag search normalization matches #रोज़गार with #Rojgar and #Rojgaar (hinglish)" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard filters" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="1.114" tests="1">
+    <testcase classname="Dashboard filters filters rows by स्थान (कहाँ)" name="Dashboard filters filters rows by स्थान (कहाँ)" time="0.337">
+    </testcase>
+  </testsuite>
+  <testsuite name="location flexible matching" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.113" tests="3">
+    <testcase classname="location flexible matching matches दिल्ली with Delhi and Dilli" name="location flexible matching matches दिल्ली with Delhi and Dilli" time="0.002">
+    </testcase>
+    <testcase classname="location flexible matching matches नई दिल्ली with New Delhi and Nayi Dilli" name="location flexible matching matches नई दिल्ली with New Delhi and Nayi Dilli" time="0.001">
+    </testcase>
+    <testcase classname="location flexible matching matches रायगढ़ with Raigarh and Raygarh" name="location flexible matching matches रायगढ़ with Raigarh and Raygarh" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="parse activities and inferred locations" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.12" tests="3">
+    <testcase classname="parse activities and inferred locations detects activities like शिलान्यास and निरीक्षण" name="parse activities and inferred locations detects activities like शिलान्यास and निरीक्षण" time="0.002">
+    </testcase>
+    <testcase classname="parse activities and inferred locations extracts multi-activity tokens like जन्मदिन, प्रार्थना, शुभकामनायें" name="parse activities and inferred locations extracts multi-activity tokens like जन्मदिन, प्रार्थना, शुभकामनायें" time="0.001">
+    </testcase>
+    <testcase classname="parse activities and inferred locations captures नई दिल्ली from sentence constructs" name="parse activities and inferred locations captures नई दिल्ली from sentence constructs" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="parse util" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:49" time="0.046" tests="2">
+    <testcase classname="parse util formats date to Hindi (Day, DD MMMM YYYY)" name="parse util formats date to Hindi (Day, DD MMMM YYYY)" time="0">
+    </testcase>
+    <testcase classname="parse util extracts where, what, which, how from content" name="parse util extracts where, what, which, how from content" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard filter reset" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="1.166" tests="1">
+    <testcase classname="Dashboard filter reset clears all filters and restores full dataset" name="Dashboard filter reset clears all filters and restores full dataset" time="0.396">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dashboard tag/mention quick filter" errors="0" failures="0" skipped="0" timestamp="2025-09-08T19:38:48" time="1.184" tests="2">
+    <testcase classname="Dashboard tag/mention quick filter filters by hashtag (e.g., #समारोह)" name="Dashboard tag/mention quick filter filters by hashtag (e.g., #समारोह)" time="0.32">
+    </testcase>
+    <testcase classname="Dashboard tag/mention quick filter filters by mention (e.g., @PMOIndia)" name="Dashboard tag/mention quick filter filters by mention (e.g., @PMOIndia)" time="0.093">
+    </testcase>
+  </testsuite>
+</testsuites>

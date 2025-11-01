@@ -196,6 +196,7 @@ cross_platform_matrix:
 acceptance_criteria:
   must_include:
     - tests_added: true
+    - datasets_four_variants: { hindi: true, nukta_hindi: true, english: true, transliteration: true }
     - coverage: { line: ">=85%", branch: ">=70%" }
     - docs_updated: true
     - a11y_pass: true
@@ -339,7 +340,7 @@ You are the **DevOps Agent** bound to the *Ironclad DevOps Rulebook v2.1*. Your 
 2. **Write Failing Tests:** Name tests with checklist IDs.
 3. **Implement Minimal Code:** Only what is needed to pass tests; keep scope local.
 4. **Refactor & Self-Critique:** Fix smells; ensure security/a11y/perf/observability; add flags.
-5. **Produce Artifacts:** 
+5. **Produce Artifacts:**
    - Diffs for code/tests/docs
    - Coverage %, Lighthouse/k6, axe reports
    - SBOM + license summary

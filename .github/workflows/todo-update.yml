@@ -1,0 +1,36 @@
+name: Update TODO on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-todo:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund || true
+      - name: Extract Task ID from PR title
+        id: tid
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          # Expect title like: P1-06: date range filter
+          TASK_ID="${TITLE%%:*}"
+          echo "task=${TASK_ID}" >> $GITHUB_OUTPUT
+      - name: Update TODO
+        run: node scripts/update-todo.js --task "${{ steps.tid.outputs.task }}"
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add TODO_TASKLIST.md
+          git commit -m "chore(todo): mark ${{ steps.tid.outputs.task }} completed" || echo "No changes to commit"
+          git push

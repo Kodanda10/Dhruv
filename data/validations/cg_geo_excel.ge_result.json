@@ -1,0 +1,194 @@
+{
+  "success": true,
+  "results": [
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_values_to_not_be_null",
+        "kwargs": {
+          "column": "district",
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "element_count": 6903,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "unexpected_percent_total": 0.0,
+        "partial_unexpected_list": []
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_values_to_not_be_null",
+        "kwargs": {
+          "column": "block",
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "element_count": 6903,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "unexpected_percent_total": 0.0,
+        "partial_unexpected_list": []
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_values_to_not_be_null",
+        "kwargs": {
+          "column": "gram_panchayat",
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "element_count": 6903,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "unexpected_percent_total": 0.0,
+        "partial_unexpected_list": []
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_values_to_not_be_null",
+        "kwargs": {
+          "column": "village",
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "element_count": 6903,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "unexpected_percent_total": 0.0,
+        "partial_unexpected_list": []
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_values_to_not_be_null",
+        "kwargs": {
+          "column": "composite_key",
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "element_count": 6903,
+        "unexpected_count": 0,
+        "unexpected_percent": 0.0,
+        "unexpected_percent_total": 0.0,
+        "partial_unexpected_list": []
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_column_unique_value_count_to_be_between",
+        "kwargs": {
+          "column": "composite_key",
+          "min_value": 6903,
+          "max_value": 6903,
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "observed_value": 6903,
+        "element_count": 6903,
+        "missing_count": null,
+        "missing_percent": null
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    },
+    {
+      "success": true,
+      "expectation_config": {
+        "expectation_type": "expect_table_row_count_to_be_between",
+        "kwargs": {
+          "min_value": 1,
+          "result_format": "BASIC"
+        },
+        "meta": {}
+      },
+      "result": {
+        "observed_value": 6903
+      },
+      "meta": {},
+      "exception_info": {
+        "raised_exception": false,
+        "exception_message": null,
+        "exception_traceback": null
+      }
+    }
+  ],
+  "evaluation_parameters": {},
+  "statistics": {
+    "evaluated_expectations": 7,
+    "successful_expectations": 7,
+    "unsuccessful_expectations": 0,
+    "success_percent": 100.0
+  },
+  "meta": {
+    "great_expectations_version": "0.18.22",
+    "expectation_suite_name": "default",
+    "run_id": {
+      "run_name": null,
+      "run_time": "2025-09-20T01:37:41.062241+05:30"
+    },
+    "batch_kwargs": {
+      "ge_batch_id": "4bf012f4-9594-11f0-aa19-46191743e4ee"
+    },
+    "batch_markers": {},
+    "batch_parameters": {},
+    "validation_time": "20250919T200741.062102Z",
+    "expectation_suite_meta": {
+      "great_expectations_version": "0.18.22"
+    }
+  }
+}

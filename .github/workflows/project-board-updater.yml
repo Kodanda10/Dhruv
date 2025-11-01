@@ -1,0 +1,23 @@
+name: Update Project Board on Deploy
+
+on:
+  deployment_status:
+
+jobs:
+  update_board:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Update Project Board - Deployed
+        env:
+          GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
+          PROJECT_OWNER: Pinak-Setu
+          PROJECT_NUMBER: "4"
+          ISSUE_LABEL: Task
+        run: |
+          echo "Production deployment successful - updating project board"
+          node scripts/move-to-deployed.js || echo "Project board update skipped (missing scopes or config)"

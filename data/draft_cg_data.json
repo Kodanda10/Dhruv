@@ -1,0 +1,38 @@
+{
+  "dropdowns": {
+    "district": ["रायपुर", "बिलासपुर", "दुर्ग", "कोरबा", "रायगढ़"],
+    "category": ["ग्रामीण", "शहरी"]
+  },
+  "sample_data": [
+    {
+      "village": "रायपुर",
+      "hindi": "रायपुर",
+      "nukta_hindi": "रायपुर",
+      "english": "Raipur",
+      "transliteration": "Rāypur",
+      "district": "रायपुर",
+      "applications": 150,
+      "status": "approved"
+    },
+    {
+      "village": "पंडरी",
+      "hindi": "पंडरी",
+      "nukta_hindi": "पंडरी",
+      "english": "Pandri",
+      "transliteration": "Paṇḍrī",
+      "district": "रायपुर",
+      "applications": 45,
+      "status": "pending"
+    },
+    {
+      "village": "कोटा",
+      "hindi": "कोटा",
+      "nukta_hindi": "कोटा",
+      "english": "Kota",
+      "transliteration": "Koṭā",
+      "district": "रायपुर",
+      "applications": 78,
+      "status": "approved"
+    }
+  ]
+}

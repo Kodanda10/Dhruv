@@ -1,0 +1,81 @@
+name: Vercel Deploy
+
+on:
+  push:
+    # Trigger on any branch; jobs handle main vs others
+  # Rely on Vercel GitHub App for PR previews; this workflow will no-op on PRs
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (preview|prod)"
+        required: true
+        default: preview
+
+jobs:
+  # Always succeed for PRs to keep checks green; Vercel App handles previews
+  noop-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skipping Vercel CLI deploy for PR; using Vercel GitHub App preview."
+
+  # No-op for non-main pushes (feature branches)
+  noop-push-other:
+    if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Non-main push detected ($GITHUB_REF). Skipping Vercel deploy."
+
+  # Succeed gracefully when secrets are missing (main push or manual prod)
+  no-secrets:
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'prod') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Vercel secrets
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "VERCEL_* secrets not configured; skipping deploy.";
+          else
+            echo "Secrets present. Proceeding in 'deploy' job.";
+          fi
+
+  deploy:
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.environment)) && (secrets.VERCEL_TOKEN && secrets.VERCEL_ORG_ID && secrets.VERCEL_PROJECT_ID) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Pull Vercel Env
+        run: |
+          ENVIRONMENT=${{ github.event_name == 'workflow_dispatch' && (inputs.environment == 'prod' && 'production' || 'preview') || (github.event_name == 'push' && 'production' || 'preview') }}
+          echo "Pulling env for: $ENVIRONMENT"
+          npx vercel pull --yes --environment=$ENVIRONMENT --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.environment }}" = "prod" ]; then
+            npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Update Project Board - Deployed
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'prod')
+        env:
+          GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
+          PROJECT_OWNER: Pinak-Setu
+          PROJECT_NUMBER: "4"
+          ISSUE_LABEL: Task
+        run: |
+          echo "Production deployment completed - updating project board"
+          node scripts/move-to-deployed.js || echo "Project board update skipped (missing scopes or config)"

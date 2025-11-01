@@ -65,5 +65,14 @@
 
 ---
 
+### 🔹 8. Data Variant Discipline  
+- All parsing data, vector data, graph data, scraped data, and fetched data saved into datasets must be stored in four variants at all times:  
+  - Hindi (Devanagari)  
+  - Nukta-Hindi (with diacritics)  
+  - English (Roman)  
+  - Transliteration (Romanized form of Hindi)  
+- Pipelines must generate missing variants deterministically (e.g., transliteration) and preserve originals.  
+- Validation/testing must assert presence of all four variants before data is accepted.  
+
 ✅ Use this memo for reasoning.  
 📜 Use `devops_agent_policy.yaml` for enforcement.  

@@ -1,0 +1,28 @@
+{"_doc":"Chhattisgarh Geography Name Mapping — NDJSON Guidance (one JSON object per line)"}
+{"_doc":"NOTE: This examples file is ignored by the loader and is for documentation only. The translator reads only geography_name_map.json and geography_name_map*.ndjson (including autocurated/). Do not place real mappings here."}
+{"_doc":"Purpose: Curate official Hindi and Nukta-Hindi spellings for Gram Panchayat and Village names that appear in English in the Excel source."}
+{"_doc":"How it's used: The dataset builder prefers these mappings for integrity; missing items are recorded to data/name_mappings/missing_names.ndjson for curation."}
+{"_doc":"Fields: kind='village'|'gram_panchayat' (required), english (required), hindi (recommended), nukta_hindi (recommended), district (optional), block (optional), source (recommended), verified_by (optional), verified_on (YYYY-MM-DD, optional), notes (optional)"}
+{"_doc":"IMPORTANT: Hindi and Nukta-Hindi must be verified from authoritative sources (e.g., state portals, official gazettes, ULB/GP websites). Do not guess. Replace EXAMPLEs with verified spellings."}
+
+{"schema":{"kind":"village|gram_panchayat","english":"string","hindi":"string","nukta_hindi":"string","district":"string?","block":"string?","source":"string?","verified_by":"string?","verified_on":"YYYY-MM-DD?","notes":"string?"}}
+
+{"_doc":"TEMPLATE — copy, fill, and replace placeholders with verified values"}
+{"kind":"village","english":"<English Name>","hindi":"<देवनागरी>","nukta_hindi":"<देवनागरी-नुक्ता>","district":"<District (optional)>","block":"<Block (optional)>","source":"<Authoritative URL or citation>","verified_by":"<Your Name / Team>","verified_on":"YYYY-MM-DD","notes":"<Optional context>"}
+{"kind":"gram_panchayat","english":"<English GP Name>","hindi":"<देवनागरी>","nukta_hindi":"<देवनागरी-नुक्ता>","district":"<District (optional)>","block":"<Block (optional)>","source":"<Authoritative URL or citation>","verified_by":"<Your Name / Team>","verified_on":"YYYY-MM-DD","notes":"<Optional context>"}
+
+{"_doc":"EXAMPLE ONLY — replace these examples with verified spellings before using in production"}
+{"kind":"village","english":"Barchha","hindi":"<बरछा — VERIFY>","nukta_hindi":"<बरछा — VERIFY>","district":"<Bilaspur — VERIFY>","block":"<Masturi — VERIFY>","source":"<Official link>","verified_by":"","verified_on":"","notes":"Example placeholder; confirm spelling"}
+{"kind":"gram_panchayat","english":"Mehdauli","hindi":"<मेहदौली — VERIFY>","nukta_hindi":"<मेहदौली — VERIFY>","district":"<Manendragarh-Chirmiri-Bharatpur — VERIFY>","block":"<Bharatpur — VERIFY>","source":"<Official link>","verified_by":"","verified_on":"","notes":"Example placeholder; confirm spelling"}
+
+{"_doc":"Curation workflow"}
+{"_doc":"1) Run the Excel builder; missing English names will be appended to data/name_mappings/missing_names.ndjson"}
+{"_doc":"2) For each missing entry, research official Hindi spellings, add a curated line here (hindi + nukta_hindi), and commit"}
+{"_doc":"3) Re-run the builder; it will use the curated mapping and stop flagging the name as missing"}
+{"_doc":"4) Keep source citations whenever possible for auditability"}
+
+{"_doc":"Notes"}
+{"_doc":"- nukta_hindi should use canonical precomposed nukta forms where applicable (e.g., ज़, क़, ग़, फ़, ड़, ढ़)."}
+{"_doc":"- If district/block are included, they help reviewers cross-check ambiguous names."}
+{"_doc":"- Keep each entry on a single line and ensure valid UTF-8 JSON. No trailing commas."}
+{"_doc":"- This file is NDJSON; comments are stored as objects with _doc keys to remain machine-readable."}

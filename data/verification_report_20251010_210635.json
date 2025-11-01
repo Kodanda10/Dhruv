@@ -1,0 +1,86 @@
+{
+  "verification_timestamp": "2025-10-10T21:06:35.985907",
+  "sources_status": {
+    "available": [
+      "cgstate",
+      "egramswaraj",
+      "panchayat"
+    ],
+    "total_checked": 7
+  },
+  "official_data_sources": {
+    "eci": {
+      "source": "Election Commission of India",
+      "url": "https://eci.gov.in",
+      "data_found": false,
+      "details": {}
+    },
+    "census": {
+      "source": "Census of India",
+      "url": "https://censusindia.gov.in",
+      "data_found": false,
+      "details": {}
+    },
+    "panchayat": {
+      "source": "e-Gram Swaraj Portal",
+      "url": "https://egramswaraj.gov.in",
+      "data_found": false,
+      "details": {}
+    },
+    "state_portal": {
+      "source": "Chhattisgarh State Portal",
+      "url": "https://cgstate.gov.in",
+      "data_found": false,
+      "details": {}
+    }
+  },
+  "existing_data_verification": {
+    "data_files_found": [
+      "data/raigarh_assembly_constituency_detailed.csv",
+      "data/raigarh_assembly_constituency_detailed.json",
+      "data/datasets/by_district/र-यगढ़.ndjson",
+      "data/constituencies.json"
+    ],
+    "structure_checks": {
+      "csv_rows": 134,
+      "csv_columns": 6,
+      "headers": [
+        "Assembly Constituency",
+        "Block",
+        "Administrative Type",
+        "GP/ULB Name",
+        "Village/Ward",
+        "Entity Type"
+      ]
+    },
+    "data_quality": {
+      "gram_panchayats": 132,
+      "villages": 132,
+      "ulbs": 1,
+      "total_records": 133
+    }
+  },
+  "cross_reference_analysis": {
+    "matches_found": 0,
+    "discrepancies_found": 0,
+    "confidence_level": "medium",
+    "recommendations": [
+      "Verify village names against Census 2011/2024 data",
+      "Cross-check assembly constituency boundaries with ECI data",
+      "Validate ULB ward information from state municipal records",
+      "Confirm Gram Panchayat listings with e-Gram Swaraj portal"
+    ]
+  },
+  "overall_assessment": {
+    "data_quality": "GOOD - Structured and consistent",
+    "source_verification": "PENDING - Official APIs need integration",
+    "confidence_level": "MEDIUM - Based on structured data, pending official verification",
+    "recommendation": "PROCEED WITH CAUTION - Use for analysis, verify for production"
+  },
+  "next_steps": [
+    "Integrate with Election Commission API for constituency boundaries",
+    "Fetch ward data from municipal corporation portals",
+    "Cross-verify village names with Census data",
+    "Implement automated monitoring for data changes"
+  ]
+}

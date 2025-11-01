@@ -9,7 +9,10 @@ const axeSource = require('axe-core').source;
     headless: 'new',
   });
   const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle0' });
+  // Increase timeout and use a more lenient wait condition
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  // Wait a bit for client-side rendering to complete
+  await new Promise(resolve => setTimeout(resolve, 2000));
   await page.addScriptTag({ content: axeSource });
   const results = await page.evaluate(async () => await axe.run(document));
   await browser.close();

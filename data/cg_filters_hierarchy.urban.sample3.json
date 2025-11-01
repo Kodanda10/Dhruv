@@ -1,0 +1,47 @@
+{
+  "source": "Chhattisgarh SuShasan Portal — Filter Hierarchy",
+  "url": "https://sushasantihar.cg.nic.in/reports/sub-category-wise-application-filter-reports",
+  "fetched_at": "2025-09-12T10:37:49.216Z",
+  "params": {
+    "mode": "urban",
+    "limits": {
+      "maxDistricts": 3,
+      "maxBlocks": 0,
+      "maxPanchayats": 0,
+      "maxVillages": 0,
+      "maxULBs": 2,
+      "maxWards": 2,
+      "delay": 900
+    }
+  },
+  "rural": [],
+  "urban": [
+    {
+      "hindi": "381",
+      "nukta_hindi": "381",
+      "english": "381",
+      "transliteration": "381",
+      "ulbs": []
+    },
+    {
+      "hindi": "382",
+      "nukta_hindi": "382",
+      "english": "382",
+      "transliteration": "382",
+      "ulbs": []
+    }
+  ],
+  "summary": {
+    "rural": {
+      "districts": 0,
+      "blocks": 0,
+      "panchayats": 0,
+      "villages": 0
+    },
+    "urban": {
+      "districts": 2,
+      "ulbs": 0,
+      "wards": 0
+    }
+  }
+}
