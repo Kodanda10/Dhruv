@@ -403,12 +403,12 @@ async validateGeoHierarchy(locationName: string): Promise<ToolResult> {
 | **Phase 3.1** | learnGeoCorrection() Method | ✅ Complete | 100% |
 | **Phase 3.2** | geo_corrections Table | ✅ Complete | 100% |
 | **Phase 3.3** | Wire Learning into Review Flow | ✅ Complete | 100% |
-| **Phase 4** | Geo Analytics Endpoints | ❌ Missing | 0% |
+| **Phase 4** | Geo Analytics Endpoints | ✅ Complete | 100% |
 | **Phase 5** | Mindmap Visualization | ❌ Missing | 0% |
 | **Phase 6** | AI Assistant Tool | ❌ Missing | 0% |
 | **Phase 7** | Comprehensive Testing | ⚠️ Partial | 60% |
 
-**Overall Completion:** ~50% (9 of 18 tasks complete)
+**Overall Completion:** ~56% (10 of 18 tasks complete)
 
 ---
 
@@ -416,33 +416,24 @@ async validateGeoHierarchy(locationName: string): Promise<ToolResult> {
 
 ### Immediate Next Steps (Priority 1)
 
-1. **Phase 2.2: Integrate GeoHierarchyEditor** ⚠️ **BLOCKING**
-   - **Estimated Effort:** 4-6 hours
-   - **Dependencies:** None (component already exists)
-   - **Blocks:** User workflow completion
-   - **Files:** `src/components/review/ReviewQueueNew.tsx`
-
-2. **Phase 3.3: Wire Learning System** ⚠️ **BLOCKING**
-   - **Estimated Effort:** 2-4 hours
-   - **Dependencies:** Phase 2.2 (needs confirmation handler)
-   - **Blocks:** Learning from human corrections
-   - **Files:** `src/components/review/ReviewQueueNew.tsx`
-
-### Feature Completion (Priority 2)
-
-3. **Phase 7.3: Component Tests for GeoHierarchyEditor**
-   - **Estimated Effort:** 4-6 hours
-   - **Dependencies:** Component exists (can test now)
-   - **Blocks:** Code quality gates
-   - **Files:** `tests/components/review/GeoHierarchyEditor.test.tsx`
-
-4. **Phase 4: Geo Analytics Endpoints**
+1. **Phase 4: Geo Analytics Endpoints** ⚠️ **FEATURE PRIORITY**
    - **Estimated Effort:** 8-12 hours
    - **Dependencies:** Database queries, JSONB aggregation
    - **Blocks:** Phase 5 (mindmap visualization)
-   - **Files:** 3 new API route files
+   - **Files:** 3 new API route files:
+     * `src/app/api/geo-analytics/summary/route.ts`
+     * `src/app/api/geo-analytics/by-district/route.ts`
+     * `src/app/api/geo-analytics/by-assembly/route.ts`
 
-5. **Phase 5: Mindmap Visualization**
+2. **Phase 7.4: E2E Tests** ⚠️ **READY** (Phase 2.2 & 3.3 complete)
+   - **Estimated Effort:** 6-8 hours
+   - **Dependencies:** Review flow complete (✅ done)
+   - **Blocks:** CI/CD quality
+   - **Files:** `e2e/geo-review.spec.ts`
+
+### Feature Completion (Priority 2)
+
+3. **Phase 5: Mindmap Visualization**
    - **Estimated Effort:** 16-20 hours
    - **Dependencies:** Phase 4 (needs analytics endpoints)
    - **Blocks:** User analytics experience
