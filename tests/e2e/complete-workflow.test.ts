@@ -150,7 +150,7 @@ describe('Complete Automated Workflow E2E', () => {
     
     const homeResponse = await fetch('/api/parsed-events?needs_review=false');
     const homeData = await homeResponse.json();
-    expect(homeData.data.some(t => t.id === tweetToApprove.id)).toBe(true);
+    expect(homeData.data.some((t: any) => t.id === tweetToApprove.id)).toBe(true);
   });
 
   it('should handle parsing failures gracefully', async () => {

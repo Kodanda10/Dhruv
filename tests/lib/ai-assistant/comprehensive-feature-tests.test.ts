@@ -171,7 +171,7 @@ describe('Feature 2: Location Addition with Validation', () => {
 
 describe('Feature 3: Event Type Suggestion', () => {
   test('should suggest event types for birthday wishes tweet', async () => {
-    const tweet = realTweets.find(t => t.event_type === 'birthday_wishes' || t.parsed?.event_type === 'birthday_wishes');
+    const tweet = realTweets.find((t: any) => t.event_type === 'birthday_wishes' || t.parsed?.event_type === 'birthday_wishes');
     
     if (tweet) {
       const result = await aiAssistant.processMessage(
@@ -186,7 +186,7 @@ describe('Feature 3: Event Type Suggestion', () => {
   });
 
   test('should suggest event types for meeting tweet', async () => {
-    const tweet = realTweets.find(t => 
+    const tweet = realTweets.find((t: any) => 
       t.event_type?.includes('बैठक') || 
       t.parsed?.event_type?.includes('meeting') ||
       t.event_type?.includes('meeting')
@@ -343,7 +343,7 @@ describe('Feature 6: Model Fallback Mechanism', () => {
       .mockRejectedValue(new Error('Gemini API unavailable'));
     
     jest.spyOn(aiAssistant as any, 'executeWithOllama')
-      .mockImplementation(async (message: string, intent: any) => {
+      .mockImplementation(async (message: string, intent: any): Promise<any> => {
         // Set the modelUsed to 'ollama' to simulate the real behavior
         (aiAssistant as any).state.modelUsed = 'ollama';
         return {

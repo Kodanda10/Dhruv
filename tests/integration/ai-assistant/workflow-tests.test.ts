@@ -149,7 +149,7 @@ describe('E2E Workflow 3: Multi-Turn Conversation', () => {
     const data1 = await turn1.json();
     const sessionId = data1.sessionId;
     
-    expect(data1.pendingChanges.some(c => c.field === 'locations')).toBe(true);
+    expect(data1.pendingChanges.some((c: any) => c.field === 'locations')).toBe(true);
     
     // Turn 2: Add scheme
     const turn2 = await callAssistant('POST', {
@@ -160,7 +160,7 @@ describe('E2E Workflow 3: Multi-Turn Conversation', () => {
     
     const data2 = await turn2.json();
     
-    expect(data2.pendingChanges.some(c => c.field === 'schemes_mentioned')).toBe(true);
+    expect(data2.pendingChanges.some((c: any) => c.field === 'schemes_mentioned')).toBe(true);
     expect(data2.context.pendingChangesCount).toBeGreaterThan(1);
     
     // Turn 3: Validate everything
