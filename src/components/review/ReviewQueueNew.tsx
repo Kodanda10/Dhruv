@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import AIAssistantModal from './AIAssistantModal';
 import GeoHierarchyTree from './GeoHierarchyTree';
+import GeoHierarchyEditor from './GeoHierarchyEditor';
+import { GeoHierarchy } from '@/lib/geo-extraction/hierarchy-resolver';
+import { DynamicLearningSystem } from '@/lib/dynamic-learning';
+import { api } from '@/lib/api';
 
 // Empty array - will be populated from API
 const initialTweets: any[] = [];
@@ -491,6 +495,78 @@ export default function ReviewQueueNew() {
         <p className="mb-4 text-center text-sm font-normal leading-normal text-gray-400">
           ट्वीट {currentIndex + 1} में से {tweets.length}
         </p>
+
+        {/* Detect ambiguous geo-hierarchy that needs review */}
+        {(() => {
+          const tweet = currentTweet as any; // Type assertion for geo_hierarchy field
+          const hasAmbiguousGeo = tweet.needs_review && 
+            tweet.locations && 
+            tweet.locations.length > 0 &&
+            (tweet.geo_hierarchy?.candidates?.length > 1 || 
+             (Array.isArray(tweet.geo_hierarchy) && tweet.geo_hierarchy.length === 0 && tweet.needs_review));
+          
+          // If we have candidates structure, use it; otherwise check for needs_review flag
+          const geoData = tweet.geo_hierarchy;
+          const candidates = geoData?.candidates || (geoData && Array.isArray(geoData) ? geoData : []);
+          const currentHierarchy = geoData?.hierarchy || (Array.isArray(geoData) && geoData.length === 1 ? geoData[0] : null);
+          const explanations = geoData?.explanations || [];
+          const locationName = tweet.locations?.[0] || '';
+
+          return hasAmbiguousGeo && candidates.length > 1 ? (
+            <GeoHierarchyEditor
+              locationName={locationName}
+              currentHierarchy={currentHierarchy}
+              candidates={candidates}
+              needs_review={currentTweet.needs_review || false}
+              explanations={explanations}
+              onConfirm={async (hierarchy: GeoHierarchy) => {
+                try {
+                  // Phase 3.3: Wire Learning System
+                  const learningSystem = new DynamicLearningSystem();
+                  await learningSystem.learnGeoCorrection(
+                    {
+                      location: locationName,
+                      hierarchy: currentHierarchy
+                    },
+                    hierarchy,
+                    'user', // TODO: Get from auth context
+                    currentTweet.tweet_id || String(currentTweet.id)
+                  );
+
+                  // Update tweet state
+                  setTweets(prev => prev.map(tweet => 
+                    tweet.id === currentTweet.id 
+                      ? { 
+                          ...tweet, 
+                          geo_hierarchy: hierarchy,
+                          needs_review: false 
+                        }
+                      : tweet
+                  ));
+
+                  // Save to database
+                  await api.put(`/api/parsed-events/${currentTweet.id}`, {
+                    geo_hierarchy: hierarchy,
+                    needs_review: false
+                  });
+
+                  // Show success message (could add toast notification here)
+                  console.log('✓ Geo-hierarchy correction learned');
+                } catch (error) {
+                  console.error('Failed to save geo-hierarchy correction:', error);
+                }
+              }}
+              onReject={() => {
+                // On reject, mark as reviewed but keep needs_review flag for manual handling
+                setTweets(prev => prev.map(tweet => 
+                  tweet.id === currentTweet.id 
+                    ? { ...tweet, review_status: 'pending' }
+                    : tweet
+                ));
+              }}
+            />
+          ) : null;
+        })()}
 
         {/* Tweet Card */}
         <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-[#0d1117] p-6 shadow-2xl sm:p-8">

@@ -80,18 +80,22 @@
 
 **Note:** Custom edit mode with dropdowns (item 4 in plan) is **NOT implemented**. This is a nice-to-have feature that may not be needed if one-click confirm is sufficient. Marked as optional enhancement.
 
-### 2.2 Integrate into ReviewQueueNew ⚠️ **PENDING**
+### 2.2 Integrate into ReviewQueueNew ✅ **COMPLETE**
 
 **File**: `src/components/review/ReviewQueueNew.tsx`
 
-**Status:** ⚠️ **NOT INTEGRATED** - Component exists but is not used
+**Status:** ✅ **INTEGRATED** - Component is now fully integrated and functional
 
-**Current State:**
-- `ReviewQueueNew.tsx` line 543: Uses `GeoHierarchyTree` (read-only display)
-- `GeoHierarchyEditor` exists but is **never imported or rendered**
-- No detection of `needs_review = true` with candidates
-- No handler for `onConfirm` to update tweet and save to DB
-- No integration with learning system
+**Implementation Complete (2025-11-02):**
+- ✅ `GeoHierarchyEditor` imported at top of file
+- ✅ Detection logic added: checks `needs_review = true` and `geo_hierarchy.candidates.length > 1`
+- ✅ Component rendered above tweet card when ambiguous geo-hierarchy detected
+- ✅ `onConfirm` handler implemented with:
+  - `DynamicLearningSystem.learnGeoCorrection()` call (Phase 3.3 integration)
+  - Tweet state update (`geo_hierarchy`, `needs_review: false`)
+  - Database save via `api.put()`
+- ✅ `onReject` handler implemented for manual handling
+- ✅ All TypeScript errors resolved
 
 **What Needs to Be Done:**
 1. Import `GeoHierarchyEditor` component
@@ -182,50 +186,30 @@ const hasAmbiguousGeo = currentTweet.needs_review &&
 
 **Note:** Migration 007 is idempotent (`CREATE TABLE IF NOT EXISTS`) and will not conflict with 003. Both migrations can coexist. The enhanced indexes in 007 provide better query performance for JSONB searches and reviewer filtering.
 
-### 3.3 Wire Learning into Review Flow ⚠️ **PENDING**
+### 3.3 Wire Learning into Review Flow ✅ **COMPLETE**
 
 **File**: `src/components/review/ReviewQueueNew.tsx`
 
-**Status:** ⚠️ **NOT INTEGRATED** - Method exists but is never called
+**Status:** ✅ **INTEGRATED** - Learning system wired into review flow
 
-**What Needs to Be Done:**
-1. In `handleGeoConfirm` handler (created in Phase 2.2):
-   ```typescript
-   const handleGeoConfirm = async (hierarchy: GeoHierarchy) => {
-     const learningSystem = new DynamicLearningSystem();
-     await learningSystem.learnGeoCorrection(
-       { 
-         location: currentTweet.locations?.[0] || '',
-         hierarchy: currentTweet.geo_hierarchy?.hierarchy || null
-       },
-       hierarchy,
-       'user', // or get from auth context
-       currentTweet.tweet_id
-     );
-     
-     // Update tweet
-     setTweets(prev => prev.map(tweet => 
-       tweet.id === currentTweet.id 
-         ? { ...tweet, geo_hierarchy: hierarchy, needs_review: false }
-         : tweet
-     ));
-     
-     // Save to DB
-     await api.put(`/api/parsed-events/${currentTweet.id}`, {
-       geo_hierarchy: hierarchy,
-       needs_review: false
-     });
-     
-     // Show success message
-     setSuccessMessage('✓ Geo-hierarchy correction learned');
-   };
-   ```
+**Implementation Complete (2025-11-02):**
+- ✅ `onConfirm` handler in `GeoHierarchyEditor` includes:
+  - ✅ `DynamicLearningSystem` instantiation
+  - ✅ `learnGeoCorrection()` call with:
+    - Original location and hierarchy
+    - Corrected hierarchy
+    - Reviewer: 'user' (TODO: get from auth context)
+    - Tweet ID
+  - ✅ Tweet state update with confirmed hierarchy
+  - ✅ Database save via `api.put()`
+  - ✅ Success logging
+- ✅ Error handling added for learning system failures
 
 **Files Status:**
 - ✅ `src/lib/dynamic-learning.ts` - `learnGeoCorrection()` exists and **FIXED** (2025-01-17)
 - ✅ `infra/migrations/003_add_geo_hierarchy_and_consensus.sql` - Table exists
-- ✅ `infra/migrations/007_add_geo_corrections.sql` - **CREATED** (2025-01-17) - Enhanced version with better indexes
-- ⚠️ `src/components/review/ReviewQueueNew.tsx` - **NEEDS INTEGRATION**
+- ✅ `infra/migrations/007_add_geo_corrections.sql` - Enhanced version with better indexes
+- ✅ `src/components/review/ReviewQueueNew.tsx` - **INTEGRATED** (2025-11-02)
 
 ---
 
@@ -405,16 +389,16 @@ async validateGeoHierarchy(locationName: string): Promise<ToolResult> {
 |-------|------|--------|------------|
 | **Phase 1** | Feature Flag & Strict Mode | ✅ Complete | 100% |
 | **Phase 2.1** | GeoHierarchyEditor Component | ✅ Complete | 100% |
-| **Phase 2.2** | Integrate into ReviewQueueNew | ⚠️ Pending | 0% |
+| **Phase 2.2** | Integrate into ReviewQueueNew | ✅ Complete | 100% |
 | **Phase 3.1** | learnGeoCorrection() Method | ✅ Complete | 100% |
 | **Phase 3.2** | geo_corrections Table | ✅ Complete | 100% |
-| **Phase 3.3** | Wire Learning into Review Flow | ⚠️ Pending | 0% |
+| **Phase 3.3** | Wire Learning into Review Flow | ✅ Complete | 100% |
 | **Phase 4** | Geo Analytics Endpoints | ❌ Missing | 0% |
 | **Phase 5** | Mindmap Visualization | ❌ Missing | 0% |
 | **Phase 6** | AI Assistant Tool | ❌ Missing | 0% |
 | **Phase 7** | Comprehensive Testing | ⚠️ Partial | 40% |
 
-**Overall Completion:** ~33% (6 of 18 tasks complete)
+**Overall Completion:** ~44% (8 of 18 tasks complete)
 
 ---
 
