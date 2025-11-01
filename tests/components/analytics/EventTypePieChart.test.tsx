@@ -69,6 +69,8 @@ const mockData = [
 
 const defaultProps = {
   data: mockData,
+  width: 400,
+  height: 400,
   title: 'Event Type Distribution',
   className: 'test-chart',
 };

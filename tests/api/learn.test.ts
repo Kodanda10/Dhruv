@@ -147,7 +147,7 @@ describe('GET /api/reference/learn', () => {
       ]
     });
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn?type=scheme&q=किसान');
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn?type=scheme&q=किसान');
 
     const response = await GET(request);
     const data = await response.json();
@@ -171,7 +171,7 @@ describe('GET /api/reference/learn', () => {
       ]
     });
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn?type=event_type&q=मुलाकात');
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn?type=event_type&q=मुलाकात');
 
     const response = await GET(request);
     const data = await response.json();
@@ -191,7 +191,7 @@ describe('GET /api/reference/learn', () => {
       rows: []
     });
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn?type=scheme&q=');
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn?type=scheme&q=');
 
     const response = await GET(request);
     const data = await response.json();
@@ -204,7 +204,7 @@ describe('GET /api/reference/learn', () => {
   it('should handle database errors', async () => {
     mockQueryFn.mockRejectedValueOnce(new Error('Database error'));
 
-    const request = new NextRequest('http://localhost:3000/api/reference/learn?type=scheme&q=test');
+    const request = new (mockNextRequest as any)('http://localhost:3000/api/reference/learn?type=scheme&q=test');
 
     const response = await GET(request);
     const data = await response.json();
