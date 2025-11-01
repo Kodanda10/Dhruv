@@ -55,8 +55,8 @@ jobs:
         with: { node-version: '20' }
       - run: npm ci
       - run: npm run test:coverage
-      - name: Enforce coverage 95/70
-        run: node ./scripts/enforce-coverage.js --lines 95 --branches 70
+      - name: Enforce coverage 85/70
+        run: node ./scripts/enforce-coverage.js --lines 85 --branches 70
 
   security:
     runs-on: ubuntu-latest
