@@ -5,6 +5,7 @@ import { ThreeLayerConsensusEngine, TweetData } from '@/lib/parsing/three-layer-
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
     getGenerativeModel: jest.fn().mockReturnValue({
+      // @ts-expect-error - Jest mock type compatibility
       generateContent: jest.fn().mockResolvedValue({
         response: {
           text: jest.fn().mockReturnValue(JSON.stringify({
@@ -23,9 +24,13 @@ jest.mock('@google/generative-ai', () => ({
 // Mock GeoHierarchyResolver
 jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
   GeoHierarchyResolver: jest.fn().mockImplementation(() => ({
+    // @ts-expect-error - Jest mock type compatibility
     initialize: jest.fn().mockResolvedValue(undefined as any),
+    // @ts-expect-error - Jest mock type compatibility
     cleanup: jest.fn().mockResolvedValue(undefined as any),
+    // @ts-expect-error - Jest mock type compatibility
     resolveVillage: jest.fn().mockResolvedValue([] as any),
+    // @ts-expect-error - Jest mock type compatibility
     resolveDeterministic: jest.fn().mockResolvedValue({
       hierarchy: {
         village: 'पंडरी',
@@ -79,6 +84,7 @@ describe('Three-Layer Consensus Engine', () => {
       // Mock Gemini initialization
       (engine as any).gemini = {
         getGenerativeModel: jest.fn().mockReturnValue({
+          // @ts-expect-error - Jest mock type compatibility
           generateContent: jest.fn().mockResolvedValue({
             response: {
               text: jest.fn().mockReturnValue(JSON.stringify({
@@ -119,6 +125,7 @@ describe('Three-Layer Consensus Engine', () => {
     test('should parse tweet with Ollama successfully', async () => {
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
+        // @ts-expect-error - Jest mock type compatibility for json method
         json: jest.fn().mockResolvedValue({
           response: JSON.stringify({
             locations: ['रायपुर'],
@@ -277,6 +284,7 @@ describe('Three-Layer Consensus Engine', () => {
       // Mock Ollama response
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
+        // @ts-expect-error - Jest mock type compatibility for json method
         json: jest.fn().mockResolvedValue({
           response: JSON.stringify({
             locations: ['रायपुर'],

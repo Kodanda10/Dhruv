@@ -1,9 +1,15 @@
 import { Pool } from 'pg';
 
+// Skip database integration tests in CI if DATABASE_URL is not available
+const shouldSkip = process.env.CI === 'true' && !process.env.DATABASE_URL;
+
 describe('Database Schema Updates - Real Database', () => {
-  let pool: Pool;
+  let pool: Pool | null = null;
 
   beforeAll(() => {
+    if (shouldSkip) {
+      return;
+    }
     // Use real database connection for integration testing
     pool = new Pool({
       connectionString: process.env.DATABASE_URL || 'postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db'
@@ -11,10 +17,16 @@ describe('Database Schema Updates - Real Database', () => {
   });
 
   afterAll(async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     await pool.end();
   });
 
   it('should have all required columns in parsed_events table', async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     const result = await pool.query(`
       SELECT column_name, data_type, is_nullable 
       FROM information_schema.columns 
@@ -40,6 +52,9 @@ describe('Database Schema Updates - Real Database', () => {
   });
 
   it('should have proper indexes for performance', async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     const result = await pool.query(`
       SELECT indexname, indexdef 
       FROM pg_indexes 
@@ -68,14 +83,14 @@ describe('Database Schema Updates - Real Database', () => {
 
   it('should have reference datasets properly seeded', async () => {
     // Check schemes
-    const schemesResult = await pool.query(`
+    const schemesResult = await pool!.query(`
       SELECT id, scheme_code, name_hi, name_en, category 
       FROM ref_schemes 
       WHERE is_active = true
     `);
     
     // Check event types
-    const eventTypesResult = await pool.query(`
+    const eventTypesResult = await pool!.query(`
       SELECT id, event_code, name_hi, name_en, category 
       FROM ref_event_types 
       WHERE is_active = true
@@ -96,6 +111,9 @@ describe('Database Schema Updates - Real Database', () => {
   });
 
   it('should have proper foreign key constraints', async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     const result = await pool.query(`
       SELECT 
         tc.constraint_name,
@@ -118,6 +136,9 @@ describe('Database Schema Updates - Real Database', () => {
   });
 
   it('should have proper check constraints', async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     const result = await pool.query(`
       SELECT constraint_name, check_clause
       FROM information_schema.check_constraints
@@ -132,6 +153,9 @@ describe('Database Schema Updates - Real Database', () => {
   });
 
   it('should be able to insert a parsed event with all new fields', async () => {
+    if (shouldSkip || !pool) {
+      return;
+    }
     // Test inserting a parsed event with all the new Gemini parser fields
     const testTweetId = `test_${Date.now()}`;
     

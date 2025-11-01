@@ -109,7 +109,7 @@ describe('Complete Automated Workflow E2E', () => {
     
     const learnResponse = await fetch('/api/reference/learn?type=scheme&q=नई');
     const suggestions = await learnResponse.json();
-    expect(suggestions.suggestions.some(s => s.name_hi.includes('नई'))).toBe(true);
+    expect(suggestions.suggestions.some((s: { name_hi: string }) => s.name_hi.includes('नई'))).toBe(true);
     
     // Step 7: Check analytics reflects approved tweet
     const mockAnalyticsResponse = {

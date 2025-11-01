@@ -5,12 +5,13 @@ describe('isGeoStrictModeEnabled', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...originalEnv };
-    // Clear both env vars
-    delete process.env.NEXT_PUBLIC_GEO_STRICT_MODE;
-    delete process.env.GEO_STRICT_MODE;
-    delete process.env.NODE_ENV;
-    delete process.env.VERCEL_ENV;
+    process.env = { ...originalEnv } as typeof process.env;
+    // Clear both env vars - using type assertion to allow deletion in tests
+    const env = process.env as Record<string, string | undefined>;
+    delete env.NEXT_PUBLIC_GEO_STRICT_MODE;
+    delete env.GEO_STRICT_MODE;
+    delete env.NODE_ENV;
+    delete env.VERCEL_ENV;
   });
 
   afterAll(() => {
@@ -59,38 +60,44 @@ describe('isGeoStrictModeEnabled', () => {
 
   describe('default behavior (when env vars not set)', () => {
     it('should return true in development (NODE_ENV not production)', () => {
+      // @ts-expect-error - TypeScript readonly, but we need to modify for testing
       process.env.NODE_ENV = 'development';
       expect(isGeoStrictModeEnabled()).toBe(true);
     });
 
     it('should return false in production (NODE_ENV=production)', () => {
-      process.env.NODE_ENV = 'production';
+      const env = process.env as Record<string, string | undefined>;
+      env.NODE_ENV = 'production';
       expect(isGeoStrictModeEnabled()).toBe(false);
     });
 
     it('should return false when VERCEL_ENV=production', () => {
-      process.env.VERCEL_ENV = 'production';
+      const env = process.env as Record<string, string | undefined>;
+      env.VERCEL_ENV = 'production';
       expect(isGeoStrictModeEnabled()).toBe(false);
     });
 
     it('should return true when NODE_ENV is undefined (defaults to dev)', () => {
-      delete process.env.NODE_ENV;
-      delete process.env.VERCEL_ENV;
+      const env = process.env as Record<string, string | undefined>;
+      delete env.NODE_ENV;
+      delete env.VERCEL_ENV;
       expect(isGeoStrictModeEnabled()).toBe(true);
     });
   });
 
   describe('edge cases', () => {
     it('should handle empty string as false', () => {
-      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = '';
+      const env = process.env as Record<string, string | undefined>;
+      env.NEXT_PUBLIC_GEO_STRICT_MODE = '';
       // Empty string should fall through to default check
-      process.env.NODE_ENV = 'development';
+      env.NODE_ENV = 'development';
       expect(isGeoStrictModeEnabled()).toBe(true);
     });
 
     it('should handle invalid values as false', () => {
-      process.env.NEXT_PUBLIC_GEO_STRICT_MODE = 'invalid';
-      process.env.NODE_ENV = 'production';
+      const env = process.env as Record<string, string | undefined>;
+      env.NEXT_PUBLIC_GEO_STRICT_MODE = 'invalid';
+      env.NODE_ENV = 'production';
       expect(isGeoStrictModeEnabled()).toBe(false);
     });
   });

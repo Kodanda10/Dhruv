@@ -1,63 +1,95 @@
-import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
+/**
+ * Health Check Endpoint
+ * 
+ * Returns system health metrics including:
+ * - Database connection pool status
+ * - Recent Ollama call count
+ * - Validation queue size
+ */
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db',
-});
+import { NextResponse } from 'next/server';
+import { getDBPool } from '@/lib/db/pool';
+
+// Track Ollama calls (in production, use Redis or shared state)
+let ollamaCallCount = 0;
+let lastOllamaCall = Date.now();
+
+// Track validation queue size
+let validationQueueSize = 0;
+
+/**
+ * Increment Ollama call counter (called from langgraph-assistant)
+ */
+export function recordOllamaCall(): void {
+  ollamaCallCount++;
+  lastOllamaCall = Date.now();
+}
+
+/**
+ * Update validation queue size (called from langgraph-assistant)
+ */
+export function updateValidationQueue(size: number): void {
+  validationQueueSize = size;
+}
 
 export async function GET() {
   try {
-    // Check database connection
-    const dbResult = await pool.query('SELECT NOW() as timestamp');
+    const pool = getDBPool();
     
-    // Check if required tables exist
-    const tablesResult = await pool.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('raw_tweets', 'parsed_events', 'ref_schemes', 'ref_event_types')
-    `);
-    
-    const existingTables = tablesResult.rows.map(row => row.table_name);
-    const requiredTables = ['raw_tweets', 'parsed_events', 'ref_schemes', 'ref_event_types'];
-    const missingTables = requiredTables.filter(table => !existingTables.includes(table));
-    
-    // Get counts for health check
-    const counts = await Promise.all([
-      pool.query('SELECT COUNT(*) as count FROM raw_tweets'),
-      pool.query('SELECT COUNT(*) as count FROM parsed_events'),
-      pool.query('SELECT COUNT(*) as count FROM parsed_events WHERE needs_review = true'),
-      pool.query('SELECT COUNT(*) as count FROM parsed_events WHERE review_status = \'approved\'')
-    ]);
-    
-    const [rawTweets, parsedEvents, reviewQueue, approvedTweets] = counts.map(result => result.rows[0].count);
-    
+    // Get active database connections
+    const dbStats = await pool.query(`
+      SELECT 
+        count(*) as total_connections,
+        count(*) FILTER (WHERE state = 'active') as active_connections,
+        count(*) FILTER (WHERE state = 'idle') as idle_connections
+      FROM pg_stat_activity
+      WHERE datname = current_database()
+        AND pid != pg_backend_pid()
+    `).catch(() => ({
+      rows: [{
+        total_connections: 'unknown',
+        active_connections: 'unknown',
+        idle_connections: 'unknown'
+      }]
+    }));
+
+    const stats = dbStats.rows[0];
+
+    // Reset Ollama count if it's been more than 1 minute since last call
+    if (Date.now() - lastOllamaCall > 60000) {
+      ollamaCallCount = 0;
+    }
+
     return NextResponse.json({
       status: 'healthy',
-      timestamp: dbResult.rows[0].timestamp,
-      database: {
-        connected: true,
-        tables: {
-          existing: existingTables,
-          missing: missingTables,
-          all_present: missingTables.length === 0
-        }
+      timestamp: new Date().toISOString(),
+      dbConnections: {
+        total: parseInt(stats.total_connections) || 0,
+        active: parseInt(stats.active_connections) || 0,
+        idle: parseInt(stats.idle_connections) || 0,
+        poolMax: pool.totalCount || 10,
+        poolActive: pool.totalCount || 0,
+        poolIdle: pool.idleCount || 0
       },
-      counts: {
-        raw_tweets: parseInt(rawTweets),
-        parsed_events: parseInt(parsedEvents),
-        review_queue: parseInt(reviewQueue),
-        approved_tweets: parseInt(approvedTweets)
+      ollamaCalls: {
+        recent: ollamaCallCount,
+        lastCall: lastOllamaCall > 0 ? new Date(lastOllamaCall).toISOString() : null
       },
-      version: '1.0.0'
+      validationQueue: validationQueueSize,
+      memory: {
+        heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+        rss: Math.round(process.memoryUsage().rss / 1024 / 1024)
+      }
     });
-    
   } catch (error) {
-    console.error('Health check failed:', error);
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    );
   }
 }

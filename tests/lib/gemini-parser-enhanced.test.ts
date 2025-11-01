@@ -7,8 +7,11 @@ import { parseTweetWithGemini } from '@/lib/gemini-parser';
 // Mock GeoHierarchyResolver
 jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
   GeoHierarchyResolver: jest.fn().mockImplementation(() => ({
+    // @ts-expect-error - Jest mock type compatibility
     initialize: jest.fn().mockResolvedValue(undefined as any),
+    // @ts-expect-error - Jest mock type compatibility
     cleanup: jest.fn().mockResolvedValue(undefined as any),
+    // @ts-expect-error - Jest mock type compatibility
     resolveVillage: jest.fn().mockImplementation(async (location: string) => {
       // Mock responses for specific locations
       const mockHierarchies: any[] = [];
@@ -68,6 +71,7 @@ jest.mock('@/lib/geo-extraction/hierarchy-resolver', () => ({
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
     getGenerativeModel: jest.fn().mockReturnValue({
+      // @ts-expect-error - Jest mock type compatibility
       generateContent: jest.fn().mockImplementation((prompt: string): Promise<any> => {
         // Check if prompt contains "Invalid tweet" or "अज्ञात" for empty/no location cases
         const isEmptyCase = prompt.includes('Invalid tweet') || prompt.includes('अज्ञात');
@@ -113,6 +117,7 @@ jest.mock('@google/generative-ai', () => ({
 // Mock pg Pool
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
+    // @ts-expect-error - Jest mock type compatibility
     query: jest.fn().mockResolvedValue({
       rows: []
     } as any)

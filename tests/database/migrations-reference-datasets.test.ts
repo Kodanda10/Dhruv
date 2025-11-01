@@ -48,7 +48,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
         ORDER BY version
       `);
       
-      const migrations = result.rows.map(row => row.name);
+      const migrations = result.rows.map((row: { name: string }) => row.name);
       
       // Required migrations for Gemini parser integration
       const requiredMigrations = [
@@ -106,15 +106,15 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       `);
       
       const schemes = result.rows;
-      const centralSchemes = schemes.filter(s => s.category === 'central');
-      const stateSchemes = schemes.filter(s => s.category === 'state');
+      const centralSchemes = schemes.filter((s: { category: string }) => s.category === 'central');
+      const stateSchemes = schemes.filter((s: { category: string }) => s.category === 'state');
       
       // Validate minimum required schemes
       const requiredCentralSchemes = ['PM_KISAN', 'AYUSHMAN_BHARAT', 'UJJWALA', 'PMAY'];
       const requiredStateSchemes = ['CM_KISAN_CG', 'GODHAN_NYAY', 'RAJIV_YUVA_MITAN'];
       
-      const centralCodes = centralSchemes.map(s => s.scheme_code);
-      const stateCodes = stateSchemes.map(s => s.scheme_code);
+      const centralCodes = centralSchemes.map((s: { scheme_code: string }) => s.scheme_code);
+      const stateCodes = stateSchemes.map((s: { scheme_code: string }) => s.scheme_code);
       
       const missingCentral = requiredCentralSchemes.filter(code => !centralCodes.includes(code));
       const missingState = requiredStateSchemes.filter(code => !stateCodes.includes(code));
@@ -167,7 +167,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       
       // Validate minimum required event types
       const requiredEventTypes = ['MEETING', 'RALLY', 'INSPECTION', 'INAUGURATION', 'DISTRIBUTION', 'VISIT'];
-      const eventCodes = eventTypes.map(e => e.event_code);
+      const eventCodes = eventTypes.map((e: { event_code: string }) => e.event_code);
       
       const missingEventTypes = requiredEventTypes.filter(code => !eventCodes.includes(code));
       
@@ -176,7 +176,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       }
       
       // Validate aliases are present
-      const eventsWithAliases = eventTypes.filter(e => e.aliases_hi && e.aliases_hi.length > 0);
+      const eventsWithAliases = eventTypes.filter((e: { aliases_hi?: string[] }) => e.aliases_hi && e.aliases_hi.length > 0);
       
       if (eventsWithAliases.length < 6) {
         throw new Error(`Insufficient event types with Hindi aliases: ${eventsWithAliases.length}`);
@@ -224,7 +224,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       const hashtags = result.rows;
       
       // Validate categories
-      const categories = [...new Set(hashtags.map(h => h.category))];
+      const categories = [...new Set(hashtags.map((h: { category: string }) => h.category))];
       const requiredCategories = ['location', 'scheme', 'event', 'general'];
       
       const missingCategories = requiredCategories.filter(cat => !categories.includes(cat));
@@ -234,9 +234,9 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       }
       
       // Validate minimum hashtags per category
-      const locationHashtags = hashtags.filter(h => h.category === 'location');
-      const schemeHashtags = hashtags.filter(h => h.category === 'scheme');
-      const eventHashtags = hashtags.filter(h => h.category === 'event');
+      const locationHashtags = hashtags.filter((h: { category: string }) => h.category === 'location');
+      const schemeHashtags = hashtags.filter((h: { category: string }) => h.category === 'scheme');
+      const eventHashtags = hashtags.filter((h: { category: string }) => h.category === 'event');
       
       if (locationHashtags.length < 3) {
         throw new Error(`Insufficient location hashtags: ${locationHashtags.length}`);
@@ -283,7 +283,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       const contributions = result.rows;
       
       // Validate entity types
-      const entityTypes = [...new Set(contributions.map(c => c.entity_type))];
+      const entityTypes = [...new Set(contributions.map((c: { entity_type: string }) => c.entity_type))];
       const requiredEntityTypes = ['event_type', 'scheme', 'hashtag', 'location', 'organization'];
       
       const missingEntityTypes = requiredEntityTypes.filter(type => !entityTypes.includes(type));
@@ -293,7 +293,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
       }
       
       // Validate approval statuses
-      const approvalStatuses = [...new Set(contributions.map(c => c.approval_status))];
+      const approvalStatuses = [...new Set(contributions.map((c: { approval_status: string }) => c.approval_status))];
       const requiredStatuses = ['approved', 'pending', 'rejected'];
       
       const missingStatuses = requiredStatuses.filter(status => !approvalStatuses.includes(status));

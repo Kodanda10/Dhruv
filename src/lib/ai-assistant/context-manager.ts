@@ -224,9 +224,9 @@ export class ConversationContextManager {
     // Remove from pending
     context.pendingChanges.splice(changeIndex, 1);
     
-    // Update tweet context if available
+    // Update tweet context if available, passing the actual actor (user or ai)
     if (context.currentTweet) {
-      this.updateTweetContext(context.currentTweet, change.field, change.value);
+      this.updateTweetContext(context.currentTweet, change.field, change.value, approvedBy);
     }
     
     context.lastActivity = new Date();
@@ -447,7 +447,7 @@ export class ConversationContextManager {
     return `change_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private updateTweetContext(tweetContext: TweetContext, field: string, value: any): void {
+  private updateTweetContext(tweetContext: TweetContext, field: string, value: any, editedBy: 'user' | 'ai' = 'user'): void {
     const oldValue = tweetContext.currentState[field];
     tweetContext.currentState[field] = value;
     
@@ -456,7 +456,7 @@ export class ConversationContextManager {
       field,
       oldValue,
       newValue: value,
-      editedBy: 'user'
+      editedBy
     });
   }
 }

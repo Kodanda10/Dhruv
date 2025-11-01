@@ -343,6 +343,7 @@ describe('Feature 6: Model Fallback Mechanism', () => {
       .mockRejectedValue(new Error('Gemini API unavailable'));
     
     jest.spyOn(aiAssistant as any, 'executeWithOllama')
+      // @ts-expect-error - Jest mock type compatibility
       .mockImplementation(async (message: string, intent: any): Promise<any> => {
         // Set the modelUsed to 'ollama' to simulate the real behavior
         (aiAssistant as any).state.modelUsed = 'ollama';

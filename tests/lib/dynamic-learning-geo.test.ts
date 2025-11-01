@@ -37,6 +37,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
       const tweetId = 'test_tweet_123';
 
       // Mock successful insert
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any);
 
       const result = await learningSystem.learnGeoCorrection(
@@ -71,6 +72,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 1.0
       };
 
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any); // geo_corrections insert
       // For alias updates, we'd need to check if fs.writeFile is called
       // For now, just verify geo_corrections is written
@@ -98,6 +100,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 0.98
       };
 
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery.mockResolvedValueOnce({ rowCount: 1 } as any);
 
       const result = await learningSystem.learnGeoCorrection(
@@ -109,8 +112,8 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
 
       expect(result.success).toBe(true);
       // Verify ULB and ward_no are in the correction
-      const insertCall = mockQuery.mock.calls.find(call => 
-        call[0].includes('INSERT INTO geo_corrections')
+      const insertCall = mockQuery.mock.calls.find((call: unknown) => 
+        Array.isArray(call) && typeof call[0] === 'string' && call[0].includes('INSERT INTO geo_corrections')
       );
       expect(insertCall).toBeDefined();
     });
@@ -126,6 +129,7 @@ describe('DynamicLearningSystem - learnGeoCorrection (Phase 3)', () => {
         confidence: 1.0
       };
 
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery.mockRejectedValueOnce(new Error('Database connection failed') as any);
 
       const result = await learningSystem.learnGeoCorrection(

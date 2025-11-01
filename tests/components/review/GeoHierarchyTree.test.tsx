@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import GeoHierarchyTree from '@/components/review/GeoHierarchyTree';
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 describe('GeoHierarchyTree Component', () => {
   beforeEach(() => {
@@ -27,6 +27,7 @@ describe('GeoHierarchyTree Component', () => {
       />
     );
 
+    // @ts-expect-error - @testing-library/jest-dom matcher types
     expect(screen.getByText('स्थान पदानुक्रम लोड हो रहा है...')).toBeInTheDocument();
   });
 
@@ -43,6 +44,7 @@ describe('GeoHierarchyTree Component', () => {
       }
     ];
 
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -65,10 +67,14 @@ describe('GeoHierarchyTree Component', () => {
     );
 
     await waitFor(() => {
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('स्थान पदानुक्रम')).toBeInTheDocument();
       expect(screen.getAllByText('रायपुर')).toHaveLength(4); // Village name appears 4 times in hierarchy
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('90% विश्वास')).toBeInTheDocument();
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('ब्लॉक:')).toBeInTheDocument();
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('रायपुर शहर उत्तर')).toBeInTheDocument();
     });
   });
@@ -87,6 +93,7 @@ describe('GeoHierarchyTree Component', () => {
       }
     ];
 
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -109,9 +116,13 @@ describe('GeoHierarchyTree Component', () => {
     );
 
     await waitFor(() => {
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('रायपुर वार्ड 5')).toBeInTheDocument();
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('(रायपुर नगर निगम)')).toBeInTheDocument();
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('वार्ड 5')).toBeInTheDocument();
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('प्रकार: शहरी')).toBeInTheDocument();
     });
   });
@@ -138,6 +149,7 @@ describe('GeoHierarchyTree Component', () => {
       }
     ];
 
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -168,6 +180,7 @@ describe('GeoHierarchyTree Component', () => {
   });
 
   test('should handle API error gracefully', async () => {
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
 
     render(
@@ -178,6 +191,7 @@ describe('GeoHierarchyTree Component', () => {
     );
 
     await waitFor(() => {
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('स्थान पदानुक्रम लोड करने में त्रुटि')).toBeInTheDocument();
     });
   });
@@ -190,6 +204,7 @@ describe('GeoHierarchyTree Component', () => {
       />
     );
 
+    // @ts-expect-error - @testing-library/jest-dom matcher types
     expect(screen.queryByText('स्थान पदानुक्रम')).not.toBeInTheDocument();
   });
 
@@ -207,6 +222,7 @@ describe('GeoHierarchyTree Component', () => {
       }
     ];
 
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -262,6 +278,7 @@ describe('GeoHierarchyTree Component', () => {
       }
     ];
 
+    // @ts-expect-error - Jest mock type compatibility
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -284,8 +301,11 @@ describe('GeoHierarchyTree Component', () => {
     );
 
     await waitFor(() => {
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('95% विश्वास')).toHaveClass('text-green-400');
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('70% विश्वास')).toHaveClass('text-yellow-400');
+      // @ts-expect-error - @testing-library/jest-dom matcher types
       expect(screen.getByText('40% विश्वास')).toHaveClass('text-red-400');
     });
   });

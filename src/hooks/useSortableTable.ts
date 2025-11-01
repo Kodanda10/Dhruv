@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 
-export type SortField = 'date' | 'location' | 'event_type' | 'tags' | 'content';
+export type SortField = 'date' | 'location' | 'event_type' | 'tags' | 'content' | 'name' | 'value';
 export type SortOrder = 'asc' | 'desc';
 
 export interface SortConfig {

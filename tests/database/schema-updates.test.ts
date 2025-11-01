@@ -66,7 +66,7 @@ describe('Database Schema Updates', () => {
         ORDER BY ordinal_position
       `);
       
-      const columns = result.rows.map(row => row.column_name);
+      const columns = result.rows.map((row: { column_name: string }) => row.column_name);
       
       // Required columns for Gemini parser integration
       const requiredColumns = [
@@ -114,7 +114,7 @@ describe('Database Schema Updates', () => {
         WHERE tablename = 'parsed_events'
       `);
       
-      const indexes = result.rows.map(row => row.indexname);
+      const indexes = result.rows.map((row: { indexname: string }) => row.indexname);
       
       // Required indexes for performance
       const requiredIndexes = [
@@ -228,7 +228,7 @@ describe('Database Schema Updates', () => {
           AND tc.table_name = 'parsed_events'
       `);
       
-      const foreignKeys = result.rows.map(row => row.constraint_name);
+      const foreignKeys = result.rows.map((row: { constraint_name: string }) => row.constraint_name);
       
       if (!foreignKeys.includes('parsed_events_tweet_id_fkey')) {
         throw new Error('Missing foreign key constraint for tweet_id');
@@ -266,7 +266,7 @@ describe('Database Schema Updates', () => {
         WHERE constraint_name LIKE 'valid_%'
       `);
       
-      const constraints = result.rows.map(row => row.constraint_name);
+      const constraints = result.rows.map((row: { constraint_name: string }) => row.constraint_name);
       
       const requiredConstraints = ['valid_confidence', 'valid_review_status'];
       const missingConstraints = requiredConstraints.filter(constraint => !constraints.includes(constraint));

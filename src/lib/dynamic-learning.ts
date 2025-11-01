@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { getDBPool } from '@/lib/db/pool';
 
 interface HumanFeedback {
   tweetId: string;
@@ -36,10 +37,9 @@ interface LearningInsights {
 export class DynamicLearningSystem {
   private pool: Pool;
 
-  constructor() {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
+  constructor(pool?: Pool) {
+    // Use shared pool to prevent connection leaks
+    this.pool = pool || getDBPool();
   }
 
   /**
@@ -463,8 +463,21 @@ export class DynamicLearningSystem {
         };
       }
 
+      // Build correction reason with details
+      let correctionReason = `Geo-hierarchy correction: ${original.location} → ${corrected.village || corrected.ulb || 'unknown'}`;
+      
+      // Check if this is an alias correction (original location → corrected canonical)
+      if (original.location !== corrected.village && corrected.village) {
+        correctionReason += ` | Alias correction: "${original.location}" maps to canonical "${corrected.village}"`;
+      }
+
+      // Check if this is a ULB/ward correction
+      if (corrected.is_urban && corrected.ulb && corrected.ward_no) {
+        correctionReason += ` | ULB/Ward correction: ${corrected.ulb} Ward ${corrected.ward_no}`;
+      }
+
       // Persist correction to geo_corrections table
-      await this.pool.query(`
+      const insertResult = await this.pool.query(`
         INSERT INTO geo_corrections (
           tweet_id,
           field_name,
@@ -474,45 +487,18 @@ export class DynamicLearningSystem {
           correction_reason
         )
         VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
       `, [
         tweetId,
         'geo_hierarchy',
         JSON.stringify(original.hierarchy),
         JSON.stringify(corrected),
         reviewer,
-        `Geo-hierarchy correction: ${original.location} → ${corrected.village || corrected.ulb || 'unknown'}`
+        correctionReason
       ]);
 
-      // Check if this is an alias correction (original location → corrected canonical)
-      if (original.location !== corrected.village && corrected.village) {
-        // This is an alias mapping - update geo_aliases.json would be handled
-        // by a separate process or API endpoint that manages the file
-        // For now, we log it in the correction_reason
-        await this.pool.query(`
-          UPDATE geo_corrections 
-          SET correction_reason = $1 
-          WHERE tweet_id = $2 AND field_name = 'geo_hierarchy'
-          ORDER BY corrected_at DESC LIMIT 1
-        `, [
-          `Alias correction: "${original.location}" maps to canonical "${corrected.village}"`,
-          tweetId
-        ]);
-      }
-
-      // Check if this is a ULB/ward correction
-      if (corrected.is_urban && corrected.ulb && corrected.ward_no) {
-        // ULB/ward mapping - could update ulb_wards.json via separate process
-        // Log in correction_reason for now
-        await this.pool.query(`
-          UPDATE geo_corrections 
-          SET correction_reason = $1 
-          WHERE tweet_id = $2 AND field_name = 'geo_hierarchy'
-          ORDER BY corrected_at DESC LIMIT 1
-        `, [
-          `ULB/Ward correction: ${corrected.ulb} Ward ${corrected.ward_no}`,
-          tweetId
-        ]);
-      }
+      // Note: Additional alias/ULB processing could be done here using insertResult.rows[0].id
+      // For now, all information is captured in correction_reason during INSERT
 
       return {
         success: true,

@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import LocationToggle from '@/components/analytics/LocationToggle';
 
 const defaultProps = {
-  currentView: 'bar',
+  currentView: 'bar' as 'bar' | 'leaflet' | 'svg',
   onViewChange: jest.fn(),
   className: 'test-toggle',
 };

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAIAssistant } from '@/lib/ai-assistant/langgraph-assistant';
 import { contextManager } from '@/lib/ai-assistant/context-manager';
 import { modelOrchestrator } from '@/lib/ai-assistant/model-manager';
+// Initialize graceful shutdown handlers
+import '@/lib/shutdown';
 
 export async function POST(request: NextRequest) {
   try {

@@ -84,9 +84,10 @@ export class LangGraphAIAssistant {
   private ollamaEndpoint: string;
   private currentSessionId: string;
 
-  constructor(sessionId?: string) {
+  constructor(sessionId?: string, learningSystem?: DynamicLearningSystem) {
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    this.learningSystem = new DynamicLearningSystem();
+    // Reuse shared learning system to prevent pool leaks
+    this.learningSystem = learningSystem || new DynamicLearningSystem();
     this.ollamaEndpoint = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     this.currentSessionId = sessionId || '';
     
@@ -397,13 +398,17 @@ export class LangGraphAIAssistant {
   /**
    * Execute with primary model (Gemini)
    */
-  private async executeWithPrimaryModel(message: string, intent: ParsedIntent): Promise<AIResponse> {
+  private async executeWithPrimaryModel(message: string, intent: ParsedIntent, skipFallback: boolean = false): Promise<AIResponse> {
     this.state.modelUsed = 'gemini';
     
     try {
       const response = await this.executeTools(intent);
       return response;
     } catch (error) {
+      // Only fallback if not in comparison mode (skipFallback prevents duplicate Ollama calls)
+      if (skipFallback) {
+        throw error; // Re-throw to let Promise.allSettled handle it
+      }
       // Fallback to Ollama
       return await this.executeWithOllama(message, intent);
     }
@@ -414,6 +419,14 @@ export class LangGraphAIAssistant {
    */
   private async executeWithOllama(message: string, intent: ParsedIntent): Promise<AIResponse> {
     this.state.modelUsed = 'ollama';
+    
+    // Record Ollama call for monitoring
+    try {
+      const { recordOllamaCall } = await import('@/app/api/health/route');
+      recordOllamaCall();
+    } catch {
+      // Health endpoint not available in test environment
+    }
     
     try {
       const response = await fetch(`${this.ollamaEndpoint}/api/generate`, {
@@ -448,8 +461,10 @@ export class LangGraphAIAssistant {
     const originalModel = this.state.modelUsed;
     
     // Execute both models
+    // Pass skipFallback=true to prevent executeWithPrimaryModel from calling Ollama internally
+    // (which would cause duplicate Ollama calls since we're already calling it here)
     const [geminiResponse, ollamaResponse] = await Promise.allSettled([
-      this.executeWithPrimaryModel(message, intent).catch(() => ({ message: '', action: 'error', confidence: 0, suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] }, pendingChanges: [] })),
+      this.executeWithPrimaryModel(message, intent, true).catch(() => ({ message: '', action: 'error', confidence: 0, suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] }, pendingChanges: [] })),
       this.executeWithOllama(message, intent).catch(() => ({ message: '', action: 'error', confidence: 0, suggestions: { locations: [], eventTypes: [], schemes: [], hashtags: [] }, pendingChanges: [] }))
     ]);
     
@@ -537,9 +552,19 @@ export class LangGraphAIAssistant {
         case 'validateData':
           await this.validateData();
           // ValidateData adds validation pendingChanges directly to state.pendingChanges
-          // Move them to response pendingChanges
-          const validationChanges = this.state.pendingChanges.filter(c => c.source === 'validation');
+          // Move them to response pendingChanges, then clear from state to prevent accumulation
+          const validationChanges = [...this.state.pendingChanges.filter(c => c.source === 'validation')];
           pendingChanges.push(...validationChanges);
+          // Clear validation changes from state after copying to response
+          this.state.pendingChanges = this.state.pendingChanges.filter(c => c.source !== 'validation');
+          
+          // Update validation queue size for monitoring
+          try {
+            const { updateValidationQueue } = await import('@/app/api/health/route');
+            updateValidationQueue(this.state.pendingChanges.filter(c => c.source === 'validation').length);
+          } catch {
+            // Health endpoint not available
+          }
           break;
           
         case 'learnFromCorrection':
@@ -570,6 +595,13 @@ export class LangGraphAIAssistant {
     
     // CRITICAL: Ensure minimum confidence for successful operations
     const finalConfidence = intent.confidence > 0 ? intent.confidence : (pendingChanges.length > 0 ? 0.7 : 0.5);
+    
+    // CRITICAL: Clear pendingChanges from state after preparing response to prevent accumulation
+    // Only clear those that were added to the response (non-validation changes are already in pendingChanges array)
+    // Validation changes were already cleared above
+    this.state.pendingChanges = this.state.pendingChanges.filter(c => 
+      !pendingChanges.some(pc => pc.field === c.field && pc.source === c.source && pc.timestamp?.getTime() === c.timestamp?.getTime())
+    );
     
     return {
       message: this.generateResponseMessage(intent, suggestions),
@@ -811,14 +843,26 @@ export class LangGraphAIAssistant {
     // Validate scheme-event type compatibility
     if (data.schemes_mentioned && data.schemes_mentioned.length > 0 && data.event_type) {
       // Check if schemes are compatible with event type
-      // For now, basic validation
-      issues.push(`Validating schemes with event type...`);
+      // Only add to issues if validation actually fails
+      const incompatibleSchemes = data.schemes_mentioned.filter((scheme: string) => {
+        // TODO: Implement real compatibility check
+        // For now, only flag if we detect actual incompatibility
+        return false; // Placeholder - implement real logic
+      });
+      if (incompatibleSchemes.length > 0) {
+        issues.push(`Schemes ${incompatibleSchemes.join(', ')} may be incompatible with event type ${data.event_type}`);
+      }
     }
 
     // Validate locations exist in geography data
     if (data.locations && data.locations.length > 0) {
-      // Check if locations are valid
-      issues.push(`Validating locations...`);
+      // Only add to issues if validation actually fails
+      // TODO: Implement real location validation against geography data
+      // For now, placeholder - only flag if we detect actual invalid locations
+      const invalidLocations: string[] = []; // Placeholder - implement real validation
+      if (invalidLocations.length > 0) {
+        issues.push(`Invalid locations detected: ${invalidLocations.join(', ')}`);
+      }
     }
 
     // Add validation results to state

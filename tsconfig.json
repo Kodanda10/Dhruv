@@ -24,7 +24,8 @@
     },
     "types": [
       "jest",
-      "node"
+      "node",
+      "@testing-library/jest-dom"
     ],
     "incremental": true,
     "plugins": [
@@ -37,6 +38,7 @@
     "next-env.d.ts",
     "src",
     "tests",
+    "tests/jest-dom.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"

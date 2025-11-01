@@ -8,6 +8,7 @@
 
 import { Pool } from 'pg';
 import { DynamicLearningSystem } from '@/lib/dynamic-learning';
+import { getDBPool } from '@/lib/db/pool';
 
 // Tool interfaces
 export interface ToolResult {
@@ -62,11 +63,10 @@ export class AIAssistantTools {
   private pool: Pool;
   private learningSystem: DynamicLearningSystem;
 
-  constructor() {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL
-    });
-    this.learningSystem = new DynamicLearningSystem();
+  constructor(pool?: Pool, learningSystem?: DynamicLearningSystem) {
+    // Use shared pool to prevent connection leaks
+    this.pool = pool || getDBPool();
+    this.learningSystem = learningSystem || new DynamicLearningSystem(this.pool);
   }
 
   /**
@@ -136,7 +136,7 @@ export class AIAssistantTools {
       };
     } catch (error) {
       return {
-        success: true, // Return success even on errors for graceful degradation
+        success: false, // Return failure to signal error to agent
         data: {
           locations: existingLocations || [],
           validated: false,
@@ -215,7 +215,7 @@ export class AIAssistantTools {
       };
     } catch (error) {
       return {
-        success: true, // Return success for graceful degradation
+        success: false, // Return failure to signal error to agent
         data: {
           eventType: currentEventType || 'other',
           aliases: [],
@@ -273,7 +273,7 @@ export class AIAssistantTools {
       };
     } catch (error) {
       return {
-        success: true, // Return success for graceful degradation
+        success: false, // Return failure to signal error to agent
         data: {
           schemes: existingSchemes || [],
           validated: false,

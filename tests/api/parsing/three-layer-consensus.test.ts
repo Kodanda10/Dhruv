@@ -4,11 +4,13 @@ import { POST, GET } from '@/app/api/parsing/three-layer-consensus/route';
 
 // Mock the ThreeLayerConsensusEngine
 const mockParseTweet = jest.fn();
+// @ts-expect-error - Jest mock type inference issue
 const mockInitialize = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('@/lib/parsing/three-layer-consensus-engine', () => ({
   ThreeLayerConsensusEngine: jest.fn().mockImplementation(() => ({
     initialize: mockInitialize,
+    // @ts-expect-error - Jest mock type inference issue
     parseTweet: mockParseTweet.mockResolvedValue({
       final_result: {
         locations: ['रायपुर'],
@@ -122,6 +124,7 @@ describe('Three-Layer Consensus API Endpoint', () => {
 
     test('should handle parsing errors gracefully', async () => {
       // Mock the engine to throw an error
+      // @ts-expect-error - Jest mock type inference issue
       mockParseTweet.mockRejectedValueOnce(new Error('Parsing failed'));
 
       const requestBody = {
@@ -165,6 +168,7 @@ describe('Three-Layer Consensus API Endpoint', () => {
 
     test('should include geo_hierarchy when resolved', async () => {
       // Force mock to include geo_hierarchy and flag as resolved
+      // @ts-expect-error - Jest mock type inference issue  
       mockParseTweet.mockResolvedValueOnce({
         final_result: {
           locations: ['पंडरी'],
@@ -246,6 +250,7 @@ describe('Three-Layer Consensus API Endpoint', () => {
 
     test('should handle parsing errors in GET request', async () => {
       // Mock the engine to throw an error
+      // @ts-expect-error - Jest mock type compatibility
       mockParseTweet.mockRejectedValueOnce(new Error('GET parsing failed'));
 
       const request = new NextRequest('http://localhost:3000/api/parsing/three-layer-consensus?tweet_text=test');
@@ -339,6 +344,7 @@ describe('Three-Layer Consensus API Endpoint', () => {
       const specialText = 'रायपुर में बैठक हुई! 🎉 #किसान #farmer #test @user';
       
       // Mock the engine to return results with special characters
+      // @ts-expect-error - Jest mock type inference issue  
       mockParseTweet.mockResolvedValueOnce({
         final_result: {
           locations: ['रायपुर'],
