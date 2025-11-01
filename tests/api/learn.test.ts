@@ -21,10 +21,12 @@ global.NextRequest = mockNextRequest;
 // Import the API route handlers
 import { POST, GET } from '@/app/api/reference/learn/route';
 
-// Mock the database pool
+// Mock the database pool - CRITICAL: Must mock at module level before route import
+// Create a shared mock query function
+const mockQueryFn = jest.fn();
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
-    query: jest.fn()
+    query: (...args: any[]) => mockQueryFn(...args)
   }))
 }));
 
@@ -33,20 +35,13 @@ global.Request = jest.fn();
 global.Response = jest.fn();
 
 describe('POST /api/reference/learn', () => {
-  let mockQuery: jest.Mock;
-  
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Get the mock query function from the mocked Pool
-    const Pool = require('pg').Pool;
-    const mockInstance = new Pool();
-    mockQuery = mockInstance.query;
   });
 
   it('should save human-added scheme to user_contributed_data', async () => {
     // Mock database responses
-    mockQuery
+    mockQueryFn
       .mockResolvedValueOnce({
         rows: [{ id: 123 }]
       })
@@ -74,7 +69,7 @@ describe('POST /api/reference/learn', () => {
     expect(data.promoted).toBe(false);
 
     // Verify database calls
-    expect(mockPool.query).toHaveBeenCalledWith(
+    expect(mockQueryFn).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO user_contributed_data'),
       ['scheme', 'नई योजना', 'New Scheme', [], 'test_tweet_123', 'human']
     );
@@ -82,7 +77,7 @@ describe('POST /api/reference/learn', () => {
   
   it('should add to reference tables after 3+ uses', async () => {
     // Mock database responses for 3+ uses
-    mockQuery
+    mockQueryFn
       .mockResolvedValueOnce({
         rows: [{ id: 124 }]
       })
@@ -112,14 +107,14 @@ describe('POST /api/reference/learn', () => {
     expect(data.promoted).toBe(true);
 
     // Verify promotion to reference table
-    expect(mockPool.query).toHaveBeenCalledWith(
+    expect(mockQueryFn).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO ref_event_types'),
       expect.arrayContaining(['नया_कार्यक्रम', 'नया कार्यक्रम', 'New Event'])
     );
   });
 
   it('should handle database errors gracefully', async () => {
-    mockQuery.mockRejectedValueOnce(new Error('Database error'));
+    mockQueryFn.mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/reference/learn', {
       method: 'POST',
@@ -140,19 +135,12 @@ describe('POST /api/reference/learn', () => {
 });
 
 describe('GET /api/reference/learn', () => {
-  let mockQuery: jest.Mock;
-  
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Get the mock query function from the mocked Pool
-    const Pool = require('pg').Pool;
-    const mockInstance = new Pool();
-    mockQuery = mockInstance.query;
   });
 
   it('should return scheme suggestions', async () => {
-    mockQuery.mockResolvedValueOnce({
+    mockQueryFn.mockResolvedValueOnce({
       rows: [
         { name_hi: 'प्रधानमंत्री किसान सम्मान निधि', name_en: 'PM-KISAN', category: 'central', usage_count: 5 },
         { name_hi: 'मुख्यमंत्री किसान योजना', name_en: 'CM Kisan Yojana CG', category: 'state', usage_count: 3 }
@@ -169,14 +157,14 @@ describe('GET /api/reference/learn', () => {
     expect(data.suggestions).toHaveLength(2);
     expect(data.suggestions[0].name_hi).toBe('प्रधानमंत्री किसान सम्मान निधि');
 
-    expect(mockPool.query).toHaveBeenCalledWith(
+    expect(mockQueryFn).toHaveBeenCalledWith(
       expect.stringContaining('SELECT name_hi, name_en, category, usage_count'),
       ['%किसान%']
     );
   });
 
   it('should return event type suggestions with aliases', async () => {
-    mockQuery.mockResolvedValueOnce({
+    mockQueryFn.mockResolvedValueOnce({
       rows: [
         { name_hi: 'बैठक', name_en: 'Meeting', category: 'administrative', usage_count: 8 },
         { name_hi: 'रैली', name_en: 'Rally', category: 'political', usage_count: 6 }
@@ -192,14 +180,14 @@ describe('GET /api/reference/learn', () => {
     expect(data.success).toBe(true);
     expect(data.suggestions).toHaveLength(2);
 
-    expect(mockPool.query).toHaveBeenCalledWith(
+    expect(mockQueryFn).toHaveBeenCalledWith(
       expect.stringContaining('$1 = ANY(aliases_hi)'),
       ['%मुलाकात%']
     );
   });
 
   it('should handle empty query', async () => {
-    mockQuery.mockResolvedValueOnce({
+    mockQueryFn.mockResolvedValueOnce({
       rows: []
     });
 
@@ -214,7 +202,7 @@ describe('GET /api/reference/learn', () => {
   });
 
   it('should handle database errors', async () => {
-    mockQuery.mockRejectedValueOnce(new Error('Database error'));
+    mockQueryFn.mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/reference/learn?type=scheme&q=test');
 

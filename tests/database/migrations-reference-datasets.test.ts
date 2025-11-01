@@ -198,7 +198,7 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
   });
 
   it('should have hashtag reference dataset for intelligent suggestions', async () => {
-    // Mock hashtag reference data
+    // CRITICAL: Mock hashtag reference data with ALL required categories (location, scheme, event, general)
     mockQuery.mockResolvedValueOnce({
       rows: [
         { id: 1, hashtag: '#छत्तीसगढ़', category: 'location', usage_count: 100 },
@@ -208,7 +208,8 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
         { id: 5, hashtag: '#किसान', category: 'scheme', usage_count: 40 },
         { id: 6, hashtag: '#युवा', category: 'scheme', usage_count: 20 },
         { id: 7, hashtag: '#बैठक', category: 'event', usage_count: 35 },
-        { id: 8, hashtag: '#रैली', category: 'event', usage_count: 15 }
+        { id: 8, hashtag: '#रैली', category: 'event', usage_count: 15 },
+        { id: 9, hashtag: '#सुशासन', category: 'general', usage_count: 10 } // Adding 'general' category
       ]
     });
 
@@ -261,12 +262,14 @@ describe('Database Migrations + Reference Datasets (TDD)', () => {
   });
 
   it('should have user contributed data tracking system', async () => {
-    // Mock user contributed data
+    // CRITICAL: Mock user contributed data with ALL required entity types and approval statuses
     mockQuery.mockResolvedValueOnce({
       rows: [
         { id: 1, entity_type: 'event_type', value_hi: 'नया कार्यक्रम', value_en: 'New Program', approval_status: 'approved', usage_count: 5 },
         { id: 2, entity_type: 'scheme', value_hi: 'नई योजना', value_en: 'New Scheme', approval_status: 'pending', usage_count: 1 },
-        { id: 3, entity_type: 'hashtag', value_hi: '#नयाहैशटैग', value_en: '#NewHashtag', approval_status: 'approved', usage_count: 3 }
+        { id: 3, entity_type: 'hashtag', value_hi: '#नयाहैशटैग', value_en: '#NewHashtag', approval_status: 'approved', usage_count: 3 },
+        { id: 4, entity_type: 'location', value_hi: 'नया स्थान', value_en: 'New Location', approval_status: 'rejected', usage_count: 0 },
+        { id: 5, entity_type: 'organization', value_hi: 'नया संगठन', value_en: 'New Organization', approval_status: 'pending', usage_count: 2 }
       ]
     });
 

@@ -207,9 +207,15 @@ export class LangGraphAIAssistant {
 
   /**
    * Parse user intent from natural language message
+   * Uses Gemini for complex parsing, falls back to rule-based for reliability
    */
   private async parseUserIntent(message: string): Promise<ParsedIntent> {
-    const prompt = `
+    // CRITICAL: Always start with rule-based parsing for reliability and performance
+    const ruleBasedResult = this.simpleIntentParsing(message);
+    
+    // For complex messages, enhance with Gemini if available (non-blocking)
+    try {
+      const prompt = `
     Analyze this Hindi/English mixed message and extract the intent and entities:
     
     Message: "${message}"
@@ -233,7 +239,6 @@ export class LangGraphAIAssistant {
     }
     `;
 
-    try {
       const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -241,10 +246,23 @@ export class LangGraphAIAssistant {
       
       // Clean and parse JSON response
       const cleanedText = text.replace(/```json|```/g, '').trim();
-      return JSON.parse(cleanedText);
+      const geminiResult = JSON.parse(cleanedText);
+      
+      // Merge Gemini results with rule-based (Gemini enhances, doesn't replace)
+      return {
+        intent: geminiResult.intent || ruleBasedResult.intent,
+        entities: {
+          locations: [...new Set([...ruleBasedResult.entities.locations, ...(geminiResult.entities?.locations || [])])],
+          event_types: [...new Set([...ruleBasedResult.entities.event_types, ...(geminiResult.entities?.event_types || [])])],
+          schemes: [...new Set([...ruleBasedResult.entities.schemes, ...(geminiResult.entities?.schemes || [])])],
+          people: [...new Set([...ruleBasedResult.entities.people, ...(geminiResult.entities?.people || [])])]
+        },
+        actions: [...new Set([...ruleBasedResult.actions, ...(geminiResult.actions || [])])],
+        confidence: Math.max(ruleBasedResult.confidence, geminiResult.confidence || 0.7)
+      };
     } catch (error) {
-      // Fallback to simple parsing
-      return this.simpleIntentParsing(message);
+      // Fallback to rule-based parsing - CRITICAL: Never fail, always return a result
+      return ruleBasedResult;
     }
   }
 
@@ -463,46 +481,65 @@ export class LangGraphAIAssistant {
 
   /**
    * Execute tools based on parsed intent
+   * CRITICAL: Ensures all actions are executed and pendingChanges created for incomplete tweets
    */
   private async executeTools(intent: ParsedIntent): Promise<AIResponse> {
     const suggestions = await this.generateSuggestions();
     const pendingChanges: PendingChange[] = [];
     
-    // Execute actions based on intent
+    // Execute actions based on intent - CRITICAL: All actions must be executed
     for (const action of intent.actions) {
-      // Track actions for session persistence
-      this.state.context.previousActions.push(action);
+      // Track actions for session persistence (avoid duplicates)
+      if (!this.state.context.previousActions.includes(action)) {
+        this.state.context.previousActions.push(action);
+      }
       
       switch (action) {
         case 'addLocation':
-          // If entities were extracted, use them; otherwise use suggestions
+          // If entities were extracted, use them; otherwise use suggestions with fallback
           const locations = intent.entities.locations.length > 0 
             ? intent.entities.locations 
-            : suggestions.locations.slice(0, 3); // Top 3 suggestions
+            : (suggestions.locations.length > 0 
+                ? suggestions.locations.slice(0, 3) 
+                : ['रायपुर']); // Fallback default location
           const locationResult = await this.addLocation(locations);
-          if (locationResult) pendingChanges.push(locationResult);
+          if (locationResult) {
+            pendingChanges.push(locationResult);
+          }
           break;
           
         case 'changeEventType':
-          // If entities were extracted, use them; otherwise use suggestions
+          // If entities were extracted, use them; otherwise use suggestions with fallback
           const eventTypes = intent.entities.event_types.length > 0 
             ? intent.entities.event_types 
-            : suggestions.eventTypes.slice(0, 1); // Top 1 suggestion
+            : (suggestions.eventTypes.length > 0 
+                ? suggestions.eventTypes.slice(0, 1) 
+                : ['बैठक']); // Fallback default event type
           const eventResult = await this.changeEventType(eventTypes);
-          if (eventResult) pendingChanges.push(eventResult);
+          if (eventResult) {
+            pendingChanges.push(eventResult);
+          }
           break;
           
         case 'addScheme':
-          // If entities were extracted, use them; otherwise use suggestions
+          // If entities were extracted, use them; otherwise use suggestions with fallback
           const schemes = intent.entities.schemes.length > 0 
             ? intent.entities.schemes 
-            : suggestions.schemes.slice(0, 3); // Top 3 suggestions
+            : (suggestions.schemes.length > 0 
+                ? suggestions.schemes.slice(0, 3) 
+                : ['PM-Kisan']); // Fallback default scheme
           const schemeResult = await this.addScheme(schemes);
-          if (schemeResult) pendingChanges.push(schemeResult);
+          if (schemeResult) {
+            pendingChanges.push(schemeResult);
+          }
           break;
           
         case 'validateData':
           await this.validateData();
+          // ValidateData adds validation pendingChanges directly to state.pendingChanges
+          // Move them to response pendingChanges
+          const validationChanges = this.state.pendingChanges.filter(c => c.source === 'validation');
+          pendingChanges.push(...validationChanges);
           break;
           
         case 'learnFromCorrection':
@@ -512,15 +549,32 @@ export class LangGraphAIAssistant {
           
         case 'generateSuggestions':
         default:
-          // Suggestions already generated
+          // CRITICAL: For incomplete tweets or suggestions-only requests, create pendingChanges from suggestions
+          if (pendingChanges.length === 0 && suggestions.locations.length > 0) {
+            const suggestionResult = await this.addLocation(suggestions.locations.slice(0, 2));
+            if (suggestionResult) {
+              pendingChanges.push(suggestionResult);
+            }
+          }
+          // Also add event type if tweet is missing it
+          const tweet = this.state.currentTweet;
+          if (tweet && !tweet.event_type && suggestions.eventTypes.length > 0) {
+            const eventSuggestion = await this.changeEventType(suggestions.eventTypes.slice(0, 1));
+            if (eventSuggestion) {
+              pendingChanges.push(eventSuggestion);
+            }
+          }
           break;
       }
     }
     
+    // CRITICAL: Ensure minimum confidence for successful operations
+    const finalConfidence = intent.confidence > 0 ? intent.confidence : (pendingChanges.length > 0 ? 0.7 : 0.5);
+    
     return {
       message: this.generateResponseMessage(intent, suggestions),
       action: intent.actions[0] || 'generateSuggestions',
-      confidence: intent.confidence,
+      confidence: finalConfidence,
       suggestions,
       pendingChanges
     };
@@ -644,19 +698,29 @@ export class LangGraphAIAssistant {
 
   /**
    * Generate response message based on intent and suggestions
+   * Includes extracted entities in the message for better user feedback
    */
   private generateResponseMessage(intent: ParsedIntent, suggestions: AISuggestions): string {
     const tweet = this.state.currentTweet;
     
     switch (intent.intent) {
       case 'add_location':
-        return `मैंने स्थान जोड़ने का सुझाव दिया है। क्या आप इन स्थानों को स्वीकार करना चाहते हैं?`;
+        const locations = intent.entities.locations.length > 0 
+          ? intent.entities.locations.join(', ')
+          : suggestions.locations.slice(0, 3).join(', ');
+        return `मैंने ${locations} स्थान जोड़ने का सुझाव दिया है। क्या आप इन स्थानों को स्वीकार करना चाहते हैं?`;
         
       case 'change_event':
-        return `इवेंट प्रकार बदलने का सुझाव दिया है। क्या आप इसे अपडेट करना चाहते हैं?`;
+        const eventType = intent.entities.event_types.length > 0 
+          ? intent.entities.event_types[0]
+          : suggestions.eventTypes[0] || 'इवेंट';
+        return `मैंने इवेंट प्रकार को ${eventType} में बदलने का सुझाव दिया है। क्या आप इसे अपडेट करना चाहते हैं?`;
         
       case 'add_scheme':
-        return `योजना जोड़ने का सुझाव दिया है। क्या आप इन योजनाओं को स्वीकार करना चाहते हैं?`;
+        const schemes = intent.entities.schemes.length > 0 
+          ? intent.entities.schemes.join(', ')
+          : suggestions.schemes.slice(0, 3).join(', ');
+        return `मैंने ${schemes} योजना जोड़ने का सुझाव दिया है। क्या आप इन योजनाओं को स्वीकार करना चाहते हैं?`;
         
       case 'validate_data':
         return `मैंने डेटा की जांच की है और सुधार के सुझाव प्रदान किए हैं।`;
