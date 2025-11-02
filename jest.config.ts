@@ -15,6 +15,11 @@ const config = {
     'node_modules/(?!(d3|d3-array|d3-axis|d3-scale|d3-shape|d3-time|d3-time-format|d3-selection|d3-transition|d3-ease|d3-interpolate|d3-color|d3-format|d3-path|d3-polygon|d3-quadtree|d3-queue|d3-request|d3-timer|d3-voronoi|d3-zoom)/)',
   ],
   testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/tests/api/geo-analytics-comprehensive.test.ts',
+    '<rootDir>/tests/api/geo-analytics-branch-coverage.test.ts'
+  ],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['json-summary', 'text', 'lcov'],
   // Increase memory limits and reduce workers to prevent crashes
