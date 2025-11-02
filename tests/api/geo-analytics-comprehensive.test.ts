@@ -70,6 +70,7 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
     });
 
     test('should handle query execution failure', async () => {
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery.mockRejectedValueOnce(new Error('Query execution failed: timeout'));
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
@@ -83,11 +84,13 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
 
     test('should handle partial query failure (some queries succeed, some fail)', async () => {
       // First query succeeds, second fails
+      // @ts-expect-error - Jest mock type compatibility
       mockQuery
-        .mockResolvedValueOnce({ rows: [{ district: 'रायपुर', event_count: '10' }] })
+        .mockResolvedValueOnce({ rows: [{ district: 'रायपुर', event_count: '10' }] } as any)
+        // @ts-expect-error - Jest mock type compatibility
         .mockRejectedValueOnce(new Error('Second query failed'))
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] } as any)
         .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
@@ -1095,8 +1098,8 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] } as any);
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -1107,7 +1110,7 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
     });
 
     test('should have consistent response structure across endpoints', async () => {
-      mockQuery.mockResolvedValue({ rows: [] });
+      mockQuery.mockResolvedValue({ rows: [] } as any);
 
       const summaryRequest = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const districtRequest = new NextRequest('http://localhost:3000/api/geo-analytics/by-district?district=रायपुर');
