@@ -3,7 +3,10 @@ import { Pool } from 'pg';
 // Skip database integration tests in CI if DATABASE_URL is not available
 const shouldSkip = process.env.CI === 'true' && !process.env.DATABASE_URL;
 
-describe('Database Migrations + Reference Datasets - Real Database', () => {
+// Use describe.skip to properly skip in CI
+const describeOrSkip = shouldSkip ? describe.skip : describe;
+
+describeOrSkip('Database Migrations + Reference Datasets - Real Database', () => {
   let pool: Pool | null = null;
 
   beforeAll(() => {

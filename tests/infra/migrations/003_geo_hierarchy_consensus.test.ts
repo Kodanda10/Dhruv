@@ -6,7 +6,10 @@ import path from 'path';
 // Skip database integration tests in CI if DATABASE_URL is not available
 const shouldSkip = process.env.CI === 'true' && !process.env.DATABASE_URL;
 
-describe('Migration 003: Geo-Hierarchy and Consensus Schema', () => {
+// Use describe.skip to properly skip in CI
+const describeOrSkip = shouldSkip ? describe.skip : describe;
+
+describeOrSkip('Migration 003: Geo-Hierarchy and Consensus Schema', () => {
   let pool: Pool | null = null;
   
   beforeAll(async () => {
