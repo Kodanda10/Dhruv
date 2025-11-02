@@ -53,7 +53,7 @@ describeOrSkip('Geo Analytics - Branch Targeting', () => {
       `);
 
       if (parseInt(count.rows[0].count) === 0) {
-        // Create test data
+        // Load real data from parsed_tweets.json
         await createTestData(pool);
       }
     } catch (error) {
@@ -62,54 +62,8 @@ describeOrSkip('Geo Analytics - Branch Targeting', () => {
   }
 
   async function createTestData(pool: Pool) {
-    // Create diverse test data covering all scenarios
-    const testEvents = [
-      // Urban with all fields
-      { district: 'रायपुर', assembly: 'रायपुर शहर उत्तर', is_urban: 'true', ulb: 'रायपुर नगर निगम', ward_no: '5' },
-      // Rural with null ulb
-      { district: 'बिलासपुर', assembly: 'बिलासपुर', is_urban: 'false', ulb: null, ward_no: null },
-      // Another urban
-      { district: 'रायपुर', assembly: 'रायपुर शहर दक्षिण', is_urban: 'true', ulb: 'रायपुर नगर निगम', ward_no: '6' },
-      // Rural with gram_panchayat
-      { district: 'बिलासपुर', assembly: 'बिलासपुर', is_urban: 'false', ulb: null, gram_panchayat: 'बिलासपुर' },
-    ];
-
-    for (let i = 0; i < testEvents.length; i++) {
-      const event = testEvents[i];
-      const tweetId = `test_coverage_${i + 1}`;
-
-      // Ensure raw_tweet exists
-      await pool.query(`
-        INSERT INTO raw_tweets (tweet_id, text, created_at, author_handle)
-        VALUES ($1, $2, NOW(), 'test_user')
-        ON CONFLICT (tweet_id) DO NOTHING
-      `, [tweetId, `Test tweet ${tweetId}`]);
-
-      // Create parsed_event
-      const geoHierarchy = [{
-        village: event.district === 'रायपुर' ? 'पंडरी' : 'तखतपुर',
-        gram_panchayat: event.gram_panchayat || null,
-        ulb: event.ulb,
-        ward_no: event.ward_no,
-        block: event.district,
-        assembly: event.assembly,
-        district: event.district,
-        is_urban: event.is_urban
-      }];
-
-      await pool.query(`
-        INSERT INTO parsed_events (
-          tweet_id, event_type, locations, needs_review, review_status,
-          geo_hierarchy, parsed_at, overall_confidence
-        )
-        VALUES ($1, $2, '[]'::jsonb, false, 'approved', $3::jsonb, NOW(), 0.9)
-        ON CONFLICT DO NOTHING
-      `, [
-        tweetId,
-        i % 2 === 0 ? 'बैठक' : 'रैली',
-        JSON.stringify(geoHierarchy)
-      ]);
-    }
+    const { setupRealTestData } = await import('./geo-analytics-real-data-loader');
+    await setupRealTestData(pool, 50);
   }
 
   // ============================================================
