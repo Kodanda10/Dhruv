@@ -675,75 +675,9 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
  * Setup test data in database
  */
 async function setupTestData(pool: Pool): Promise<void> {
-  // First, ensure we have raw_tweets to reference
-  const tweetsCheck = await pool.query(`
-    SELECT COUNT(*) as count FROM raw_tweets LIMIT 1
-  `);
-
-  if (parseInt(tweetsCheck.rows[0].count) === 0) {
-    // Create a test tweet first
-    await pool.query(`
-      INSERT INTO raw_tweets (tweet_id, text, created_at, author_handle)
-      VALUES ('test_geo_1', 'Test tweet for geo analytics', NOW(), 'test_user')
-      ON CONFLICT (tweet_id) DO NOTHING
-    `);
-  }
-
-  // Create test parsed_events with geo_hierarchy
-  const testGeoHierarchy = JSON.stringify([
-    {
-      village: 'पंडरी',
-      gram_panchayat: null,
-      ulb: 'रायपुर नगर निगम',
-      ward_no: 5,
-      block: 'रायपुर',
-      assembly: 'रायपुर शहर उत्तर',
-      district: 'रायपुर',
-      is_urban: true,
-      confidence: 0.95
-    },
-    {
-      village: 'तखतपुर',
-      gram_panchayat: 'बिलासपुर',
-      ulb: null,
-      ward_no: null,
-      block: 'बिलासपुर',
-      assembly: 'बिलासपुर',
-      district: 'बिलासपुर',
-      is_urban: false,
-      confidence: 0.92
-    }
-  ]);
-
-  await pool.query(`
-    INSERT INTO parsed_events (
-      tweet_id, event_type, locations, needs_review, review_status, 
-      geo_hierarchy, parsed_at
-    )
-    SELECT 
-      COALESCE(
-        (SELECT tweet_id FROM raw_tweets LIMIT 1),
-        'test_geo_1'
-      ),
-      'बैठक',
-      '[{"name": "रायपुर", "type": "district"}]'::jsonb,
-      false,
-      'approved',
-      $1::jsonb,
-      NOW()
-    WHERE NOT EXISTS (
-      SELECT 1 FROM parsed_events 
-      WHERE review_status = 'approved' 
-        AND needs_review = false
-        AND geo_hierarchy IS NOT NULL
-    )
-  `, [testGeoHierarchy]);
-
-  // Mark test tweets as parsed
-  await pool.query(`
-    UPDATE raw_tweets 
-    SET processing_status = 'parsed'
-    WHERE tweet_id = 'test_geo_1'
-  `);
+  // Use real data from parsed_tweets.json
+  const { setupRealTestData } = await import('./geo-analytics-real-data-loader');
+  await setupRealTestData(pool, 50);
+  console.log('✅ Real integration test data loaded from parsed_tweets.json');
 }
 
