@@ -26,10 +26,12 @@ export function getDBPool(): Pool {
       connectionTimeoutMillis: 2000,
     });
 
-    // Handle pool errors
-    pool.on('error', (err) => {
-      console.error('Unexpected error on idle database client', err);
-    });
+    // Handle pool errors (only if pool is a real Pool instance)
+    if (pool && typeof pool.on === 'function') {
+      pool.on('error', (err) => {
+        console.error('Unexpected error on idle database client', err);
+      });
+    }
   }
 
   return pool;
