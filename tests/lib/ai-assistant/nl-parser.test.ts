@@ -4,6 +4,8 @@
  * Tests Hindi/English mixed request parsing with real tweet examples
  */
 
+import fs from 'fs';
+import path from 'path';
 import { nlParser } from '@/lib/ai-assistant/nl-parser';
 
 // Mock the dependencies
@@ -37,8 +39,8 @@ jest.mock('@google/generative-ai', () => ({
 describe('Natural Language Parser', () => {
   // Load real parsed tweets for testing
   const realTweets = JSON.parse(
-    require('fs').readFileSync(
-      require('path').join(process.cwd(), 'data/parsed_tweets.json'),
+    fs.readFileSync(
+      path.join(process.cwd(), 'data/parsed_tweets.json'),
       'utf-8'
     )
   );
