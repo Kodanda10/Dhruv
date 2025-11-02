@@ -609,58 +609,10 @@ describeOrSkip('Geo Analytics - Branch Coverage Tests (Real Database)', () => {
 });
 
 /**
- * Create test data in database if needed
+ * Create test data in database if needed - uses real data from parsed_tweets.json
  */
 async function createTestData(pool: Pool): Promise<void> {
-  try {
-    const tweetsCheck = await pool.query('SELECT COUNT(*) as count FROM raw_tweets LIMIT 1');
-    
-    if (parseInt(tweetsCheck.rows[0].count) === 0) {
-      await pool.query(`
-        INSERT INTO raw_tweets (tweet_id, text, created_at, author_handle)
-        VALUES ('test_geo_1', 'रायपुर के पंडरी में कार्यक्रम', NOW(), 'test_user')
-        ON CONFLICT (tweet_id) DO NOTHING
-      `);
-    }
-
-    const testGeoHierarchy = [
-      {
-        village: 'पंडरी',
-        gram_panchayat: null,
-        ulb: 'रायपुर नगर निगम',
-        ward_no: 5,
-        block: 'रायपुर',
-        assembly: 'रायपुर शहर उत्तर',
-        district: 'रायपुर',
-        is_urban: true,
-        confidence: 0.95
-      }
-    ];
-
-    await pool.query(`
-      INSERT INTO parsed_events (
-        tweet_id, event_type, locations, needs_review, review_status, 
-        geo_hierarchy, parsed_at, overall_confidence
-      )
-      SELECT 
-        COALESCE((SELECT tweet_id FROM raw_tweets LIMIT 1), 'test_geo_1'),
-        'बैठक',
-        '[{"name": "रायपुर", "type": "district"}]'::jsonb,
-        false,
-        'approved',
-        $1::jsonb,
-        NOW(),
-        0.9
-      WHERE NOT EXISTS (
-        SELECT 1 FROM parsed_events 
-        WHERE review_status = 'approved' 
-          AND needs_review = false
-          AND geo_hierarchy IS NOT NULL
-        LIMIT 1
-      )
-    `, [JSON.stringify(testGeoHierarchy)]);
-  } catch (error) {
-    console.warn('Error creating test data:', error);
-  }
+  const { setupRealTestData } = await import('./geo-analytics-real-data-loader');
+  await setupRealTestData(pool, 50);
 }
 
