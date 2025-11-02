@@ -28,25 +28,25 @@ export async function GET(request: NextRequest) {
 
     const pool = getDBPool();
 
-    // Build WHERE clause
-    let whereClause = "WHERE needs_review = false AND review_status = 'approved'";
+    // Build WHERE clause with pe alias for parsed_events table
+    let whereClause = "WHERE pe.needs_review = false AND pe.review_status = 'approved'";
     const params: any[] = [];
     let paramIndex = 1;
 
     if (startDate) {
-      whereClause += ` AND parsed_at >= $${paramIndex}`;
+      whereClause += ` AND pe.parsed_at >= $${paramIndex}`;
       params.push(startDate);
       paramIndex++;
     }
 
     if (endDate) {
-      whereClause += ` AND parsed_at <= $${paramIndex}`;
+      whereClause += ` AND pe.parsed_at <= $${paramIndex}`;
       params.push(endDate);
       paramIndex++;
     }
 
     if (eventType) {
-      whereClause += ` AND event_type = $${paramIndex}`;
+      whereClause += ` AND pe.event_type = $${paramIndex}`;
       params.push(eventType);
       paramIndex++;
     }
@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
         geo->>'district' as district,
         COUNT(DISTINCT pe.id) as event_count
       FROM parsed_events pe,
-           jsonb_array_elements(pe.geo_hierarchy) AS geo
-      ${whereClause.replace(/parsed_events/g, 'pe')}
+           jsonb_array_elements(COALESCE(pe.geo_hierarchy, '[]'::jsonb)) AS geo
+      ${whereClause}
+        AND pe.geo_hierarchy IS NOT NULL
         AND geo->>'district' IS NOT NULL
       GROUP BY geo->>'district'
       ORDER BY event_count DESC
@@ -71,8 +72,9 @@ export async function GET(request: NextRequest) {
         geo->>'assembly' as assembly,
         COUNT(DISTINCT pe.id) as event_count
       FROM parsed_events pe,
-           jsonb_array_elements(pe.geo_hierarchy) AS geo
-      ${whereClause.replace(/parsed_events/g, 'pe')}
+           jsonb_array_elements(COALESCE(pe.geo_hierarchy, '[]'::jsonb)) AS geo
+      ${whereClause}
+        AND pe.geo_hierarchy IS NOT NULL
         AND geo->>'district' IS NOT NULL
         AND geo->>'assembly' IS NOT NULL
       GROUP BY 
@@ -89,8 +91,9 @@ export async function GET(request: NextRequest) {
         geo->>'block' as block,
         COUNT(DISTINCT pe.id) as event_count
       FROM parsed_events pe,
-           jsonb_array_elements(pe.geo_hierarchy) AS geo
-      ${whereClause.replace(/parsed_events/g, 'pe')}
+           jsonb_array_elements(COALESCE(pe.geo_hierarchy, '[]'::jsonb)) AS geo
+      ${whereClause}
+        AND pe.geo_hierarchy IS NOT NULL
         AND geo->>'district' IS NOT NULL
         AND geo->>'block' IS NOT NULL
       GROUP BY 
@@ -109,8 +112,8 @@ export async function GET(request: NextRequest) {
         END as area_type,
         COUNT(DISTINCT pe.id) as event_count
       FROM parsed_events pe,
-           jsonb_array_elements(pe.geo_hierarchy) AS geo
-      ${whereClause.replace(/parsed_events/g, 'pe')}
+           jsonb_array_elements(COALESCE(pe.geo_hierarchy, '[]'::jsonb)) AS geo
+      ${whereClause}
         AND pe.geo_hierarchy IS NOT NULL
       GROUP BY area_type
     `;
@@ -124,8 +127,9 @@ export async function GET(request: NextRequest) {
         geo->>'is_urban' as is_urban,
         COUNT(DISTINCT pe.id) as event_count
       FROM parsed_events pe,
-           jsonb_array_elements(pe.geo_hierarchy) AS geo
-      ${whereClause.replace(/parsed_events/g, 'pe')}
+           jsonb_array_elements(COALESCE(pe.geo_hierarchy, '[]'::jsonb)) AS geo
+      ${whereClause}
+        AND pe.geo_hierarchy IS NOT NULL
         AND geo->>'village' IS NOT NULL
       GROUP BY 
         geo->>'village',
@@ -145,34 +149,40 @@ export async function GET(request: NextRequest) {
       pool.query(topLocationsQuery, params),
     ]);
 
-    // Format results
+    // Format results with null safety
+    const districtRows = districtResult?.rows || [];
+    const assemblyRows = assemblyResult?.rows || [];
+    const blockRows = blockResult?.rows || [];
+    const urbanRuralRows = urbanRuralResult?.rows || [];
+    const topLocationsRows = topLocationsResult?.rows || [];
+
     const summary = {
-      total_events: districtResult.rows.reduce((sum, row) => sum + parseInt(row.event_count), 0),
-      by_district: districtResult.rows.map(row => ({
+      total_events: districtRows.reduce((sum, row) => sum + parseInt(row.event_count || '0'), 0),
+      by_district: districtRows.map(row => ({
         district: row.district,
-        event_count: parseInt(row.event_count),
+        event_count: parseInt(row.event_count || '0'),
       })),
-      by_assembly: assemblyResult.rows.map(row => ({
+      by_assembly: assemblyRows.map(row => ({
         district: row.district,
         assembly: row.assembly,
-        event_count: parseInt(row.event_count),
+        event_count: parseInt(row.event_count || '0'),
       })),
-      by_block: blockResult.rows.map(row => ({
+      by_block: blockRows.map(row => ({
         district: row.district,
         assembly: row.assembly,
         block: row.block,
-        event_count: parseInt(row.event_count),
+        event_count: parseInt(row.event_count || '0'),
       })),
-      urban_rural: urbanRuralResult.rows.reduce((acc, row) => {
-        acc[row.area_type] = parseInt(row.event_count);
+      urban_rural: urbanRuralRows.reduce((acc, row) => {
+        acc[row.area_type] = parseInt(row.event_count || '0');
         return acc;
       }, {} as Record<string, number>),
-      top_locations: topLocationsResult.rows.map(row => ({
+      top_locations: topLocationsRows.map(row => ({
         location: row.location,
         district: row.district,
         ulb: row.ulb || null,
         is_urban: row.is_urban === 'true',
-        event_count: parseInt(row.event_count),
+        event_count: parseInt(row.event_count || '0'),
       })),
       filters: {
         start_date: startDate || null,
