@@ -1092,10 +1092,8 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
     test('should include source field in successful response', async () => {
       mockQuery
         .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+      // @ts-expect-error - Jest mock type compatibility
+      // @ts-expect-error - Jest mock type compatibility
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -1106,7 +1104,7 @@ describe('Geo Analytics API - Comprehensive Test Suite', () => {
     });
 
     test('should have consistent response structure across endpoints', async () => {
-      mockQuery.mockResolvedValue({ rows: [] });
+      mockQuery.mockResolvedValue({ rows: [] } as any);
 
       const summaryRequest = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const districtRequest = new NextRequest('http://localhost:3000/api/geo-analytics/by-district?district=रायपुर');
