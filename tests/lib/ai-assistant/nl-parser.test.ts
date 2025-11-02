@@ -35,13 +35,18 @@ jest.mock('@google/generative-ai', () => ({
 }));
 
 describe('Natural Language Parser', () => {
-  const realTweetExamples = [
-    'राज्य सरकार ने रायपुर में बैठक की और PM Kisan योजना की घोषणा की।',
-    'बिलासपुर में कार्यक्रम आयोजित किया गया जिसमें कई मंत्रियों ने भाग लिया।',
-    'छत्तीसगढ़ के विकास के लिए नई योजनाएं शुरू की गई हैं।',
-    'रायगढ़ में Ayushman Bharat कार्यक्रम का उद्घाटन किया गया।',
-    'दुर्ग में किसानों के लिए विशेष बैठक आयोजित की गई।'
-  ];
+  // Load real parsed tweets for testing
+  const realTweets = JSON.parse(
+    require('fs').readFileSync(
+      require('path').join(process.cwd(), 'data/parsed_tweets.json'),
+      'utf-8'
+    )
+  );
+  
+  // Extract tweet texts from real data
+  const realTweetExamples = realTweets
+    .slice(0, 55) // Use first 55 tweets (matching original count)
+    .map((tweet: any) => tweet.tweet_text || tweet.text || '');
 
   beforeEach(() => {
     jest.clearAllMocks();
