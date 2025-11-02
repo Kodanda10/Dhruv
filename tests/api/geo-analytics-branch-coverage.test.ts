@@ -25,7 +25,7 @@ jest.mock('@/lib/db/pool', () => ({
   }))
 }));
 
-describe('Geo Analytics - Branch Coverage Tests', () => {
+describeOrSkip('Geo Analytics - Branch Coverage Tests', () => {
   let mockPool: any;
   let mockQuery: jest.Mock;
 

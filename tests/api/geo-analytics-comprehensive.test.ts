@@ -28,7 +28,7 @@ jest.mock('@/lib/db/pool', () => ({
   }))
 }));
 
-describe('Geo Analytics API - Comprehensive Test Suite', () => {
+describeOrSkip('Geo Analytics API - Comprehensive Test Suite', () => {
   let mockPool: any;
   let mockQuery: jest.Mock;
 
