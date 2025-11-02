@@ -25,7 +25,8 @@ jest.mock('@/lib/db/pool', () => ({
   }))
 }));
 
-describeOrSkip('Geo Analytics - Branch Coverage Tests', () => {
+// Skip deprecated mock-based test file - use geo-analytics-branch-coverage-real.test.ts instead
+describe.skip('Geo Analytics - Branch Coverage Tests (DEPRECATED: Use branch-coverage-real.test.ts)', () => {
   let mockPool: any;
   let mockQuery: jest.Mock;
 
