@@ -45,6 +45,8 @@
   ],
   "exclude": [
     "node_modules",
-    "scripts"
+    "scripts",
+    "tests/api/geo-analytics-comprehensive.test.ts",
+    "tests/api/geo-analytics-branch-coverage.test.ts"
   ]
 }

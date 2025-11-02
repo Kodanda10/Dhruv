@@ -45,7 +45,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -63,7 +63,7 @@ describe('GET /api/health', () => {
     mockQuery.mockRejectedValue(new Error('Query failed'));
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -83,7 +83,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(data.ollamaCalls).toBeDefined();
@@ -101,7 +101,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(data.validationQueue).toBeDefined();
@@ -118,7 +118,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(data.memory).toBeDefined();
@@ -133,7 +133,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(500);
@@ -151,7 +151,7 @@ describe('GET /api/health', () => {
     });
 
     const request = new NextRequest('http://localhost:3000/api/health');
-    const response = await GET(request);
+    const response = await GET();
     const data = await response.json();
 
     expect(data.timestamp).toBeDefined();
