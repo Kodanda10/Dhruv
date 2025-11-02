@@ -40,78 +40,86 @@ export async function GET(request: NextRequest) {
 
     const pool = getDBPool();
 
-    // Build WHERE clause
-    let whereClause = `WHERE needs_review = false AND review_status = 'approved' AND geo_hierarchy->>'district' = $1`;
-    const params: any[] = [district];
-    let paramIndex = 2;
+    // Build base WHERE clause (for parsed_events table)
+    let baseWhereClause = "WHERE pe.needs_review = false AND pe.review_status = 'approved'";
+    const params: any[] = [];
+    let paramIndex = 1;
 
     if (startDate) {
-      whereClause += ` AND parsed_at >= $${paramIndex}`;
+      baseWhereClause += ` AND pe.parsed_at >= $${paramIndex}`;
       params.push(startDate);
       paramIndex++;
     }
 
     if (endDate) {
-      whereClause += ` AND parsed_at <= $${paramIndex}`;
+      baseWhereClause += ` AND pe.parsed_at <= $${paramIndex}`;
       params.push(endDate);
       paramIndex++;
     }
 
     if (eventType) {
-      whereClause += ` AND event_type = $${paramIndex}`;
+      baseWhereClause += ` AND pe.event_type = $${paramIndex}`;
       params.push(eventType);
       paramIndex++;
     }
 
+    // Build WHERE clause for geo_hierarchy filter
+    const geoWhereClause = ` AND geo->>'district' = $${paramIndex}`;
+    params.push(district);
+    const fullWhereClause = `${baseWhereClause}${geoWhereClause}`;
+
     // Assemblies in this district
     const assembliesQuery = `
       SELECT 
-        geo_hierarchy->>'assembly' as assembly,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'assembly' IS NOT NULL
-      GROUP BY geo_hierarchy->>'assembly'
+        geo->>'assembly' as assembly,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${fullWhereClause}
+        AND geo->>'assembly' IS NOT NULL
+      GROUP BY geo->>'assembly'
       ORDER BY event_count DESC
     `;
 
     // Blocks in this district
     const blocksQuery = `
       SELECT 
-        geo_hierarchy->>'assembly' as assembly,
-        geo_hierarchy->>'block' as block,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'block' IS NOT NULL
+        geo->>'assembly' as assembly,
+        geo->>'block' as block,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${fullWhereClause}
+        AND geo->>'block' IS NOT NULL
       GROUP BY 
-        geo_hierarchy->>'assembly',
-        geo_hierarchy->>'block'
+        geo->>'assembly',
+        geo->>'block'
       ORDER BY assembly, event_count DESC
     `;
 
     // Villages/ULBs in this district
     const villagesQuery = `
       SELECT 
-        geo_hierarchy->>'village' as village,
-        geo_hierarchy->>'assembly' as assembly,
-        geo_hierarchy->>'block' as block,
-        geo_hierarchy->>'gram_panchayat' as gram_panchayat,
-        geo_hierarchy->>'ulb' as ulb,
-        geo_hierarchy->>'ward_no' as ward_no,
-        geo_hierarchy->>'is_urban' as is_urban,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'village' IS NOT NULL
+        geo->>'village' as village,
+        geo->>'assembly' as assembly,
+        geo->>'block' as block,
+        geo->>'gram_panchayat' as gram_panchayat,
+        geo->>'ulb' as ulb,
+        geo->>'ward_no' as ward_no,
+        geo->>'is_urban' as is_urban,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${fullWhereClause}
+        AND geo->>'village' IS NOT NULL
       GROUP BY 
-        geo_hierarchy->>'village',
-        geo_hierarchy->>'assembly',
-        geo_hierarchy->>'block',
-        geo_hierarchy->>'gram_panchayat',
-        geo_hierarchy->>'ulb',
-        geo_hierarchy->>'ward_no',
-        geo_hierarchy->>'is_urban'
+        geo->>'village',
+        geo->>'assembly',
+        geo->>'block',
+        geo->>'gram_panchayat',
+        geo->>'ulb',
+        geo->>'ward_no',
+        geo->>'is_urban'
       ORDER BY event_count DESC
     `;
 
@@ -119,25 +127,27 @@ export async function GET(request: NextRequest) {
     const urbanRuralQuery = `
       SELECT 
         CASE 
-          WHEN geo_hierarchy->>'is_urban' = 'true' THEN 'urban'
+          WHEN geo->>'is_urban' = 'true' THEN 'urban'
           ELSE 'rural'
         END as area_type,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy IS NOT NULL
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${fullWhereClause}
+        AND pe.geo_hierarchy IS NOT NULL
       GROUP BY area_type
     `;
 
     // Event types in this district
     const eventTypesQuery = `
       SELECT 
-        event_type,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND event_type IS NOT NULL
-      GROUP BY event_type
+        pe.event_type,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${fullWhereClause}
+        AND pe.event_type IS NOT NULL
+      GROUP BY pe.event_type
       ORDER BY event_count DESC
     `;
 

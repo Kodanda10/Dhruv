@@ -184,6 +184,11 @@ export class NaturalLanguageParser {
       const response = await result.response;
       const text = response.text();
       
+      // Guard: Ensure text is a string (handle edge cases in tests/mocks)
+      if (typeof text !== 'string') {
+        throw new TypeError(`Expected string from response.text(), got ${typeof text}: ${text}`);
+      }
+      
       // Clean and parse JSON response
       const cleanedText = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleanedText);

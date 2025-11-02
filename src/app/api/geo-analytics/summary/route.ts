@@ -51,49 +51,52 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    // Aggregate by district (geo_hierarchy is a separate JSONB column)
+    // Aggregate by district (geo_hierarchy is a JSONB array, expand with jsonb_array_elements)
     const districtQuery = `
       SELECT 
-        geo_hierarchy->>'district' as district,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'district' IS NOT NULL
-      GROUP BY geo_hierarchy->>'district'
+        geo->>'district' as district,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${whereClause.replace(/parsed_events/g, 'pe')}
+        AND geo->>'district' IS NOT NULL
+      GROUP BY geo->>'district'
       ORDER BY event_count DESC
     `;
 
     // Aggregate by assembly
     const assemblyQuery = `
       SELECT 
-        geo_hierarchy->>'district' as district,
-        geo_hierarchy->>'assembly' as assembly,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'district' IS NOT NULL
-        AND geo_hierarchy->>'assembly' IS NOT NULL
+        geo->>'district' as district,
+        geo->>'assembly' as assembly,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${whereClause.replace(/parsed_events/g, 'pe')}
+        AND geo->>'district' IS NOT NULL
+        AND geo->>'assembly' IS NOT NULL
       GROUP BY 
-        geo_hierarchy->>'district',
-        geo_hierarchy->>'assembly'
+        geo->>'district',
+        geo->>'assembly'
       ORDER BY district, event_count DESC
     `;
 
     // Aggregate by block
     const blockQuery = `
       SELECT 
-        geo_hierarchy->>'district' as district,
-        geo_hierarchy->>'assembly' as assembly,
-        geo_hierarchy->>'block' as block,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'district' IS NOT NULL
-        AND geo_hierarchy->>'block' IS NOT NULL
+        geo->>'district' as district,
+        geo->>'assembly' as assembly,
+        geo->>'block' as block,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${whereClause.replace(/parsed_events/g, 'pe')}
+        AND geo->>'district' IS NOT NULL
+        AND geo->>'block' IS NOT NULL
       GROUP BY 
-        geo_hierarchy->>'district',
-        geo_hierarchy->>'assembly',
-        geo_hierarchy->>'block'
+        geo->>'district',
+        geo->>'assembly',
+        geo->>'block'
       ORDER BY district, assembly, event_count DESC
     `;
 
@@ -101,32 +104,34 @@ export async function GET(request: NextRequest) {
     const urbanRuralQuery = `
       SELECT 
         CASE 
-          WHEN geo_hierarchy->>'is_urban' = 'true' THEN 'urban'
+          WHEN geo->>'is_urban' = 'true' THEN 'urban'
           ELSE 'rural'
         END as area_type,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy IS NOT NULL
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${whereClause.replace(/parsed_events/g, 'pe')}
+        AND pe.geo_hierarchy IS NOT NULL
       GROUP BY area_type
     `;
 
     // Top locations (village/ULB)
     const topLocationsQuery = `
       SELECT 
-        geo_hierarchy->>'village' as location,
-        geo_hierarchy->>'district' as district,
-        geo_hierarchy->>'ulb' as ulb,
-        geo_hierarchy->>'is_urban' as is_urban,
-        COUNT(*) as event_count
-      FROM parsed_events
-      ${whereClause}
-        AND geo_hierarchy->>'village' IS NOT NULL
+        geo->>'village' as location,
+        geo->>'district' as district,
+        geo->>'ulb' as ulb,
+        geo->>'is_urban' as is_urban,
+        COUNT(DISTINCT pe.id) as event_count
+      FROM parsed_events pe,
+           jsonb_array_elements(pe.geo_hierarchy) AS geo
+      ${whereClause.replace(/parsed_events/g, 'pe')}
+        AND geo->>'village' IS NOT NULL
       GROUP BY 
-        geo_hierarchy->>'village',
-        geo_hierarchy->>'district',
-        geo_hierarchy->>'ulb',
-        geo_hierarchy->>'is_urban'
+        geo->>'village',
+        geo->>'district',
+        geo->>'ulb',
+        geo->>'is_urban'
       ORDER BY event_count DESC
       LIMIT 20
     `;

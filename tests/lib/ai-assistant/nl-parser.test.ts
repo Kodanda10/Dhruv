@@ -12,7 +12,7 @@ jest.mock('@google/generative-ai', () => ({
     getGenerativeModel: jest.fn().mockReturnValue({
       generateContent: jest.fn().mockResolvedValue({
         response: {
-          text: jest.fn().mockResolvedValue(JSON.stringify({
+          text: jest.fn().mockReturnValue(JSON.stringify({
             intent: 'add_location',
             entities: {
               locations: [{ text: 'रायपुर', confidence: 0.9, startIndex: 4, endIndex: 10, normalized: 'रायपुर' }],
