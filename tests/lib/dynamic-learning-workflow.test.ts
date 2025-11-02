@@ -3,10 +3,13 @@ import { DynamicLearningSystem } from '@/lib/dynamic-learning';
 // Skip database integration tests in CI if DATABASE_URL is not available
 const shouldSkip = process.env.CI === 'true' && !process.env.DATABASE_URL;
 
+// Use describe.skip to properly skip in CI
+const describeOrSkip = shouldSkip ? describe.skip : describe;
+
 // Use real database connection for testing with actual data
 const realDatabaseUrl = 'postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db';
 
-describe('Complete Dynamic Learning Workflow with Real Data', () => {
+describeOrSkip('Complete Dynamic Learning Workflow with Real Data', () => {
   let learningSystem: DynamicLearningSystem;
 
   beforeAll(() => {
