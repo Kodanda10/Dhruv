@@ -51,11 +51,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
     test('should include startDate in WHERE when provided', async () => {
       const startDate = '2024-01-01';
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest(`http://localhost:3000/api/geo-analytics/summary?startDate=${startDate}`));
 
@@ -66,11 +66,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should NOT include startDate in WHERE when NOT provided', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest('http://localhost:3000/api/geo-analytics/summary'));
 
@@ -85,11 +85,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
     test('should include endDate in WHERE when provided', async () => {
       const endDate = '2024-12-31';
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest(`http://localhost:3000/api/geo-analytics/summary?endDate=${endDate}`));
 
@@ -99,11 +99,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should NOT include endDate in WHERE when NOT provided', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest('http://localhost:3000/api/geo-analytics/summary'));
 
@@ -115,11 +115,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
     test('should include event_type in WHERE when provided', async () => {
       const eventType = 'बैठक';
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest(`http://localhost:3000/api/geo-analytics/summary?event_type=${encodeURIComponent(eventType)}`));
 
@@ -129,11 +129,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should NOT include event_type in WHERE when NOT provided', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest('http://localhost:3000/api/geo-analytics/summary'));
 
@@ -149,11 +149,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const eventType = 'बैठक';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest(
         `http://localhost:3000/api/geo-analytics/summary?startDate=${startDate}&endDate=${endDate}&event_type=${encodeURIComponent(eventType)}`
@@ -173,11 +173,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const eventType = 'बैठक';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getSummary(new NextRequest(
         `http://localhost:3000/api/geo-analytics/summary?startDate=${startDate}&endDate=${endDate}&event_type=${encodeURIComponent(eventType)}`
@@ -206,11 +206,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should execute queries when district is provided', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-district?district=रायपुर');
       await getByDistrict(request);
@@ -223,11 +223,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const startDate = '2024-01-01';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getByDistrict(new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}&startDate=${startDate}`
@@ -243,11 +243,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const endDate = '2024-12-31';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getByDistrict(new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}&endDate=${endDate}`
@@ -262,11 +262,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const eventType = 'बैठक';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getByDistrict(new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}&event_type=${encodeURIComponent(eventType)}`
@@ -281,11 +281,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const startDate = '2024-01-01';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getByDistrict(new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}&startDate=${startDate}`
@@ -333,10 +333,10 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should execute queries when both district and assembly are provided', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-assembly?district=रायपुर&assembly=रायपुर शहर उत्तर');
       await getByAssembly(request);
@@ -350,10 +350,10 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const startDate = '2024-01-01';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       await getByAssembly(new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-assembly?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}&startDate=${startDate}`
@@ -375,9 +375,9 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ district: 'रायपुर', event_count: '1' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             location: 'पंडरी',
@@ -401,9 +401,9 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ district: 'रायपुर', event_count: '1' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             location: 'पंडरी',
@@ -427,7 +427,7 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ assembly: 'रायपुर शहर उत्तर', event_count: '1' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -440,8 +440,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-district?district=रायपुर');
       const response = await getByDistrict(request);
@@ -453,8 +453,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should handle non-null gram_panchayat in villages', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -467,8 +467,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-district?district=रायपुर');
       const response = await getByDistrict(request);
@@ -480,7 +480,7 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should convert ward_no to number when present', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -493,8 +493,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-assembly?district=रायपुर&assembly=रायपुर शहर उत्तर');
       const response = await getByAssembly(request);
@@ -507,7 +507,7 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should handle null ward_no', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -520,8 +520,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-assembly?district=रायपुर&assembly=रायपुर शहर उत्तर');
       const response = await getByAssembly(request);
@@ -533,7 +533,7 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should convert is_urban string true to boolean true', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -545,8 +545,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-assembly?district=रायपुर&assembly=रायपुर शहर उत्तर');
       const response = await getByAssembly(request);
@@ -559,7 +559,7 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should convert is_urban string false to boolean false', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{
             village: 'पंडरी',
@@ -571,8 +571,8 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
             event_count: '1'
           }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/by-assembly?district=रायपुर&assembly=रायपुर शहर उत्तर');
       const response = await getByAssembly(request);
@@ -584,11 +584,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
 
     test('should handle filters object with null values', async () => {
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -606,11 +606,11 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
       const eventType = 'बैठक';
 
       mockQuery
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest(
         `http://localhost:3000/api/geo-analytics/summary?startDate=${startDate}&endDate=${endDate}&event_type=${encodeURIComponent(eventType)}`
@@ -629,10 +629,10 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ district: 'रायपुर', event_count: '0' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any) // Empty urban_rural result
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] }) // Empty urban_rural result
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -647,12 +647,12 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ district: 'रायपुर', event_count: '10' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [{ area_type: 'urban', event_count: '10' }] // Single result
         })
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -667,15 +667,15 @@ describe('Geo Analytics - Branch Coverage Tests', () => {
         .mockResolvedValueOnce({
           rows: [{ district: 'रायपुर', event_count: '10' }]
         })
-        .mockResolvedValueOnce({ rows: [] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({
           rows: [
             { area_type: 'urban', event_count: '6' },
             { area_type: 'rural', event_count: '4' }
           ]
         })
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);

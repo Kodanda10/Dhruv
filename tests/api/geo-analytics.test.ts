@@ -544,11 +544,6 @@ describeOrSkip('Geo Analytics API Endpoints - Real Database', () => {
     });
 
     test('should handle SQL injection attempts safely', async () => {
-      if (!pool) {
-        // Skip if no database connection
-        return;
-      }
-
       const maliciousInput = "'; DROP TABLE parsed_events; --";
       const request = new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(maliciousInput)}`
@@ -560,17 +555,19 @@ describeOrSkip('Geo Analytics API Endpoints - Real Database', () => {
       expect([200, 400, 500]).toContain(response.status);
       
       // Verify table still exists (if pool is available)
-      try {
-        const tableCheck = await pool.query(`
-          SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = 'parsed_events'
-          )
-        `);
-        expect(tableCheck.rows[0].exists).toBe(true);
-      } catch (error) {
-        // If query fails, that's okay - the main test is that the endpoint didn't crash
-        console.warn('Could not verify table exists:', error);
+      if (pool) {
+        try {
+          const tableCheck = await pool.query(`
+            SELECT EXISTS (
+              SELECT FROM information_schema.tables 
+              WHERE table_name = 'parsed_events'
+            )
+          `);
+          expect(tableCheck.rows[0].exists).toBe(true);
+        } catch (error) {
+          // If query fails, that's okay - the main test is that the endpoint didn't crash
+          console.warn('Could not verify table exists:', error);
+        }
       }
     });
   });
