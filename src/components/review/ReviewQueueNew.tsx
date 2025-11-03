@@ -328,6 +328,71 @@ export default function ReviewQueueNew() {
     }
   };
 
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        // Ctrl+S or Cmd+S to save while editing
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          if (editMode && correctionReason.trim()) {
+            handleSaveAndApprove();
+          }
+        }
+        return;
+      }
+
+      // Keyboard shortcuts (only when not in input fields)
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          if (!editMode) {
+            e.preventDefault();
+            handleApprove();
+          }
+          break;
+        case 'e':
+          if (!editMode) {
+            e.preventDefault();
+            setEditMode(true);
+            setEditedData({
+              event_type: currentTweet?.event_type || '',
+              locations: currentTweet?.locations || [],
+              people_mentioned: currentTweet?.people_mentioned || [],
+              organizations: currentTweet?.organizations || [],
+              schemes_mentioned: currentTweet?.schemes_mentioned || [],
+            });
+            fetchIntelligentSuggestions();
+          }
+          break;
+        case 'r':
+          if (!editMode) {
+            e.preventDefault();
+            handleReject();
+          }
+          break;
+        case 's':
+          if (!editMode) {
+            e.preventDefault();
+            handleSkip();
+          }
+          break;
+        case 'escape':
+          if (editMode) {
+            e.preventDefault();
+            setEditMode(false);
+            setEditedData({});
+            setCorrectionReason('');
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editMode, currentTweet, correctionReason]);
+
   // Fetch tweets from API on component mount
   useEffect(() => {
     logger.debug('ReviewQueueNew: useEffect triggered');

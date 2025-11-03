@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Input from '@/components/ui/Input';
 
@@ -19,12 +19,11 @@ describe('Input Component', () => {
     expect(input.value).toBe('test value');
   });
 
-  it('should handle onChange events', async () => {
+  it('should handle onChange events', () => {
     const handleChange = jest.fn();
-    const user = userEvent.setup();
     render(<Input data-testid="test-input" onChange={handleChange} />);
     const input = screen.getByTestId('test-input');
-    await user.type(input, 'test');
+    fireEvent.change(input, { target: { value: 'test' } });
     expect(handleChange).toHaveBeenCalled();
   });
 

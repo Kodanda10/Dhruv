@@ -61,9 +61,13 @@ export class ThreeLayerConsensusEngine {
   }
 
   async initialize(): Promise<void> {
-    // Initialize Gemini
-    if (process.env.GOOGLE_API_KEY) {
-      this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    // Initialize Gemini - check both GOOGLE_API_KEY and GEMINI_API_KEY
+    const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+    if (apiKey) {
+      this.gemini = new GoogleGenerativeAI(apiKey);
+      console.log('✅ Gemini API initialized');
+    } else {
+      console.warn('⚠️  Gemini API key not found (GOOGLE_API_KEY or GEMINI_API_KEY)');
     }
 
     // Initialize Geo Resolver
@@ -342,10 +346,35 @@ Respond in JSON format:
     }
 
     const data = await response.json();
-    const text = data.response;
+    const text = data.response || '';
 
-    // Parse JSON response
-    const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, ''));
+    // Try to parse JSON response with better error handling
+    let parsed: any = {};
+    try {
+      // Remove markdown code blocks if present
+      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+      
+      // Try to extract JSON from the response
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        // If no JSON found, try parsing the whole text
+        parsed = JSON.parse(cleanedText);
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, log and return empty results
+      console.warn(`Ollama JSON parse error for tweet ${tweet.tweet_id}:`, parseError);
+      console.warn(`Raw Ollama response: ${text.substring(0, 200)}...`);
+      // Return empty results instead of throwing - consensus will still work with other layers
+      parsed = {
+        locations: [],
+        event_type: null,
+        schemes_mentioned: [],
+        hashtags: [],
+        people_mentioned: []
+      };
+    }
 
     return {
       locations: parsed.locations || [],

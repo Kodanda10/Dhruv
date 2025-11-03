@@ -324,7 +324,8 @@ export default function DashboardDark() {
 
   const { sortedData, handleSort, getSortIcon } = useSortableTable(sanitizedData, getFieldValue);
 
-  const totalCount = parsed.length;
+  // Fix count discrepancy: Use actual data source count, not parsed length
+  const totalCount = serverRows.length > 0 ? serverRows.length : parsedTweets.length;
   const shownCount = filtered.length;
 
   return (
@@ -392,6 +393,29 @@ export default function DashboardDark() {
           <div className="text-gray-400 text-sm" aria-live="polite">
             {`दिखा रहे हैं: ${shownCount} / ${totalCount}`}
           </div>
+          <button
+            aria-label="डेटा रिफ्रेश करें"
+            onClick={async () => {
+              setIsPolling(true);
+              try {
+                const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
+                if (res.success) {
+                  setServerRows(res.data);
+                }
+              } catch (error) {
+                logger.error('DashboardDark: Refresh error:', error as Error);
+              } finally {
+                setIsPolling(false);
+              }
+            }}
+            disabled={isPolling}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-600 text-white border border-green-700 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <span className={`material-symbols-outlined text-base ${isPolling ? 'animate-spin' : ''}`}>
+              {isPolling ? 'hourglass_empty' : 'refresh'}
+            </span>
+            {isPolling ? 'रिफ्रेश हो रहा है...' : 'रिफ्रेश करें'}
+          </button>
           <button
             aria-label="फ़िल्टर साफ़ करें"
             onClick={() => {

@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Select from '@/components/ui/Select';
 
@@ -26,12 +26,11 @@ describe('Select Component', () => {
     expect(screen.getByText('Option 3')).toBeInTheDocument();
   });
 
-  it('should handle onChange events', async () => {
+  it('should handle onChange events', () => {
     const handleChange = jest.fn();
-    const user = userEvent.setup();
     render(<Select options={options} onChange={handleChange} data-testid="test-select" />);
     const select = screen.getByTestId('test-select');
-    await user.selectOptions(select, 'option2');
+    fireEvent.change(select, { target: { value: 'option2' } });
     expect(handleChange).toHaveBeenCalled();
   });
 

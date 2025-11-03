@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Badge from '@/components/ui/Badge';
 
@@ -54,12 +54,11 @@ describe('Badge Component', () => {
     expect(screen.queryByLabelText('Remove')).not.toBeInTheDocument();
   });
 
-  it('should call onRemove when remove button is clicked', async () => {
+  it('should call onRemove when remove button is clicked', () => {
     const handleRemove = jest.fn();
-    const user = userEvent.setup();
     render(<Badge removable onRemove={handleRemove}>Removable</Badge>);
     const removeButton = screen.getByLabelText('Remove');
-    await user.click(removeButton);
+    fireEvent.click(removeButton);
     expect(handleRemove).toHaveBeenCalledTimes(1);
   });
 
