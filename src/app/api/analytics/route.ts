@@ -1,17 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '@/lib/utils/logger';
+import { getPool } from '../parsed-events/pool-helper';
 
 export async function GET(request: NextRequest) {
   try {
-    // Try to read from static data first
+    // PRIMARY: Try to read from database first
+    try {
+      const pool = getPool();
+      const result = await pool.query(`
+        SELECT 
+          pe.*,
+          rt.text as tweet_text,
+          rt.created_at as tweet_created_at,
+          rt.author_handle
+        FROM parsed_events pe
+        LEFT JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
+        ORDER BY rt.created_at DESC
+      `);
+      
+      if (result.rows && result.rows.length > 0) {
+        const tweets = result.rows.map((row: any) => ({
+          id: row.tweet_id,
+          tweet_id: row.tweet_id,
+          event_type: row.event_type,
+          locations: row.locations || [],
+          schemes_mentioned: row.schemes_mentioned || [],
+          people_mentioned: row.people_mentioned || [],
+          organizations: row.organizations || [],
+          event_date: row.event_date,
+          timestamp: row.tweet_created_at,
+          parsed_at: row.created_at,
+          content: row.tweet_text,
+          text: row.tweet_text,
+          parsed: {
+            event_type: row.event_type,
+            locations: row.locations || [],
+            schemes: row.schemes_mentioned || [],
+          },
+        }));
+        
+        logger.info(`Loaded ${tweets.length} tweets from database for analytics`);
+        
+        // Generate comprehensive analytics from database data
+        const analytics = {
+          total_tweets: tweets.length,
+          event_distribution: aggregateEventTypes(tweets),
+          location_distribution: aggregateLocations(tweets),
+          scheme_usage: aggregateSchemes(tweets),
+          timeline: aggregateByDate(tweets),
+          day_of_week: aggregateByDayOfWeek(tweets),
+          top_locations: getTopLocations(tweets),
+          top_schemes: getTopSchemes(tweets),
+          recent_activity: getRecentActivity(tweets)
+        };
+        
+        logger.info('Analytics generated from database:', {
+          total_tweets: analytics.total_tweets,
+          event_types: Object.keys(analytics.event_distribution).length,
+          locations: Object.keys(analytics.location_distribution).length,
+          schemes: Object.keys(analytics.scheme_usage).length
+        });
+        
+        return NextResponse.json({ 
+          success: true, 
+          analytics, 
+          raw_data: tweets.slice(0, 10), // Return first 10 for preview
+          source: 'database',
+          message: `Analytics data loaded successfully from ${tweets.length} tweets in database`
+        });
+      }
+    } catch (dbError) {
+      logger.warn('Database read failed, falling back to file:', dbError);
+    }
+    
+    // FALLBACK: Try to read from static data file
     const dataPath = path.join(process.cwd(), 'data', 'parsed_tweets.json');
     
     if (fs.existsSync(dataPath)) {
       const fileContent = fs.readFileSync(dataPath, 'utf8');
       const tweets = JSON.parse(fileContent);
       
-      console.log(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
+      logger.info(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
       
       // Use all tweets for analytics (not just approved ones)
       const allTweets = tweets;
@@ -29,7 +100,7 @@ export async function GET(request: NextRequest) {
         recent_activity: getRecentActivity(allTweets)
       };
       
-      console.log('Analytics generated:', {
+      logger.info('Analytics generated from file:', {
         total_tweets: analytics.total_tweets,
         event_types: Object.keys(analytics.event_distribution).length,
         locations: Object.keys(analytics.location_distribution).length,

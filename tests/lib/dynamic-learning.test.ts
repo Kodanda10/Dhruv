@@ -1,17 +1,51 @@
+import { loadParsedTweets } from '../utils/loadParsedTweets';
+
+const parsedTweets = loadParsedTweets();
+const derivedEventTypes = Array.from(
+  new Set(parsedTweets.map(tweet => tweet.type).filter((value): value is string => Boolean(value)))
+);
+const derivedSchemes = Array.from(
+  new Set(parsedTweets.map(tweet => tweet.scheme).filter((value): value is string => Boolean(value)))
+);
+const derivedLocations = Array.from(
+  new Set(
+    parsedTweets
+      .map(tweet => tweet.geo?.district || tweet.geo?.village || tweet.geo?.block)
+      .filter((value): value is string => Boolean(value))
+  )
+);
+const derivedHashtags = Array.from(
+  new Set(
+    parsedTweets
+      .flatMap(tweet => tweet.hashtags ?? [])
+      .filter((value): value is string => Boolean(value))
+  )
+);
+
+const fallbackEventType = derivedEventTypes[0] ?? 'Fallback Event';
+const fallbackScheme = derivedSchemes[0] ?? 'Fallback Scheme';
+const fallbackLocation = derivedLocations[0] ?? 'Fallback Location';
+const fallbackHashtag = derivedHashtags[0] ?? '#fallback';
+const fallbackTweetId = parsedTweets[0]?.id ?? 'fallback-tweet-id';
+const fallbackTweetText = parsedTweets[0]?.text ?? 'Fallback tweet text for dynamic learning';
+
 jest.mock('@/lib/dynamic-learning', () => ({
   DynamicLearningSystem: jest.fn().mockImplementation(() => ({
-    learnFromHumanFeedback: jest.fn().mockResolvedValue({ success: true, learnedEntities: ['event_type', 'scheme'] }),
+    learnFromHumanFeedback: jest.fn().mockResolvedValue({
+      success: true,
+      learnedEntities: ['event_type', 'scheme']
+    }),
     getIntelligentSuggestions: jest.fn().mockResolvedValue({
-      eventTypes: ['बैठक', 'रैली'],
-      schemes: ['PM-KISAN'],
-      locations: ['रायपुर'],
-      hashtags: ['#किसान']
+      eventTypes: derivedEventTypes.length > 0 ? derivedEventTypes : [fallbackEventType],
+      schemes: derivedSchemes.length > 0 ? derivedSchemes : [fallbackScheme],
+      locations: derivedLocations.length > 0 ? derivedLocations : [fallbackLocation],
+      hashtags: derivedHashtags.length > 0 ? derivedHashtags : [fallbackHashtag]
     }),
     getLearningInsights: jest.fn().mockResolvedValue({
-      totalLearnedEntities: 5,
-      eventTypesLearned: 2,
-      schemesLearned: 2,
-      hashtagsLearned: 1
+      totalLearnedEntities: parsedTweets.length,
+      eventTypesLearned: derivedEventTypes.length,
+      schemesLearned: derivedSchemes.length,
+      hashtagsLearned: derivedHashtags.length
     })
   }))
 }));
@@ -30,11 +64,8 @@ describe('DynamicLearningSystem with Real Data', () => {
 
   describe('learnFromHumanFeedback with Real Data', () => {
     it('should learn new event type from real human correction', async () => {
-      // Get a real tweet from the database
-      const realTweetId = '1979074268907606480'; // Use actual tweet ID from our data
-      
       const humanFeedback = {
-        tweetId: realTweetId,
+        tweetId: fallbackTweetId,
         originalParsed: {
           event_type: 'Unknown',
           event_type_en: 'Unknown',
@@ -57,17 +88,15 @@ describe('DynamicLearningSystem with Real Data', () => {
     });
 
     it('should learn new scheme from real human correction', async () => {
-      const realTweetId = '1979049036633010349';
-      
       const humanFeedback = {
-        tweetId: realTweetId,
+        tweetId: fallbackTweetId,
         originalParsed: {
           schemes: [],
           schemes_en: []
         },
         humanCorrection: {
-          schemes: ['मुख्यमंत्री स्लम स्वास्थ्य योजना'],
-          schemes_en: ['CM Slum Health Scheme']
+          schemes: [fallbackScheme],
+          schemes_en: [fallbackScheme]
         },
         reviewer: 'human'
       };
@@ -82,10 +111,10 @@ describe('DynamicLearningSystem with Real Data', () => {
   describe('getIntelligentSuggestions with Real Data', () => {
     it('should provide suggestions based on real learned patterns', async () => {
       const context = {
-        tweetText: 'मुख्यमंत्री ने किसानों से मुलाकात की',
+        tweetText: fallbackTweetText,
         currentParsed: {
           event_type: 'Unknown',
-          locations: ['रायपुर']
+          locations: [fallbackLocation]
         }
       };
 
@@ -93,9 +122,13 @@ describe('DynamicLearningSystem with Real Data', () => {
 
       // Should have suggestions based on real data
       expect(suggestions.eventTypes.length).toBeGreaterThan(0);
+      expect(suggestions.eventTypes).toContain(fallbackEventType);
       expect(suggestions.schemes.length).toBeGreaterThan(0);
+      expect(suggestions.schemes).toContain(fallbackScheme);
       expect(suggestions.locations.length).toBeGreaterThan(0);
+      expect(suggestions.locations).toContain(fallbackLocation);
       expect(suggestions.hashtags.length).toBeGreaterThan(0);
+      expect(suggestions.hashtags).toContain(fallbackHashtag);
     });
   });
 
@@ -103,11 +136,10 @@ describe('DynamicLearningSystem with Real Data', () => {
     it('should provide real learning insights', async () => {
       const insights = await (learningSystem as any).getLearningInsights();
 
-      expect(insights.totalLearnedEntities).toBeGreaterThanOrEqual(0);
-      expect(insights.eventTypesLearned).toBeGreaterThanOrEqual(0);
-      expect(insights.schemesLearned).toBeGreaterThanOrEqual(0);
-      expect(insights.hashtagsLearned).toBeGreaterThanOrEqual(0);
+      expect(insights.totalLearnedEntities).toBeGreaterThanOrEqual(parsedTweets.length === 0 ? 0 : 1);
+      expect(insights.eventTypesLearned).toBe(derivedEventTypes.length);
+      expect(insights.schemesLearned).toBe(derivedSchemes.length);
+      expect(insights.hashtagsLearned).toBe(derivedHashtags.length);
     });
   });
 });
-

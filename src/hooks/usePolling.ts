@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { logger } from '@/lib/utils/logger';
 
 export interface UsePollingOptions {
   interval: number; // milliseconds
@@ -26,11 +27,11 @@ export function usePolling<T>(
   const fetchData = useCallback(async () => {
     if (isLoading) return;
     
-    console.log('usePolling: Starting fetch...');
+    logger.debug('usePolling: Starting fetch...');
     setIsLoading(true);
     try {
       const newData = await fetchFnRef.current();
-      console.log('usePolling: Fetched data length:', newData.length);
+      logger.debug('usePolling: Fetched data length:', newData.length);
       const previousData = previousDataRef.current;
       
       // Check if there's new data
@@ -42,26 +43,26 @@ export function usePolling<T>(
       setData(newData);
       previousDataRef.current = newData;
     } catch (error) {
-      console.error('Polling fetch error:', error);
+      logger.error('Polling fetch error:', error as Error);
     } finally {
       setIsLoading(false);
     }
   }, [isLoading, onNewData]);
 
   useEffect(() => {
-    console.log('usePolling: useEffect triggered, enabled:', enabled);
+    logger.debug('usePolling: useEffect triggered, enabled:', enabled);
     if (!enabled) return;
 
     // Initial fetch
-    console.log('usePolling: Starting initial fetch...');
+    logger.debug('usePolling: Starting initial fetch...');
     fetchData();
 
     // Set up polling
-    console.log('usePolling: Setting up polling interval:', interval);
+    logger.debug('usePolling: Setting up polling interval:', interval);
     intervalRef.current = setInterval(fetchData, interval);
 
     return () => {
-      console.log('usePolling: Cleaning up interval');
+      logger.debug('usePolling: Cleaning up interval');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

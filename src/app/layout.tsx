@@ -1,5 +1,11 @@
 import './globals.css';
 import type { ReactNode } from 'react';
+import { Noto_Sans_Devanagari } from 'next/font/google';
+
+const notoSans = Noto_Sans_Devanagari({
+  subsets: ['devanagari'],
+  display: 'optional',
+});
 
 export const metadata = {
   title: 'Project Dhruv Dashboard',
@@ -11,7 +17,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="hi">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
         <style dangerouslySetInnerHTML={{
           __html: `
             .material-symbols-outlined {
@@ -24,7 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           `
         }} />
       </head>
-      <body>{children}</body>
+      <body className={notoSans.className}>{children}</body>
     </html>
   );
 }

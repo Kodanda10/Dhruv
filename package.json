@@ -17,6 +17,8 @@
     "ci:monitor": "./scripts/ci-monitor.sh",
     "ci:status": "./scripts/ci-status-table.sh",
     "deploy": "vercel --prod",
+    "db:migrate": "ts-node scripts/apply-migrations.ts",
+    "db:seed": "psql \"$DATABASE_URL\" -f infra/migrations/seed.sql",
     "project:deployed": "node scripts/update-project-board.js",
     "project:move": "node scripts/move-to-deployed.js"
   },

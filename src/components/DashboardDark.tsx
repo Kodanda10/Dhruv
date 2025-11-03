@@ -1,6 +1,7 @@
 "use client";
 import parsedTweets from '../../data/parsed_tweets.json';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
 import { parsePost, formatHindiDate } from '@/utils/parse';
 import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
@@ -14,7 +15,7 @@ import type { Route } from 'next';
 type Post = { id: string | number; timestamp: string; content: string; parsed?: any; confidence?: number; needs_review?: boolean; review_status?: string };
 
 export default function DashboardDark() {
-  console.log('DashboardDark: Component mounting...');
+  logger.debug('DashboardDark: Component mounting...');
   
   // Move useEffect to the very beginning
   const [serverRows, setServerRows] = useState<any[]>([]);
@@ -22,21 +23,21 @@ export default function DashboardDark() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('DashboardDark: About to call useEffect');
+  logger.debug('DashboardDark: About to call useEffect');
 
   useEffect(() => {
-    console.log('DashboardDark: useEffect triggered');
+    logger.debug('DashboardDark: useEffect triggered');
     const fetchData = async () => {
-      console.log('DashboardDark: Simple fetch starting...');
+      logger.debug('DashboardDark: Simple fetch starting...');
       setIsPolling(true);
       try {
         const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
-        console.log('DashboardDark: Simple fetch response:', res);
+        logger.debug('DashboardDark: Simple fetch response:', res);
         if (res.success) {
           setServerRows(res.data);
         }
       } catch (error) {
-        console.error('DashboardDark: Simple fetch error:', error);
+        logger.error('DashboardDark: Simple fetch error:', error as Error);
       } finally {
         setIsPolling(false);
       }
@@ -47,7 +48,7 @@ export default function DashboardDark() {
     return () => clearInterval(interval);
   }, []);
 
-  console.log('DashboardDark: After useEffect');
+  logger.debug('DashboardDark: After useEffect');
   
   const [locFilter, setLocFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
@@ -74,24 +75,24 @@ export default function DashboardDark() {
   // Fetch server-side parsed events with polling
   const fetchParsedEvents = useCallback(async () => {
     try {
-      console.log('DashboardDark: Fetching parsed events...');
+      logger.debug('DashboardDark: Fetching parsed events...');
       const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
-      console.log('DashboardDark: API response:', res);
+      logger.debug('DashboardDark: API response:', res);
       if (res.success) return res.data;
-      console.log('DashboardDark: API response not successful');
+      logger.warn('DashboardDark: API response not successful');
       return [];
     } catch (error) {
-      console.error('DashboardDark: API fetch error:', error);
+      logger.error('DashboardDark: API fetch error:', error as Error);
       return [];
     }
   }, []);
 
-  console.log('DashboardDark: Simple fetch result:', { serverRows: serverRows?.length, isPolling });
+  logger.debug('DashboardDark: Simple fetch result:', { serverRows: serverRows?.length, isPolling });
 
   const parsed = useMemo(() => {
     // Use real database data from serverRows, fallback to parsedTweets if empty
     const source = serverRows.length > 0 ? serverRows : parsedTweets;
-    console.log('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
+    logger.debug('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
     
     return source.map((p: any, index: number) => {
       // Handle both old parsed structure and new database structure
@@ -181,11 +182,11 @@ export default function DashboardDark() {
   }, [serverRows]);
 
   const filtered = useMemo(() => {
-    console.log('DashboardDark: parsed length:', parsed.length);
-    console.log('DashboardDark: first parsed item:', parsed[0]);
+    logger.debug('DashboardDark: parsed length:', parsed.length);
+    logger.debug('DashboardDark: first parsed item:', parsed[0]);
     
     let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
-    console.log('DashboardDark: after skip filter:', rows.length);
+    logger.debug('DashboardDark: after skip filter:', rows.length);
     if (locFilter.trim()) {
       const q = locFilter.trim();
       rows = rows.filter((r) => {

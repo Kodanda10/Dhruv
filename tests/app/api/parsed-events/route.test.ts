@@ -22,7 +22,7 @@ jest.mock('pg', () => {
     Pool: jest.fn().mockImplementation(() => ({
       query: mockQueryFn,
       end: jest.fn(),
-    })),
+    })) as unknown as typeof import('pg').Pool,
   };
 });
 

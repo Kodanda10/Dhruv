@@ -61,7 +61,8 @@ INSERT INTO ref_hashtags (hashtag, category, usage_count, is_active) VALUES
 ('#जनता', 'general', 18, true),
 ('#Public', 'general', 9, true),
 ('#लोकतंत्र', 'general', 15, true),
-('#Democracy', 'general', 8, true);
+('#Democracy', 'general', 8, true)
+ON CONFLICT (hashtag) DO NOTHING;
 
 -- Add sample user contributed data for testing
 INSERT INTO user_contributed_data (entity_type, value_hi, value_en, aliases, approval_status, usage_count, metadata) VALUES

@@ -144,3 +144,4 @@ curl https://your-app.vercel.app/api/parsed-events?limit=5
 5. Gather user feedback
 6. Iterate based on production metrics
 
+

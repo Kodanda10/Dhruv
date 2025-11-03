@@ -6,6 +6,7 @@
  */
 
 import { closeDBPool } from '@/lib/db/pool';
+import { logger } from '@/lib/utils/logger';
 
 let isShuttingDown = false;
 
@@ -14,25 +15,25 @@ let isShuttingDown = false;
  */
 async function gracefulShutdown(signal: string): Promise<void> {
   if (isShuttingDown) {
-    console.warn('Shutdown already in progress, forcing exit...');
+    logger.warn('Shutdown already in progress, forcing exit...');
     process.exit(1);
   }
 
   isShuttingDown = true;
-  console.log(`\n${signal} received, starting graceful shutdown...`);
+  logger.info(`\n${signal} received, starting graceful shutdown...`);
 
   try {
     // Close database pool
-    console.log('Closing database connections...');
+    logger.info('Closing database connections...');
     await closeDBPool();
-    console.log('Database connections closed.');
+    logger.info('Database connections closed.');
 
     // Add other cleanup tasks here (Redis, file handles, etc.)
 
-    console.log('Graceful shutdown complete.');
+    logger.info('Graceful shutdown complete.');
     process.exit(0);
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', error as Error);
     process.exit(1);
   }
 }
@@ -44,17 +45,16 @@ if (typeof process !== 'undefined') {
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
-    console.error('Uncaught exception:', error);
+    logger.error('Uncaught exception:', error as Error);
     gracefulShutdown('uncaughtException').catch(() => process.exit(1));
   });
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled rejection at:', promise, 'reason:', reason);
+    logger.error('Unhandled rejection at:', promise, 'reason:', reason);
     gracefulShutdown('unhandledRejection').catch(() => process.exit(1));
   });
 }
 
 // Export for manual invocation if needed
 export { gracefulShutdown };
-

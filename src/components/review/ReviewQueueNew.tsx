@@ -22,6 +22,7 @@ import GeoHierarchyTree from './GeoHierarchyTree';
 import GeoHierarchyEditor from './GeoHierarchyEditor';
 import { GeoHierarchy } from '@/lib/geo-extraction/hierarchy-resolver';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
 
 // Empty array - will be populated from API
 const initialTweets: any[] = [];
@@ -52,7 +53,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ReviewQueueNew() {
-  console.log('ReviewQueueNew: Component mounting...');
+  logger.debug('ReviewQueueNew: Component mounting...');
   
   // Temporarily use static data to get Review working
   const staticTweets = [
@@ -151,7 +152,7 @@ export default function ReviewQueueNew() {
         throw new Error(data.error || 'AI Assistant error');
       }
     } catch (error) {
-      console.error('AI Assistant error:', error);
+      logger.error('AI Assistant error:', error as Error);
       // Remove loading message
       setAiMessages(prev => prev.slice(0, -1));
       
@@ -193,7 +194,7 @@ export default function ReviewQueueNew() {
 
         if (learningResponse.ok) {
           const learningResult = await learningResponse.json();
-          console.log('Learning from feedback:', learningResult);
+          logger.info('Learning from feedback:', learningResult);
         }
       }
 
@@ -222,10 +223,10 @@ export default function ReviewQueueNew() {
         // Move to next tweet
         handleSkip();
       } else {
-        console.error('Failed to approve tweet');
+        logger.error('Failed to approve tweet');
       }
     } catch (error) {
-      console.error('Error approving tweet:', error);
+      logger.error('Error approving tweet:', error as Error);
     }
   };
 
@@ -264,10 +265,10 @@ export default function ReviewQueueNew() {
       if (response.ok) {
         const suggestions = await response.json();
         setIntelligentSuggestions(suggestions);
-        console.log('Intelligent suggestions:', suggestions);
+        logger.debug('Intelligent suggestions:', suggestions);
       }
     } catch (error) {
-      console.error('Error fetching intelligent suggestions:', error);
+      logger.error('Error fetching intelligent suggestions:', error as Error);
     }
   };
 
@@ -287,7 +288,7 @@ export default function ReviewQueueNew() {
         }
       }
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      logger.error('Error fetching suggestions:', error as Error);
     }
   };
 
@@ -322,29 +323,29 @@ export default function ReviewQueueNew() {
         }
       }
     } catch (error) {
-      console.error('Error saving new value:', error);
+      logger.error('Error saving new value:', error as Error);
       alert('नया मान सहेजने में त्रुटि हुई');
     }
   };
 
   // Fetch tweets from API on component mount
   useEffect(() => {
-    console.log('ReviewQueueNew: useEffect triggered');
+    logger.debug('ReviewQueueNew: useEffect triggered');
     
     const fetchTweets = async () => {
       try {
-        console.log('ReviewQueueNew: Starting to fetch tweets...');
+        logger.debug('ReviewQueueNew: Starting to fetch tweets...');
         setLoading(true);
         const response = await fetch('/api/parsed-events?limit=200');
-        console.log('ReviewQueueNew: Response status:', response.status);
+        logger.debug('ReviewQueueNew: Response status:', response.status);
         const result = await response.json();
-        console.log('ReviewQueueNew: API result:', result);
+        logger.debug('ReviewQueueNew: API result:', result);
         
         if (result.success && result.data) {
-          console.log('ReviewQueueNew: Setting tweets, count:', result.data.length);
+          logger.debug('ReviewQueueNew: Setting tweets, count:', result.data.length);
           setTweets(result.data);
         } else {
-          console.error('Failed to fetch tweets:', result.error);
+          logger.error('Failed to fetch tweets:', result.error);
           // Fallback to static data if API fails
           const staticTweets = [
             {
@@ -366,7 +367,7 @@ export default function ReviewQueueNew() {
           setTweets(staticTweets);
         }
       } catch (error) {
-        console.error('Error fetching tweets:', error);
+        logger.error('Error fetching tweets:', error as Error);
         // Fallback to static data if API fails
         const staticTweets = [
           {
@@ -387,7 +388,7 @@ export default function ReviewQueueNew() {
         ];
         setTweets(staticTweets);
       } finally {
-        console.log('ReviewQueueNew: Setting loading to false');
+        logger.debug('ReviewQueueNew: Setting loading to false');
         setLoading(false);
       }
     };
@@ -397,16 +398,16 @@ export default function ReviewQueueNew() {
 
   const currentTweet = tweets[currentIndex];
   
-  console.log('ReviewQueueNew: tweets length:', tweets.length);
-  console.log('ReviewQueueNew: currentIndex:', currentIndex);
-  console.log('ReviewQueueNew: currentTweet:', currentTweet);
+  logger.debug('ReviewQueueNew: tweets length:', tweets.length);
+  logger.debug('ReviewQueueNew: currentIndex:', currentIndex);
+  logger.debug('ReviewQueueNew: currentTweet:', currentTweet);
   
   const stats = useMemo(() => {
     const pending = tweets.filter(t => t.review_status !== 'approved').length;
     const reviewed = tweets.filter(t => t.review_status === 'approved').length;
     const avgConfidence = tweets.reduce((sum, t) => sum + (parseFloat(t.overall_confidence) || 0), 0) / tweets.length;
     
-    console.log('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
+    logger.debug('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
     return { pending, reviewed, avgConfidence };
   }, [tweets]);
 
@@ -550,9 +551,9 @@ export default function ReviewQueueNew() {
                   });
 
                   // Show success message (could add toast notification here)
-                  console.log('✓ Geo-hierarchy correction learned');
+                  logger.info('✓ Geo-hierarchy correction learned');
                 } catch (error) {
-                  console.error('Failed to save geo-hierarchy correction:', error);
+                  logger.error('Failed to save geo-hierarchy correction:', error as Error);
                 }
               }}
               onReject={() => {

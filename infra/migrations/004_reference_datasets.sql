@@ -25,13 +25,15 @@ INSERT INTO ref_schemes (scheme_code, name_hi, name_en, category, ministry, desc
 ('PM_KISAN', 'प्रधानमंत्री किसान सम्मान निधि', 'PM-KISAN', 'central', 'Agriculture', 'किसानों को वित्तीय सहायता', 'Financial support to farmers'),
 ('AYUSHMAN_BHARAT', 'आयुष्मान भारत', 'Ayushman Bharat', 'central', 'Health', 'स्वास्थ्य बीमा योजना', 'Health insurance scheme'),
 ('UJJWALA', 'प्रधानमंत्री उज्ज्वला योजना', 'PM Ujjwala Yojana', 'central', 'Petroleum', 'मुफ्त गैस कनेक्शन', 'Free LPG connections'),
-('PMAY', 'प्रधानमंत्री आवास योजना', 'PM Awas Yojana', 'central', 'Housing', 'सभी के लिए आवास', 'Housing for all');
+('PMAY', 'प्रधानमंत्री आवास योजना', 'PM Awas Yojana', 'central', 'Housing', 'सभी के लिए आवास', 'Housing for all')
+ON CONFLICT (scheme_code) DO NOTHING;
 
 -- Chhattisgarh State Schemes (Seed Data)
 INSERT INTO ref_schemes (scheme_code, name_hi, name_en, category, ministry, description_hi, description_en) VALUES
 ('CM_KISAN_CG', 'मुख्यमंत्री किसान योजना', 'CM Kisan Yojana CG', 'state', 'Agriculture', 'किसानों को राज्य सहायता', 'State support to farmers'),
 ('GODHAN_NYAY', 'गोधन न्याय योजना', 'Godhan Nyay Yojana', 'state', 'Agriculture', 'गाय के गोबर की खरीद', 'Cow dung procurement'),
-('RAJIV_YUVA_MITAN', 'राजीव युवा मितान क्लब', 'Rajiv Yuva Mitan Club', 'state', 'Youth Affairs', 'युवा विकास कार्यक्रम', 'Youth development program');
+('RAJIV_YUVA_MITAN', 'राजीव युवा मितान क्लब', 'Rajiv Yuva Mitan Club', 'state', 'Youth Affairs', 'युवा विकास कार्यक्रम', 'Youth development program')
+ON CONFLICT (scheme_code) DO NOTHING;
 
 -- Reference Event Types Table
 CREATE TABLE IF NOT EXISTS ref_event_types (
@@ -56,7 +58,8 @@ INSERT INTO ref_event_types (event_code, name_hi, name_en, aliases_hi, aliases_e
 ('DISTRIBUTION', 'वितरण', 'Distribution', ARRAY['बंटवारा', 'प्रदान'], ARRAY['handover', 'giving'], 'social'),
 ('VISIT', 'दौरा', 'Visit', ARRAY['भ्रमण', 'यात्रा'], ARRAY['tour', 'trip'], 'administrative'),
 ('CELEBRATION', 'समारोह', 'Celebration', ARRAY['उत्सव', 'जयंती'], ARRAY['festival', 'anniversary'], 'social'),
-('WORSHIP', 'पूजा', 'Worship', ARRAY['प्रार्थना', 'आरती'], ARRAY['prayer', 'ritual'], 'religious');
+('WORSHIP', 'पूजा', 'Worship', ARRAY['प्रार्थना', 'आरती'], ARRAY['prayer', 'ritual'], 'religious')
+ON CONFLICT (event_code) DO NOTHING;
 
 -- Reference Hashtags Table (for intelligent suggestions)
 CREATE TABLE IF NOT EXISTS ref_hashtags (

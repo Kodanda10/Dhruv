@@ -58,6 +58,24 @@ export interface ValidationToolResult extends ToolResult {
   };
 }
 
+export interface FetchTweetsToolResult extends ToolResult {
+  data?: {
+    tweets: Array<{
+      id: string;
+      text: string;
+      created_at: string | null;
+      public_metrics: {
+        like_count: number;
+        retweet_count: number;
+        reply_count: number;
+        quote_count: number;
+      };
+    }>;
+    count: number;
+    username: string;
+  };
+}
+
 // Tool implementations
 export class AIAssistantTools {
   private pool: Pool;

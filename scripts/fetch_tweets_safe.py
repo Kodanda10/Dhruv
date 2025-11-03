@@ -122,13 +122,14 @@ def insert_tweets(conn, tweets: list, author_handle: str):
     return inserted_count
 
 
-def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
+def fetch_all_tweets_safe(author_handle: str, max_batches: int = None, until_id: str = None):
     """
     Safely fetch ALL tweets from a user with rate limit monitoring.
     
     Args:
         author_handle: Twitter username (without @)
         max_batches: Maximum number of batches to fetch (None = unlimited)
+        until_id: Fetch tweets older than this tweet ID (for avoiding duplicates)
     
     Returns:
         Total number of tweets fetched
@@ -168,6 +169,12 @@ def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
     total_inserted = 0
     batch_num = 1
     
+    # If until_id is provided, use it for first batch to fetch older tweets
+    if until_id:
+        logger.info(f'📌 Starting from oldest tweet: {until_id}')
+        logger.info(f'   Will fetch tweets OLDER than this ID (going backwards in time)')
+        logger.info('')
+    
     try:
         logger.info('Starting tweet fetch...')
         logger.info('=' * 60)
@@ -187,13 +194,24 @@ def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
                 # - Monitor rate limit headers
                 # - Sleep when limit is reached
                 # - Resume when limit resets
-                response = client.get_users_tweets(
-                    id=user_id,
-                    max_results=100,  # API maximum
-                    pagination_token=pagination_token,
-                    exclude=['retweets'],  # Exclude retweets only (keep original + replies)
-                    tweet_fields=['created_at', 'public_metrics', 'entities', 'author_id'],
-                )
+                # Build request parameters
+                request_params = {
+                    'id': user_id,
+                    'max_results': 100,  # API maximum
+                    'exclude': ['retweets'],  # Exclude retweets only (keep original + replies)
+                    'tweet_fields': ['created_at', 'public_metrics', 'entities', 'author_id'],
+                }
+                
+                # Use until_id for first batch (fetch older tweets)
+                if until_id and batch_num == 1 and not pagination_token:
+                    request_params['until_id'] = until_id
+                    logger.info(f'   Using until_id: {until_id} (fetching tweets older than this)')
+                
+                # Use pagination token for subsequent batches
+                if pagination_token:
+                    request_params['pagination_token'] = pagination_token
+                
+                response = client.get_users_tweets(**request_params)
                 
                 if not response.data:
                     logger.info('✓ No more tweets available')
@@ -233,6 +251,9 @@ def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
                 if response.meta and 'next_token' in response.meta:
                     pagination_token = response.meta['next_token']
                     batch_num += 1
+                    
+                    # Clear until_id after first batch (pagination handles continuation)
+                    until_id = None
                     
                     # Small delay between successful requests (be nice to API)
                     time.sleep(1)
@@ -292,6 +313,7 @@ def main():
     )
     parser.add_argument('--handle', required=True, help='Twitter username (without @)')
     parser.add_argument('--max-batches', type=int, help='Maximum number of batches to fetch (for testing)')
+    parser.add_argument('--until-id', type=str, help='Fetch tweets older than this tweet ID (for avoiding duplicates)')
     
     args = parser.parse_args()
     
@@ -310,6 +332,7 @@ def main():
         total = fetch_all_tweets_safe(
             author_handle=args.handle,
             max_batches=args.max_batches,
+            until_id=args.until_id,
         )
         
         logger.info('✅ SUCCESS!')

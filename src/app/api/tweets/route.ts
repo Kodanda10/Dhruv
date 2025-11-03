@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { logger } from '@/lib/utils/logger';
 
 // Create a connection pool
 const pool = new Pool({
@@ -12,8 +13,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10');
     
-    console.log('Attempting to connect to database...');
-    console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+    logger.info('Attempting to connect to database...');
+    logger.info('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
     
     // Query the database for latest tweets
     const query = `
@@ -35,9 +36,9 @@ export async function GET(request: NextRequest) {
       LIMIT $1
     `;
     
-    console.log('Executing query...');
+    logger.info('Executing query...');
     const result = await pool.query(query, [limit]);
-    console.log('Query executed successfully, rows:', result.rows.length);
+    logger.info('Query executed successfully, rows:', result.rows.length);
     
     // Convert database format to dashboard format
     const tweets = result.rows.map((row: any) => ({
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error fetching tweets from database:', error);
+    logger.error('Error fetching tweets from database:', error);
     return NextResponse.json(
       { 
         success: false, 

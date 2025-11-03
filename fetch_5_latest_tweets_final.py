@@ -2,6 +2,8 @@
 """
 Fetch exactly 5 latest tweets from OP Choudhary's account
 Check database connection and save tweets
+
+OPTIMIZED: Uses cached user ID to avoid extra API call
 """
 import os
 import sys
@@ -9,6 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import tweepy
 import psycopg2
+import json
 
 # Setup logging
 import logging
@@ -20,6 +23,28 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv(Path(__file__).parent / '.env.local')
+
+# Cache file for user ID (to avoid API calls)
+USER_ID_CACHE_FILE = Path(__file__).parent / '.user_id_cache.json'
+
+def get_cached_user_id():
+    """Get cached user ID or None if not cached."""
+    if USER_ID_CACHE_FILE.exists():
+        try:
+            with open(USER_ID_CACHE_FILE, 'r') as f:
+                cache = json.load(f)
+                return cache.get('user_id'), cache.get('username')
+        except Exception:
+            return None, None
+    return None, None
+
+def cache_user_id(user_id, username):
+    """Cache user ID to avoid future API calls."""
+    try:
+        with open(USER_ID_CACHE_FILE, 'w') as f:
+            json.dump({'user_id': user_id, 'username': username}, f)
+    except Exception as e:
+        logger.warning(f'Could not cache user ID: {e}')
 
 def get_db_connection():
     """Get PostgreSQL database connection."""
@@ -116,13 +141,14 @@ def main():
     """Fetch exactly 5 latest tweets and save to database."""
     
     logger.info('=' * 80)
-    logger.info('FETCH 5 LATEST TWEETS - FINAL TEST')
+    logger.info('FETCH 5 LATEST TWEETS - OPTIMIZED')
     logger.info('=' * 80)
     logger.info('')
     logger.info('This will:')
     logger.info('1. Check database connection')
-    logger.info('2. Fetch exactly 5 latest tweets')
-    logger.info('3. Save to database')
+    logger.info('2. Use cached user ID (or fetch once if needed)')
+    logger.info('3. Fetch exactly 5 latest tweets (MINIMUM API CALLS)')
+    logger.info('4. Save to database')
     logger.info('')
     
     conn = None
@@ -150,34 +176,48 @@ def main():
         logger.info('✓ Twitter client initialized')
         logger.info('')
         
-        # Step 3: Get user ID
+        # Step 3: Get user ID (use cache to avoid API call)
         logger.info('Step 3: Getting user ID for @OPChoudhary_Ind...')
-        user = client.get_user(username='OPChoudhary_Ind')
-        if not user.data:
-            logger.error('❌ User @OPChoudhary_Ind not found')
-            return
+        user_id, cached_username = get_cached_user_id()
         
-        user_id = user.data.id
-        logger.info(f'✓ User ID: {user_id}')
+        if user_id:
+            logger.info(f'✓ Using cached user ID: {user_id} (saved API call!)')
+            username = cached_username or 'OPChoudhary_Ind'
+        else:
+            logger.info('   Cache miss - fetching user ID (one-time call)...')
+            user = client.get_user(username='OPChoudhary_Ind')
+            if not user.data:
+                logger.error('❌ User @OPChoudhary_Ind not found')
+                return
+            
+            user_id = user.data.id
+            username = user.data.username
+            cache_user_id(user_id, username)
+            logger.info(f'✓ User ID fetched and cached: {user_id}')
         logger.info('')
         
-        # Step 4: Fetch exactly 5 tweets
+        # Step 4: Fetch exactly 5 tweets (ONLY API CALL for tweets)
         logger.info('Step 4: Fetching 5 latest tweets...')
-        logger.info('(Making API call now...)')
+        logger.info('(Making API call now - this is the ONLY tweet fetch call)...')
         logger.info('')
         
         response = client.get_users_tweets(
             id=user_id,
-            max_results=5,  # Exactly 5 tweets
+            max_results=5,  # Exactly 5 tweets (minimum required by Twitter)
             exclude=['retweets'],
             tweet_fields=['created_at', 'public_metrics', 'entities', 'author_id'],
         )
         
         if not response.data:
             logger.error('❌ No tweets returned')
+            logger.info('')
+            logger.info('Possible reasons:')
+            logger.info('  - Account has no recent tweets')
+            logger.info('  - Rate limit exceeded (script will auto-retry if wait_on_rate_limit=True)')
+            logger.info('  - API credentials issue')
             return
         
-        logger.info(f'✓ Fetched {len(response.data)} tweets')
+        logger.info(f'✅ SUCCESS! Fetched {len(response.data)} tweet(s)')
         logger.info('')
         
         # Step 5: Convert to dict format
@@ -227,6 +267,7 @@ def main():
         logger.info('✅ Database connection: WORKING')
         logger.info('✅ Tweet fetching: WORKING')
         logger.info('✅ Data storage: WORKING')
+        logger.info('✅ API call optimization: USER ID CACHED')
         logger.info('')
         
         conn.close()
@@ -235,6 +276,7 @@ def main():
         logger.error('')
         logger.error('❌ Rate limit exceeded')
         logger.error('   The script will automatically wait and retry')
+        logger.error('   Check x-rate-limit-reset header for exact wait time')
         logger.error('')
         sys.exit(1)
         

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { getPool } from './pool-helper';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
       });
       
     } catch (dbError) {
-      console.error('Database query failed, falling back to static file:', dbError);
+      logger.error('Database query failed, falling back to static file:', dbError);
       // Continue to fallback below
     }
     
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       const fileContent = fs.readFileSync(dataPath, 'utf8');
       const tweets = JSON.parse(fileContent);
       
-      console.log(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
+      logger.info(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
       
       // Filter based on parameters
       let filteredTweets = tweets;
@@ -206,7 +207,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Error fetching parsed events:', error);
+    logger.error('Error fetching parsed events:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -333,7 +334,7 @@ export async function PUT(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error updating parsed event:', error);
+    logger.error('Error updating parsed event:', error);
     return NextResponse.json(
       { 
         success: false, 

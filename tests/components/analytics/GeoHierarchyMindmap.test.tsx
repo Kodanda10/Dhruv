@@ -206,8 +206,8 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should render export buttons when data exists', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
-      expect(screen.getByLabelText('Export to CSV')).toBeInTheDocument();
-      expect(screen.getByLabelText('Export to JSON')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Export .* items to CSV file/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Export .* items to JSON file/i)).toBeInTheDocument();
     });
 
     it('should render legend', () => {
@@ -545,9 +545,9 @@ describe('GeoHierarchyMindmap', () => {
     });
 
     it('should export CSV when CSV button is clicked', () => {
-      render(<GeoHierarchyMindmap data={mockData} />);
+      render(<GeoHierarchyMindmap data={hierarchicalData} />);
 
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       fireEvent.click(csvButton);
 
       expect(document.createElement).toHaveBeenCalledWith('a');
@@ -559,9 +559,9 @@ describe('GeoHierarchyMindmap', () => {
     });
 
     it('should export JSON when JSON button is clicked', () => {
-      render(<GeoHierarchyMindmap data={mockData} />);
+      render(<GeoHierarchyMindmap data={hierarchicalData} />);
 
-      const jsonButton = screen.getByLabelText('Export to JSON');
+      const jsonButton = screen.getByLabelText(/Export .* items to JSON file/i);
       fireEvent.click(jsonButton);
 
       expect(document.createElement).toHaveBeenCalledWith('a');
@@ -572,7 +572,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should not export when no data', () => {
       render(<GeoHierarchyMindmap data={undefined} />);
-      expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Export .* items to CSV file/i)).not.toBeInTheDocument();
     });
 
     it('should include filters in JSON export', () => {
@@ -584,7 +584,7 @@ describe('GeoHierarchyMindmap', () => {
 
       render(<GeoHierarchyMindmap data={mockData} filters={filters} />);
 
-      const jsonButton = screen.getByLabelText('Export to JSON');
+      const jsonButton = screen.getByLabelText(/Export .* items to JSON file/i);
       
       const blobContents: string[] = [];
       global.Blob = jest.fn(([content]) => {
@@ -604,7 +604,7 @@ describe('GeoHierarchyMindmap', () => {
     it('should flatten hierarchy correctly in CSV export', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       
       const blobContents: string[] = [];
       global.Blob = jest.fn(([content]) => {
@@ -624,7 +624,7 @@ describe('GeoHierarchyMindmap', () => {
     it('should handle export with nested hierarchy levels', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       
       const blobContents: string[] = [];
       global.Blob = jest.fn(([content]) => {
@@ -646,8 +646,8 @@ describe('GeoHierarchyMindmap', () => {
   describe('Accessibility', () => {
     it('should have proper ARIA labels on export buttons', () => {
       render(<GeoHierarchyMindmap data={mockData} />);
-      expect(screen.getByLabelText('Export to CSV')).toBeInTheDocument();
-      expect(screen.getByLabelText('Export to JSON')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Export .* items to CSV file/i);
+      expect(screen.getByLabelText(/Export .* items to JSON file/i);
     });
 
     it('should have data-testid for testing', () => {
@@ -843,13 +843,13 @@ describe('GeoHierarchyMindmap', () => {
         by_district: [],
       };
       render(<GeoHierarchyMindmap data={emptyHierarchyData} />);
-      expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Export .* items to CSV file/i);
     });
 
     it('should include all hierarchy levels in export', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       
       const blobContents: string[] = [];
       global.Blob = jest.fn(([content]) => {
@@ -869,7 +869,7 @@ describe('GeoHierarchyMindmap', () => {
       // Data with full hierarchy
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1185,7 +1185,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={deepData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1214,7 +1214,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={minimalData} />);
       
-      const jsonButton = screen.getByLabelText('Export to JSON');
+      const jsonButton = screen.getByLabelText(/Export .* items to JSON file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1235,7 +1235,7 @@ describe('GeoHierarchyMindmap', () => {
     it('should export nodes with path property correctly', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1264,7 +1264,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={noPathData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1291,7 +1291,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={fullData} />);
       
-      const jsonButton = screen.getByLabelText('Export to JSON');
+      const jsonButton = screen.getByLabelText(/Export .* items to JSON file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1313,7 +1313,7 @@ describe('GeoHierarchyMindmap', () => {
       // Multi-level hierarchy
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1343,7 +1343,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={fullHierarchyData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1377,7 +1377,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={minimalData} />);
       
-      const jsonButton = screen.getByLabelText('Export to JSON');
+      const jsonButton = screen.getByLabelText(/Export .* items to JSON file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1407,7 +1407,7 @@ describe('GeoHierarchyMindmap', () => {
     it('should export nodes with path property as hierarchy_path', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
@@ -1434,7 +1434,7 @@ describe('GeoHierarchyMindmap', () => {
       
       render(<GeoHierarchyMindmap data={noPathData} />);
       
-      const csvButton = screen.getByLabelText('Export to CSV');
+      const csvButton = screen.getByLabelText(/Export .* items to CSV file/i);
       const blobContents: string[] = [];
       
       global.Blob = jest.fn(([content]) => {
