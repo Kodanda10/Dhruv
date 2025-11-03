@@ -3,10 +3,27 @@ import { DynamicLearningSystem } from '@/lib/dynamic-learning';
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, data } = await request.json();
+    const body = await request.json();
+    
+    // Support both old action-based format and new direct format
+    const action = body.action;
+    const data = body.data || body;
+    const type = body.type;
 
     const learningSystem = new DynamicLearningSystem();
 
+    // Support new direct geo_correction format
+    if (type === 'geo_correction') {
+      const result = await learningSystem.learnGeoCorrection(
+        data.original,
+        data.corrected,
+        data.user_id || 'user',
+        data.source_id || ''
+      );
+      return NextResponse.json({ success: true, result });
+    }
+
+    // Legacy action-based format
     switch (action) {
       case 'learn_from_feedback':
         const feedbackResult = await learningSystem.learnFromHumanFeedback(data);
@@ -26,7 +43,7 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { success: false, error: 'Invalid action' },
+          { success: false, error: 'Invalid action or type' },
           { status: 400 }
         );
     }

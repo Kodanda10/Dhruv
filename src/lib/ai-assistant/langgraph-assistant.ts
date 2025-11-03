@@ -422,10 +422,10 @@ export class LangGraphAIAssistant {
     
     // Record Ollama call for monitoring
     try {
-      const { recordOllamaCall } = await import('@/app/api/health/route');
+      const { recordOllamaCall } = await import('@/lib/health-metrics');
       recordOllamaCall();
     } catch {
-      // Health endpoint not available in test environment
+      // Health metrics not available in test environment
     }
     
     try {
@@ -560,7 +560,7 @@ export class LangGraphAIAssistant {
           
           // Update validation queue size for monitoring
           try {
-            const { updateValidationQueue } = await import('@/app/api/health/route');
+            const { updateValidationQueue } = await import('@/lib/health-metrics');
             updateValidationQueue(this.state.pendingChanges.filter(c => c.source === 'validation').length);
           } catch {
             // Health endpoint not available

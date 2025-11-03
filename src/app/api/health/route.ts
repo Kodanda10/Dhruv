@@ -9,28 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import { getDBPool } from '@/lib/db/pool';
-
-// Track Ollama calls (in production, use Redis or shared state)
-let ollamaCallCount = 0;
-let lastOllamaCall = Date.now();
-
-// Track validation queue size
-let validationQueueSize = 0;
-
-/**
- * Increment Ollama call counter (called from langgraph-assistant)
- */
-export function recordOllamaCall(): void {
-  ollamaCallCount++;
-  lastOllamaCall = Date.now();
-}
-
-/**
- * Update validation queue size (called from langgraph-assistant)
- */
-export function updateValidationQueue(size: number): void {
-  validationQueueSize = size;
-}
+import { getOllamaMetrics, getValidationQueueSize } from '@/lib/health-metrics';
 
 export async function GET() {
   try {
@@ -55,10 +34,7 @@ export async function GET() {
 
     const stats = dbStats.rows[0];
 
-    // Reset Ollama count if it's been more than 1 minute since last call
-    if (Date.now() - lastOllamaCall > 60000) {
-      ollamaCallCount = 0;
-    }
+    const ollamaMetrics = getOllamaMetrics();
 
     return NextResponse.json({
       status: 'healthy',
@@ -72,10 +48,10 @@ export async function GET() {
         poolIdle: pool.idleCount || 0
       },
       ollamaCalls: {
-        recent: ollamaCallCount,
-        lastCall: lastOllamaCall > 0 ? new Date(lastOllamaCall).toISOString() : null
+        recent: ollamaMetrics.recent,
+        lastCall: ollamaMetrics.lastCall > 0 ? new Date(ollamaMetrics.lastCall).toISOString() : null
       },
-      validationQueue: validationQueueSize,
+      validationQueue: getValidationQueueSize(),
       memory: {
         heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
         heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),

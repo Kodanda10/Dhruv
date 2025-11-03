@@ -21,7 +21,6 @@ import AIAssistantModal from './AIAssistantModal';
 import GeoHierarchyTree from './GeoHierarchyTree';
 import GeoHierarchyEditor from './GeoHierarchyEditor';
 import { GeoHierarchy } from '@/lib/geo-extraction/hierarchy-resolver';
-import { DynamicLearningSystem } from '@/lib/dynamic-learning';
 import { api } from '@/lib/api';
 
 // Empty array - will be populated from API
@@ -521,17 +520,17 @@ export default function ReviewQueueNew() {
               explanations={explanations}
               onConfirm={async (hierarchy: GeoHierarchy) => {
                 try {
-                  // Phase 3.3: Wire Learning System
-                  const learningSystem = new DynamicLearningSystem();
-                  await learningSystem.learnGeoCorrection(
-                    {
+                  // Phase 3.3: Wire Learning System via API (server-side only)
+                  await api.post('/api/learning', {
+                    type: 'geo_correction',
+                    original: {
                       location: locationName,
                       hierarchy: currentHierarchy
                     },
-                    hierarchy,
-                    'user', // TODO: Get from auth context
-                    currentTweet.tweet_id || String(currentTweet.id)
-                  );
+                    corrected: hierarchy,
+                    user_id: 'user', // TODO: Get from auth context
+                    source_id: currentTweet.tweet_id || String(currentTweet.id)
+                  });
 
                   // Update tweet state
                   setTweets(prev => prev.map(tweet => 
