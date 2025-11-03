@@ -1064,10 +1064,10 @@ describe('Comprehensive Scenario Testing - 100+ Combinations', () => {
   // Generate all combinations (5 * 3 * 3 * 2 = 90 combinations)
   const scenarios: Array<{limit?: number; needsReview?: string; reviewStatus?: string; analytics?: boolean}> = [];
   
-  limits.forEach(limit => {
-    needsReviewValues.forEach(needsReview => {
-      reviewStatusValues.forEach(reviewStatus => {
-        analyticsValues.forEach(analytics => {
+  limits.forEach((limit) => {
+    needsReviewValues.forEach((needsReview) => {
+      reviewStatusValues.forEach((reviewStatus) => {
+        analyticsValues.forEach((analytics) => {
           scenarios.push({ limit, needsReview, reviewStatus, analytics });
         });
       });

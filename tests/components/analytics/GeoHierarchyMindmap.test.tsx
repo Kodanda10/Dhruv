@@ -646,8 +646,8 @@ describe('GeoHierarchyMindmap', () => {
   describe('Accessibility', () => {
     it('should have proper ARIA labels on export buttons', () => {
       render(<GeoHierarchyMindmap data={mockData} />);
-      expect(screen.getByLabelText(/Export .* items to CSV file/i);
-      expect(screen.getByLabelText(/Export .* items to JSON file/i);
+      expect(screen.getByLabelText(/Export .* items to CSV file/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Export .* items to JSON file/i)).toBeInTheDocument();
     });
 
     it('should have data-testid for testing', () => {
@@ -738,7 +738,7 @@ describe('GeoHierarchyMindmap', () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         json: async () => ({
           success: true,
-          data: null,
+          data: undefined,
           source: 'database',
         }),
       });
@@ -843,7 +843,7 @@ describe('GeoHierarchyMindmap', () => {
         by_district: [],
       };
       render(<GeoHierarchyMindmap data={emptyHierarchyData} />);
-      expect(screen.queryByLabelText(/Export .* items to CSV file/i);
+      expect(screen.queryByLabelText(/Export .* items to CSV file/i)).not.toBeInTheDocument();
     });
 
     it('should include all hierarchy levels in export', () => {
