@@ -332,8 +332,36 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should show empty state when data has no districts', () => {
       const emptyData = {
-        ...mockData,
-        by_district: [],
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyData} />);
       expect(screen.getByText('कोई डेटा उपलब्ध नहीं है')).toBeInTheDocument();
@@ -366,7 +394,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle assemblies with no matching district', () => {
       const orphanAssemblyData = {
-        ...mockData,
+        ...hierarchicalData,
         by_assembly: [
           { district: 'Nonexistent', assembly: 'Some Assembly', event_count: 1 },
         ],
@@ -388,7 +416,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle blocks with no matching assembly', () => {
       const orphanBlockData = {
-        ...mockData,
+        ...hierarchicalData,
         by_assembly: [],
         by_block: [
           { district: 'रायपुर', assembly: 'Nonexistent', block: 'Test Block', event_count: 1 },
@@ -400,7 +428,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle data with no assemblies', () => {
       const noAssembliesData = {
-        ...mockData,
+        ...hierarchicalData,
         by_assembly: [],
         by_block: [],
       };
@@ -410,7 +438,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle data with no blocks', () => {
       const noBlocksData = {
-        ...mockData,
+        ...hierarchicalData,
         by_block: [],
       };
       render(<GeoHierarchyMindmap data={noBlocksData} />);
@@ -419,7 +447,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should calculate max value correctly', () => {
       const varyingData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'A', event_count: 10 },
           { district: 'B', event_count: 20 },
@@ -432,7 +481,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle max value of zero', () => {
       const zeroData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'A', event_count: 0 },
         ],
@@ -514,7 +584,7 @@ describe('GeoHierarchyMindmap', () => {
     it('should not fetch when propData changes', async () => {
       const { rerender } = render(<GeoHierarchyMindmap data={mockData} />);
       
-      const newData = { ...mockData, total_events: 20 };
+      const newData = { ...hierarchicalData, total_events: 20 };
       await act(async () => {
         rerender(<GeoHierarchyMindmap data={newData} />);
       });
@@ -700,7 +770,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle tweets with district-level data only', () => {
       const districtOnlyData = {
-        ...mockData,
+        ...hierarchicalData,
         by_assembly: [],
         by_block: [],
       };
@@ -766,7 +836,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle data with very large event counts', () => {
       const largeData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'रायपुर', event_count: 999999 },
           { district: 'बिलासपुर', event_count: 888888 },
@@ -778,7 +869,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle data with single district', () => {
       const singleDistrictData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'रायपुर', event_count: 10 }],
         by_assembly: [],
         by_block: [],
@@ -789,7 +901,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle very long location names', () => {
       const longNameData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'रायपुर' + 'र'.repeat(100), event_count: 5 },
         ],
@@ -800,7 +933,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle data with missing path property', () => {
       const minimalData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test', event_count: 1 }],
       };
       render(<GeoHierarchyMindmap data={minimalData} />);
@@ -809,8 +963,36 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle empty displayData scenario', () => {
       const emptyDisplayData = {
-        ...mockData,
-        by_district: [],
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyDisplayData} />);
       expect(screen.getByText('कोई डेटा उपलब्ध नहीं है')).toBeInTheDocument();
@@ -834,8 +1016,36 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle export with empty hierarchy', () => {
       const emptyHierarchyData = {
-        ...mockData,
-        by_district: [],
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyHierarchyData} />);
       expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
@@ -885,7 +1095,7 @@ describe('GeoHierarchyMindmap', () => {
   describe('Data Processing Edge Cases', () => {
     it('should handle district with undefined assembly in by_assembly array', () => {
       const dataWithUndefined = {
-        ...mockData,
+        ...hierarchicalData,
         by_assembly: [
           { district: 'रायपुर', assembly: undefined as any, event_count: 1 },
         ],
@@ -896,7 +1106,7 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle block with undefined assembly', () => {
       const dataWithUndefinedBlock = {
-        ...mockData,
+        ...hierarchicalData,
         by_block: [
           { district: 'रायपुर', assembly: undefined as any, block: 'Test', event_count: 1 },
         ],
@@ -907,7 +1117,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle duplicate district names', () => {
       const duplicateData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'रायपुर', event_count: 5 },
           { district: 'रायपुर', event_count: 3 }, // Duplicate
@@ -942,7 +1173,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should not drilldown when node has no children', () => {
       const leafNodeData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test', event_count: 1 }],
         by_assembly: [],
         by_block: [],
@@ -981,7 +1233,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle drilldown with node that has no path', () => {
       const dataWithoutPath = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test', event_count: 1 }],
       };
       render(<GeoHierarchyMindmap data={dataWithoutPath} />);
@@ -1201,7 +1474,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle nodes with missing optional fields in export', () => {
       const minimalData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test', event_count: 1 }],
         by_assembly: [],
         by_block: [],
@@ -1251,7 +1545,28 @@ describe('GeoHierarchyMindmap', () => {
     it('should export nodes without path property (using name as fallback)', () => {
       // Create data that might result in nodes without paths
       const noPathData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test District', event_count: 1 }],
         by_assembly: [],
         by_block: [],
@@ -1364,7 +1679,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should handle export with nodes that have missing optional fields', () => {
       const minimalData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test', event_count: 1 }],
         by_assembly: [],
         by_block: [],
@@ -1421,7 +1757,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should use node name as fallback when path is missing', () => {
       const noPathData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [{ district: 'Test District', event_count: 1 }],
         by_assembly: [],
         by_block: [],
@@ -1450,7 +1807,28 @@ describe('GeoHierarchyMindmap', () => {
   describe('Color Calculation', () => {
     it('should calculate color for zero max value', () => {
       const zeroData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'A', event_count: 0 },
         ],
@@ -1461,7 +1839,28 @@ describe('GeoHierarchyMindmap', () => {
 
     it('should calculate color for various intensity values', () => {
       const varyingData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'Low', event_count: 1 },
           { district: 'Medium', event_count: 50 },
@@ -1475,7 +1874,28 @@ describe('GeoHierarchyMindmap', () => {
     it('should handle color calculation when value exceeds max', () => {
       // getColor uses Math.min(value / maxValue, 1) to cap intensity
       const cappedData = {
-        ...mockData,
+        {
+        total_events: 10,
+                by_district: [
+                  { district: 'रायपुर', event_count: 5 },
+                  { district: 'बिलासपुर', event_count: 5 },
+                ],
+                by_assembly: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', event_count: 3 },
+                  { district: 'रायपुर', assembly: 'रायपुर ग्रामीण', event_count: 2 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', event_count: 5 },
+                ],
+                by_block: [
+                  { district: 'रायपुर', assembly: 'रायपुर शहर', block: 'रायपुर ब्लॉक', event_count: 3 },
+                  { district: 'बिलासपुर', assembly: 'बिलासपुर शहर', block: 'बिलासपुर ब्लॉक', event_count: 5 },
+                ],
+                urban_rural: { urban: 8, rural: 2 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              }
+        
+        const emptyData = {
+        ...hierarchicalData,
         by_district: [
           { district: 'A', event_count: 10 },
           { district: 'B', event_count: 20 }, // This will be max

@@ -1,8 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import GeoHierarchyMindmap from './GeoHierarchyMindmap';
-import type { GeoAnalyticsFilters } from '@/types/geo-analytics';
 
 interface TweetData {
   id: string;
@@ -111,34 +109,6 @@ export default function AnalyticsDashboardDark() {
       'शनिवार': 'शनिवार'
     };
     return hindiDays[day] || day;
-  };
-
-  // Convert dashboard filters to geo-analytics filter format
-  const convertFiltersToGeoAnalyticsFilters = (
-    dashboardFilters: { timeRange: string; location: string; eventType: string; theme: string }
-  ): GeoAnalyticsFilters => {
-    const now = new Date();
-    let startDate: string | null = null;
-    let endDate: string | null = null;
-
-    // Convert timeRange to dates
-    if (dashboardFilters.timeRange !== 'all') {
-      const days = dashboardFilters.timeRange === '7d' ? 7 :
-                   dashboardFilters.timeRange === '30d' ? 30 :
-                   dashboardFilters.timeRange === '90d' ? 90 :
-                   dashboardFilters.timeRange === '1y' ? 365 : 30;
-      
-      const start = new Date(now);
-      start.setDate(start.getDate() - days);
-      startDate = start.toISOString().split('T')[0];
-      endDate = now.toISOString().split('T')[0];
-    }
-
-    return {
-      start_date: startDate,
-      end_date: endDate,
-      event_type: dashboardFilters.eventType !== 'all' ? dashboardFilters.eventType : null,
-    };
   };
 
   if (loading) {
@@ -376,14 +346,6 @@ export default function AnalyticsDashboardDark() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-
-          {/* Geo-Hierarchy Mindmap */}
-          <div className="lg:col-span-2">
-            <GeoHierarchyMindmap
-              filters={convertFiltersToGeoAnalyticsFilters(filters)}
-              height={600}
-            />
           </div>
 
           {/* Scheme Usage */}

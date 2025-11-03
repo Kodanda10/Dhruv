@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'dhruv_db',
-  user: process.env.DB_USER || 'dhruv_user',
-  password: process.env.DB_PASSWORD || 'dhruv_pass',
-});
+import { getPool } from './pool-helper';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,31 +11,51 @@ export async function GET(request: NextRequest) {
     const reviewStatus = searchParams.get('review_status');
     const includeAnalytics = searchParams.get('analytics') === 'true';
     
-    // Build query based on parameters
-    let query = 'SELECT * FROM parsed_events WHERE 1=1';
-    const params = [];
+    // Build query with proper parameter binding (PRIMARY: Database)
+    let query = `
+      SELECT 
+        pe.*,
+        rt.text as tweet_text,
+        rt.created_at as tweet_created_at,
+        rt.author_handle,
+        rt.retweet_count,
+        rt.reply_count,
+        rt.like_count,
+        rt.quote_count,
+        rt.hashtags,
+        rt.mentions,
+        rt.urls
+      FROM parsed_events pe
+      LEFT JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let paramIndex = 1;
     
     if (needsReview === 'true') {
-      query += ' AND needs_review = true';
+      query += ' AND pe.needs_review = true';
     } else if (needsReview === 'false' || includeAnalytics) {
       // For analytics, only approved tweets
-      query += ' AND needs_review = false AND review_status = $1';
+      query += ` AND pe.needs_review = false AND pe.review_status = $${paramIndex}`;
       params.push('approved');
+      paramIndex++;
     }
     
     if (reviewStatus && !includeAnalytics) {
-      query += ` AND review_status = $${params.length + 1}`;
+      query += ` AND pe.review_status = $${paramIndex}`;
       params.push(reviewStatus);
+      paramIndex++;
     }
     
-    query += ' ORDER BY parsed_at DESC';
+    query += ' ORDER BY pe.parsed_at DESC';
     
     if (limit && !includeAnalytics) {
-      query += ` LIMIT $${params.length + 1}`;
+      query += ` LIMIT $${paramIndex}`;
       params.push(limit);
     }
     
     try {
+      const pool = getPool();
       const result = await pool.query(query, params);
       
       if (includeAnalytics) {
@@ -65,10 +77,51 @@ export async function GET(request: NextRequest) {
         });
       }
       
-      // For non-analytics requests, always use file fallback to get tweet content
-      console.log('Using file fallback for dashboard data to include tweet content');
+      // Map database results to dashboard format
+      const mappedTweets = result.rows.map((row: any) => ({
+        id: row.tweet_id,
+        tweet_id: row.tweet_id,
+        parsedEventId: row.id,
+        content: row.tweet_text || '',
+        text: row.tweet_text || '',
+        timestamp: row.tweet_created_at || row.parsed_at,
+        created_at: row.tweet_created_at || row.parsed_at,
+        event_type: row.event_type || 'other',
+        event_type_confidence: parseFloat(row.event_type_confidence || '0'),
+        event_date: row.event_date,
+        date_confidence: parseFloat(row.date_confidence || '0'),
+        locations: Array.isArray(row.locations) ? row.locations : (typeof row.locations === 'object' && row.locations !== null ? [row.locations] : []),
+        people_mentioned: row.people_mentioned || [],
+        organizations: row.organizations || [],
+        schemes_mentioned: row.schemes_mentioned || [],
+        overall_confidence: parseFloat(row.overall_confidence || '0'),
+        needs_review: row.needs_review || false,
+        review_status: row.review_status || 'pending',
+        parsed_at: row.parsed_at,
+        parsed_by: row.parsed_by || 'system',
+        // Additional tweet metadata
+        author_handle: row.author_handle,
+        retweet_count: row.retweet_count || 0,
+        reply_count: row.reply_count || 0,
+        like_count: row.like_count || 0,
+        quote_count: row.quote_count || 0,
+        hashtags: row.hashtags || [],
+        mentions: row.mentions || [],
+        urls: row.urls || []
+      }));
+      
+      return NextResponse.json({
+        success: true,
+        data: mappedTweets,
+        events: mappedTweets, // For backward compatibility
+        total: result.rows.length,
+        returned: mappedTweets.length,
+        source: 'database'
+      });
+      
     } catch (dbError) {
-      console.log('Database query failed, falling back to static file:', dbError);
+      console.error('Database query failed, falling back to static file:', dbError);
+      // Continue to fallback below
     }
     
     // Fallback: Try to read from parsed_tweets.json
