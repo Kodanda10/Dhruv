@@ -61,22 +61,22 @@ jobs:
 
       - name: Verify Coverage Thresholds
         run: |
-          if [ ! -f "coverage/coverage-summary.json" ]; then
-            echo "❌ Coverage file not found"
-            exit 1
-          fi
-          LINES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.lines.pct);")
-          BRANCHES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.branches.pct);")
-          echo "Lines: ${LINES}%, Branches: ${BRANCHES}%"
-          if (( $(echo "$LINES < 85" | awk '{print ($1 < 85)}') )); then
-            echo "❌ Lines coverage ${LINES}% below 85% threshold"
-            exit 1
-          fi
-          if (( $(echo "$BRANCHES < 70" | awk '{print ($1 < 70)}') )); then
-            echo "❌ Branches coverage ${BRANCHES}% below 70% threshold"
-            exit 1
-          fi
-          echo "✅ Coverage thresholds met: Lines ${LINES}% ≥ 85%, Branches ${BRANCHES}% ≥ 70%"
+          node -e "
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const lines = data.total.lines.pct;
+            const branches = data.total.branches.pct;
+            console.log(\`Lines: \${lines}%, Branches: \${branches}%\`);
+            if (lines < 85) {
+              console.error(\`❌ Lines coverage \${lines}% below 85% threshold\`);
+              process.exit(1);
+            }
+            if (branches < 70) {
+              console.error(\`❌ Branches coverage \${branches}% below 70% threshold\`);
+              process.exit(1);
+            }
+            console.log(\`✅ Coverage thresholds met: Lines \${lines}% ≥ 85%, Branches \${branches}% ≥ 70%\`);
+          "
 
       - name: Build Check
         run: npm run build
