@@ -33,6 +33,11 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
     const { getDBPool } = require('@/lib/db/pool');
     mockPool = getDBPool();
     mockQuery = mockPool.query as jest.Mock;
+    // Ensure mock is a function
+    if (typeof mockQuery !== 'function') {
+      mockPool.query = jest.fn();
+      mockQuery = mockPool.query as jest.Mock;
+    }
   });
 
   // ============================================================
@@ -152,7 +157,7 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
             { area_type: 'urban', event_count: '10' },
             { area_type: 'rural', event_count: '20' },
           ],
-        }) // urbanRuralResult
+        }) // urbanRuralResult - reduce will create {urban: 10, rural: 20}
         .mockResolvedValueOnce({ rows: [] }); // topLocationsResult
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
@@ -160,7 +165,11 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
+      // urban_ruralRows.reduce((acc, row) => { acc[row.area_type] = parseInt(...); return acc; }, {})
+      expect(data.data.urban_rural).toBeDefined();
+      expect(data.data.urban_rural).toHaveProperty('urban');
       expect(data.data.urban_rural.urban).toBe(10);
+      expect(data.data.urban_rural).toHaveProperty('rural');
       expect(data.data.urban_rural.rural).toBe(20);
     });
 
@@ -429,8 +438,9 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
   describe('Error Handling Branches', () => {
     test('should handle Error instance - returns error.message', async () => {
       const error = new Error('Database connection failed');
-      // Promise.all fails on first rejection, so mock first query to fail
-      mockQuery.mockRejectedValueOnce(error);
+      // Mock getDBPool to throw error, or mock query to reject
+      // Since Promise.all will reject on first error, we need to mock it properly
+      mockQuery.mockImplementationOnce(() => Promise.reject(error));
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -444,8 +454,8 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
     });
 
     test('should handle non-Error exception - returns "Unknown error"', async () => {
-      // Promise.all fails on first rejection - use a non-Error value
-      mockQuery.mockRejectedValueOnce('String error'); // Not an Error instance
+      // Mock query to reject with non-Error value
+      mockQuery.mockImplementationOnce(() => Promise.reject('String error')); // Not an Error instance
 
       const request = new NextRequest('http://localhost:3000/api/geo-analytics/summary');
       const response = await getSummary(request);
@@ -504,7 +514,7 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
             { district: 'Test1', event_count: '10' },
             { district: 'Test2', event_count: '20' },
           ],
-        }) // districtResult
+        }) // districtResult - total_events uses districtRows.reduce
         .mockResolvedValueOnce({ rows: [] }) // assemblyResult
         .mockResolvedValueOnce({ rows: [] }) // blockResult
         .mockResolvedValueOnce({ rows: [] }) // urbanRuralResult
@@ -515,7 +525,8 @@ describe('Geo Analytics - Complete Branch Coverage (Mocks)', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      // reduce should sum: 10 + 20 = 30
+      // total_events = districtRows.reduce((sum, row) => sum + parseInt(row.event_count || '0'), 0)
+      // So: 0 + parseInt('10' || '0') + parseInt('20' || '0') = 0 + 10 + 20 = 30
       expect(data.data.total_events).toBe(30);
     });
 
