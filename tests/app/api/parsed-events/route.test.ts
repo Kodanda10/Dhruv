@@ -42,9 +42,10 @@ jest.mock('path', () => ({
   join: (...args: string[]) => args.join('/'),
 }));
 
-// Now import the route AFTER all mocks are set up
+// Now import the route and pool helper AFTER all mocks are set up
 const routeModule = require('@/app/api/parsed-events/route');
-const { GET, PUT, resetPool } = routeModule;
+const { GET, PUT } = routeModule;
+const { resetPool } = require('@/app/api/parsed-events/pool-helper');
 
 describe('GET /api/parsed-events - Database Primary Source', () => {
   beforeEach(() => {

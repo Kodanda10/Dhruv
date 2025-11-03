@@ -353,8 +353,15 @@ describe('GeoHierarchyMindmap', () => {
               }
         
         const emptyData = {
-        ...hierarchicalData,
-        by_district: [],
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyData} />);
       expect(screen.getByText('कोई डेटा उपलब्ध नहीं है')).toBeInTheDocument();
@@ -977,8 +984,15 @@ describe('GeoHierarchyMindmap', () => {
               }
         
         const emptyData = {
-        ...hierarchicalData,
-        by_district: [],
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyDisplayData} />);
       expect(screen.getByText('कोई डेटा उपलब्ध नहीं है')).toBeInTheDocument();
@@ -1023,8 +1037,15 @@ describe('GeoHierarchyMindmap', () => {
               }
         
         const emptyData = {
-        ...hierarchicalData,
-        by_district: [],
+        {
+                total_events: 0,
+                by_district: [],
+                by_assembly: [],
+                by_block: [],
+                urban_rural: { urban: 0, rural: 0 },
+                top_locations: [],
+                filters: { start_date: null, end_date: null, event_type: null },
+              },
       };
       render(<GeoHierarchyMindmap data={emptyHierarchyData} />);
       expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
