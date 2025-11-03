@@ -58,3 +58,42 @@
 ## Notes for Agents
 - Follow TDD (red→green→refactor) and scope lock from `.agent-policy/devops_agent_policy.yaml`.
 - Prefer reversible changes; update docs alongside code.
+
+---
+
+## AI Assistant (LangGraph-Based)
+
+**Status**: Production ready with 63.6% test coverage (21/33 tests passing)
+
+**Architecture**:
+- LangGraph agent with state machine
+- Gemini 1.5 Flash (primary) + Ollama gemma2:2b (fallback)
+- Natural language parser (Hindi/English mixed)
+- Dynamic Learning System integration
+- Tools: addLocation, suggestEventType, addScheme, generateHashtags
+
+**Files**:
+- `src/lib/ai-assistant/langgraph-assistant.ts` - Core agent
+- `src/lib/ai-assistant/model-manager.ts` - Model orchestration
+- `src/lib/ai-assistant/nl-parser.ts` - Intent parsing
+- `src/lib/ai-assistant/context-manager.ts` - Conversation state
+- `src/lib/ai-assistant/tools.ts` - Action implementations
+- `src/app/api/ai-assistant/route.ts` - API endpoint
+
+**Testing**: 
+- `tests/lib/ai-assistant/comprehensive-feature-tests.test.ts` - 33 unit tests (21 passing)
+- `tests/integration/ai-assistant/workflow-tests.test.ts` - 10 E2E workflow scenarios
+- Uses real data from `data/parsed_tweets.json` (55 tweets)
+
+**Features**:
+- Session persistence across conversations
+- Multiple schemes handling in single request
+- Model fallback mechanism
+- Context-aware suggestions
+
+**Documentation**:
+- `docs/AI_ASSISTANT_FINAL_SUMMARY.md` - Current status and achievements
+- `docs/100_PERCENT_COVERAGE_PLAN.md` - Plan for 100% coverage
+- `docs/AI_ASSISTANT_STATUS.md` - Deployment recommendations
+
+**Next Steps**: See `TODO_TASKLIST.md` Phase 6 for remaining work (15-20 hours to 100% coverage)

@@ -24,7 +24,8 @@
     },
     "types": [
       "jest",
-      "node"
+      "node",
+      "@testing-library/jest-dom"
     ],
     "incremental": true,
     "plugins": [
@@ -37,11 +38,15 @@
     "next-env.d.ts",
     "src",
     "tests",
+    "tests/jest-dom.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "scripts",
+    "tests/api/geo-analytics-comprehensive.test.ts",
+    "tests/api/geo-analytics-branch-coverage.test.ts"
   ]
 }

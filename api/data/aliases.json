@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "tags": {
+    "किसान": {"variants": ["किसानों", "krishi", "farmer"], "confidence": 0.8, "source": "seed"},
+    "सड़क": {"variants": ["sadak", "road"], "confidence": 0.8, "source": "seed"},
+    "शिविर": {"variants": ["shivir", "camp"], "confidence": 0.8, "source": "seed"},
+    "महिला": {"variants": ["mahila", "women"], "confidence": 0.8, "source": "seed"},
+    "स्टार्टअप": {"variants": ["startup", "start-up"], "confidence": 0.8, "source": "seed"},
+    "समारोह": {"variants": ["samaroh", "samaroha"], "confidence": 0.9, "source": "seed"},
+    "स्वच्छता": {"variants": ["swachhata", "swachhta", "swachata"], "confidence": 0.9, "source": "seed"},
+    "स्वास्थ्य": {"variants": ["swasthya"], "confidence": 0.9, "source": "seed"},
+    "उद्यमिता": {"variants": ["udyamita", "udhyamita"], "confidence": 0.9, "source": "seed"}
+  },
+  "locations": {
+    "दिल्ली": {"variants": ["dilli", "new delhi", "नई दिल्ली", "नयी दिल्ली"], "confidence": 0.95, "source": "seed"},
+    "रायगढ़": {"variants": ["raigarh", "raygarh"], "confidence": 0.9, "source": "seed"},
+    "रायपुर": {"variants": ["raipur"], "confidence": 0.9, "source": "seed"},
+    "मुंबई": {"variants": ["bombay", "mumbai"], "confidence": 0.9, "source": "seed"},
+    "कोलकाता": {"variants": ["kolkata", "calcutta"], "confidence": 0.9, "source": "seed"},
+    "बेंगलुरु": {"variants": ["bengaluru", "bangalore"], "confidence": 0.9, "source": "seed"},
+    "वाराणसी": {"variants": ["varanasi", "banaras", "benaras"], "confidence": 0.9, "source": "seed"},
+    "प्रयागराज": {"variants": ["prayagraj", "allahabad"], "confidence": 0.9, "source": "seed"}
+  }
+}
+

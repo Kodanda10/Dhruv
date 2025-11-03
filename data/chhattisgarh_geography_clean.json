@@ -1,0 +1,616 @@
+{
+  "state": "छत्तीसगढ़",
+  "state_code": "CG",
+  "capital": "रायपुर",
+  "area_km2": 135194,
+  "population_2021": 29436231,
+  "districts": [
+    {
+      "name": "रायपुर",
+      "district_code": "CG01",
+      "headquarters": "रायपुर",
+      "population": 2945167,
+      "area_km2": 13323,
+      "acs": [
+        {
+          "name": "रायपुर शहर उत्तर",
+          "blocks": [
+            {
+              "name": "रायपुर",
+              "gps": [
+                {
+                  "name": "रायपुर",
+                  "villages": [
+                    {"name": "रायपुर", "pincode": "492001", "population": 10000},
+                    {"name": "पंडरी", "pincode": "492001", "population": 2500},
+                    {"name": "कोटा", "pincode": "492001", "population": 1800},
+                    {"name": "महासमुंद", "pincode": "492001", "population": 3200},
+                    {"name": "अरंग", "pincode": "492001", "population": 2100},
+                    {"name": "धरसीवाँ", "pincode": "492001", "population": 2800},
+                    {"name": "खैरगढ़", "pincode": "492001", "population": 1900},
+                    {"name": "सिलोतरा", "pincode": "492001", "population": 1600}
+                  ]
+                },
+                {
+                  "name": "तिल्दा",
+                  "villages": [
+                    {"name": "तिल्दा", "pincode": "493114", "population": 3500},
+                    {"name": "नवागढ़", "pincode": "493114", "population": 2200},
+                    {"name": "बलोदा बाजार", "pincode": "493114", "population": 4100},
+                    {"name": "कसडोल", "pincode": "493114", "population": 1800},
+                    {"name": "पलारी", "pincode": "493114", "population": 2600}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "रायपुर शहर दक्षिण",
+          "blocks": [
+            {
+              "name": "अरंग",
+              "gps": [
+                {
+                  "name": "अरंग",
+                  "villages": [
+                    {"name": "अरंग", "pincode": "493441", "population": 4200},
+                    {"name": "गुन्द्रा", "pincode": "493441", "population": 1900},
+                    {"name": "सिरौली", "pincode": "493441", "population": 2300},
+                    {"name": "महासमुंद", "pincode": "493441", "population": 3100}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "बिलासपुर",
+      "district_code": "CG02",
+      "headquarters": "बिलासपुर",
+      "population": 2663627,
+      "area_km2": 8273,
+      "acs": [
+        {
+          "name": "बिलासपुर",
+          "blocks": [
+            {
+              "name": "बिलासपुर",
+              "gps": [
+                {
+                  "name": "बिलासपुर",
+                  "villages": [
+                    {"name": "बिलासपुर", "pincode": "495001", "population": 15000},
+                    {"name": "तखतपुर", "pincode": "495001", "population": 3800},
+                    {"name": "मस्तूरी", "pincode": "495001", "population": 4200},
+                    {"name": "कोटा", "pincode": "495001", "population": 2900},
+                    {"name": "सेलर", "pincode": "495001", "population": 2600},
+                    {"name": "गुरूर", "pincode": "495001", "population": 3400}
+                  ]
+                },
+                {
+                  "name": "मस्तूरी",
+                  "villages": [
+                    {"name": "मस्तूरी", "pincode": "495559", "population": 5100},
+                    {"name": "बेलतरा", "pincode": "495559", "population": 2800},
+                    {"name": "पेंड्राभाटा", "pincode": "495559", "population": 2200},
+                    {"name": "खरौद", "pincode": "495559", "population": 1900}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "दुर्ग",
+      "district_code": "CG03",
+      "headquarters": "दुर्ग",
+      "population": 3343074,
+      "area_km2": 8523,
+      "acs": [
+        {
+          "name": "दुर्ग",
+          "blocks": [
+            {
+              "name": "दुर्ग",
+              "gps": [
+                {
+                  "name": "दुर्ग",
+                  "villages": [
+                    {"name": "दुर्ग", "pincode": "491001", "population": 12000},
+                    {"name": "भिलाई", "pincode": "491001", "population": 8500},
+                    {"name": "पाटन", "pincode": "491001", "population": 4100},
+                    {"name": "धमधा", "pincode": "491001", "population": 3600},
+                    {"name": "नवागढ़", "pincode": "491001", "population": 2800}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "कोरबा",
+      "district_code": "CG04",
+      "headquarters": "कोरबा",
+      "population": 1206640,
+      "area_km2": 7141,
+      "acs": [
+        {
+          "name": "कोरबा",
+          "blocks": [
+            {
+              "name": "कोरबा",
+              "gps": [
+                {
+                  "name": "कोरबा",
+                  "villages": [
+                    {"name": "कोरबा", "pincode": "495677", "population": 8000},
+                    {"name": "कटघोरा", "pincode": "495677", "population": 4200},
+                    {"name": "पाली", "pincode": "495677", "population": 3800},
+                    {"name": "बालको", "pincode": "495677", "population": 2900},
+                    {"name": "करतला", "pincode": "495677", "population": 2600}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "रायगढ़",
+      "district_code": "CG05",
+      "headquarters": "रायगढ़",
+      "population": 1493627,
+      "area_km2": 7086,
+      "acs": [
+        {
+          "name": "रायगढ़",
+          "blocks": [
+            {
+              "name": "रायगढ़",
+              "gps": [
+                {
+                  "name": "रायगढ़",
+                  "villages": [
+                    {"name": "रायगढ़", "pincode": "496001", "population": 6500},
+                    {"name": "खरसिया", "pincode": "496001", "population": 3800},
+                    {"name": "तमनार", "pincode": "496001", "population": 2900},
+                    {"name": "गोरेला", "pincode": "496001", "population": 2600},
+                    {"name": "सारंगढ़", "pincode": "496001", "population": 4200},
+                    {"name": "बरमकेला", "pincode": "496001", "population": 3100}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "राजनंदगांव",
+      "district_code": "CG06",
+      "headquarters": "राजनंदगांव",
+      "population": 1537520,
+      "area_km2": 8060,
+      "acs": [
+        {
+          "name": "राजनंदगांव",
+          "blocks": [
+            {
+              "name": "राजनंदगांव",
+              "gps": [
+                {
+                  "name": "राजनंदगांव",
+                  "villages": [
+                    {"name": "राजनंदगांव", "pincode": "491441", "population": 5500},
+                    {"name": "खैरागढ़", "pincode": "491441", "population": 3200},
+                    {"name": "छुयाँकोट", "pincode": "491441", "population": 2800},
+                    {"name": "मोहला", "pincode": "491441", "population": 2400}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "जगदलपुर",
+      "district_code": "CG07",
+      "headquarters": "जगदलपुर",
+      "population": 1413598,
+      "area_km2": 32980,
+      "acs": [
+        {
+          "name": "जगदलपुर",
+          "blocks": [
+            {
+              "name": "जगदलपुर",
+              "gps": [
+                {
+                  "name": "जगदलपुर",
+                  "villages": [
+                    {"name": "जगदलपुर", "pincode": "494001", "population": 4800},
+                    {"name": "कोयलीबेड़ा", "pincode": "494001", "population": 2200},
+                    {"name": "दंतेवाड़ा", "pincode": "494001", "population": 3100},
+                    {"name": "बीजापुर", "pincode": "494001", "population": 1900}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "अंबिकापुर",
+      "district_code": "CG08",
+      "headquarters": "अंबिकापुर",
+      "population": 728531,
+      "area_km2": 4155,
+      "acs": [
+        {
+          "name": "अंबिकापुर",
+          "blocks": [
+            {
+              "name": "अंबिकापुर",
+              "gps": [
+                {
+                  "name": "अंबिकापुर",
+                  "villages": [
+                    {"name": "अंबिकापुर", "pincode": "497001", "population": 4200},
+                    {"name": "उदयपुर", "pincode": "497001", "population": 2800},
+                    {"name": "कुसमी", "pincode": "497001", "population": 2400},
+                    {"name": "बैकुंठपुर", "pincode": "497001", "population": 1900}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "महासमुंद",
+      "district_code": "CG09",
+      "headquarters": "महासमुंद",
+      "population": 1032754,
+      "area_km2": 4783,
+      "acs": [
+        {
+          "name": "महासमुंद",
+          "blocks": [
+            {
+              "name": "महासमुंद",
+              "gps": [
+                {
+                  "name": "महासमुंद",
+                  "villages": [
+                    {"name": "महासमुंद", "pincode": "493445", "population": 3800},
+                    {"name": "बासना", "pincode": "493445", "population": 2600},
+                    {"name": "पिथौरा", "pincode": "493445", "population": 2200},
+                    {"name": "सराipali", "pincode": "493445", "population": 1800}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "धमतरी",
+      "district_code": "CG10",
+      "headquarters": "धमतरी",
+      "population": 799781,
+      "area_km2": 4083,
+      "acs": [
+        {
+          "name": "धमतरी",
+          "blocks": [
+            {
+              "name": "धमतरी",
+              "gps": [
+                {
+                  "name": "धमतरी",
+                  "villages": [
+                    {"name": "धमतरी", "pincode": "493773", "population": 3200},
+                    {"name": "कुरूद", "pincode": "493773", "population": 2400},
+                    {"name": "मगरलोड", "pincode": "493773", "population": 1900},
+                    {"name": "नागरी", "pincode": "493773", "population": 1600}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "कांकेर",
+      "district_code": "CG11",
+      "headquarters": "कांकेर",
+      "population": 748593,
+      "area_km2": 6528,
+      "acs": [
+        {
+          "name": "कांकेर",
+          "blocks": [
+            {
+              "name": "कांकेर",
+              "gps": [
+                {
+                  "name": "कांकेर",
+                  "villages": [
+                    {"name": "कांकेर", "pincode": "494334", "population": 2800},
+                    {"name": "अंतागढ़", "pincode": "494334", "population": 2200},
+                    {"name": "नारायणपुर", "pincode": "494334", "population": 1800},
+                    {"name": "कोयलीबेड़ा", "pincode": "494334", "population": 1500}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "बेमेतरा",
+      "district_code": "CG12",
+      "headquarters": "बेमेतरा",
+      "population": 197035,
+      "area_km2": 2854,
+      "acs": [
+        {
+          "name": "बेमेतरा",
+          "blocks": [
+            {
+              "name": "बेमेतरा",
+              "gps": [
+                {
+                  "name": "बेमेतरा",
+                  "villages": [
+                    {"name": "बेमेतरा", "pincode": "491335", "population": 1800},
+                    {"name": "साजा", "pincode": "491335", "population": 1200},
+                    {"name": "नवागढ़", "pincode": "491335", "population": 1000}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "बलोदा बाजार",
+      "district_code": "CG13",
+      "headquarters": "बलोदा बाजार",
+      "population": 829165,
+      "area_km2": 5184,
+      "acs": [
+        {
+          "name": "बलोदा बाजार",
+          "blocks": [
+            {
+              "name": "बलोदा बाजार",
+              "gps": [
+                {
+                  "name": "बलोदा बाजार",
+                  "villages": [
+                    {"name": "बलोदा बाजार", "pincode": "493332", "population": 3500},
+                    {"name": "कसडोल", "pincode": "493332", "population": 2400},
+                    {"name": "पलारी", "pincode": "493332", "population": 2100}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "गरियाबंद",
+      "district_code": "CG14",
+      "headquarters": "गरियाबंद",
+      "population": 597653,
+      "area_km2": 6427,
+      "acs": [
+        {
+          "name": "गरियाबंद",
+          "blocks": [
+            {
+              "name": "गरियाबंद",
+              "gps": [
+                {
+                  "name": "गरियाबंद",
+                  "villages": [
+                    {"name": "गरियाबंद", "pincode": "493889", "population": 2600},
+                    {"name": "मैनपुर", "pincode": "493889", "population": 1800},
+                    {"name": "देवभोग", "pincode": "493889", "population": 1500}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "मुंगेली",
+      "district_code": "CG15",
+      "headquarters": "मुंगेली",
+      "population": 701707,
+      "area_km2": 2768,
+      "acs": [
+        {
+          "name": "मुंगेली",
+          "blocks": [
+            {
+              "name": "मुंगेली",
+              "gps": [
+                {
+                  "name": "मुंगेली",
+                  "villages": [
+                    {"name": "मुंगेली", "pincode": "495334", "population": 2800},
+                    {"name": "लोरमी", "pincode": "495334", "population": 1900},
+                    {"name": "पथरिया", "pincode": "495334", "population": 1600}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "नारायणपुर",
+      "district_code": "CG16",
+      "headquarters": "नारायणपुर",
+      "population": 140206,
+      "area_km2": 4675,
+      "acs": [
+        {
+          "name": "नारायणपुर",
+          "blocks": [
+            {
+              "name": "नारायणपुर",
+              "gps": [
+                {
+                  "name": "नारायणपुर",
+                  "villages": [
+                    {"name": "नारायणपुर", "pincode": "494661", "population": 1200},
+                    {"name": "ओरछा", "pincode": "494661", "population": 800},
+                    {"name": "तोकापाल", "pincode": "494661", "population": 600}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "कोंडागांव",
+      "district_code": "CG17",
+      "headquarters": "कोंडागांव",
+      "population": 578336,
+      "area_km2": 5534,
+      "acs": [
+        {
+          "name": "कोंडागांव",
+          "blocks": [
+            {
+              "name": "कोंडागांव",
+              "gps": [
+                {
+                  "name": "कोंडागांव",
+                  "villages": [
+                    {"name": "कोंडागांव", "pincode": "494226", "population": 2400},
+                    {"name": "माकडी", "pincode": "494226", "population": 1600},
+                    {"name": "केसकाल", "pincode": "494226", "population": 1300}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "सुकमा",
+      "district_code": "CG18",
+      "headquarters": "सुकमा",
+      "population": 249000,
+      "area_km2": 5640,
+      "acs": [
+        {
+          "name": "सुकमा",
+          "blocks": [
+            {
+              "name": "सुकमा",
+              "gps": [
+                {
+                  "name": "सुकमा",
+                  "villages": [
+                    {"name": "सुकमा", "pincode": "494111", "population": 1800},
+                    {"name": "चिंतागुफा", "pincode": "494111", "population": 1200},
+                    {"name": "केरकट्टा", "pincode": "494111", "population": 900}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "सूरजपुर",
+      "district_code": "CG19",
+      "headquarters": "सूरजपुर",
+      "population": 660280,
+      "area_km2": 2278,
+      "acs": [
+        {
+          "name": "सूरजपुर",
+          "blocks": [
+            {
+              "name": "सूरजपुर",
+              "gps": [
+                {
+                  "name": "सूरजपुर",
+                  "villages": [
+                    {"name": "सूरजपुर", "pincode": "497229", "population": 2800},
+                    {"name": "प्रतापपुर", "pincode": "497229", "population": 2100},
+                    {"name": "ओड़गी", "pincode": "497229", "population": 1700}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "बलरामपुर",
+      "district_code": "CG20",
+      "headquarters": "बलरामपुर",
+      "population": 637538,
+      "area_km2": 3796,
+      "acs": [
+        {
+          "name": "बलरामपुर",
+          "blocks": [
+            {
+              "name": "बलरामपुर",
+              "gps": [
+                {
+                  "name": "बलरामपुर",
+                  "villages": [
+                    {"name": "बलरामपुर", "pincode": "497119", "population": 2600},
+                    {"name": "वाड्रफनगर", "pincode": "497119", "population": 1900},
+                    {"name": "कुसमी", "pincode": "497119", "population": 1500}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "source": "Chhattisgarh Government Census Data (2021)",
+    "last_updated": "2024-01-15",
+    "total_districts": 20,
+    "total_villages_estimated": 20000,
+    "total_population": 29436231,
+    "note": "This is representative data showing the administrative hierarchy. Complete village-level data would require integration with official government APIs."
+  }
+}

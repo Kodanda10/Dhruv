@@ -1,0 +1,20 @@
+# Lightweight dependencies for running API unit tests in CI.
+# Use this file instead of requirements.txt to avoid heavy installs (torch, transformers, pymilvus, etc.).
+#
+# Install:
+#   pip install -r api/requirements-test.txt
+#
+# Notes:
+# - Focuses on Flask app tests and pure-Python parsing utilities.
+# - If a specific test requires an extra lib, add it here with a pinned version.
+
+# Web framework (used by the Flask test client in unit tests)
+Flask==3.0.3
+
+# Testing
+pytest==8.2.0
+pytest-mock==3.14.0
+
+# Validation (kept light; used by schema/validation related tests if present)
+marshmallow==3.21.3
+pandas==2.2.2
