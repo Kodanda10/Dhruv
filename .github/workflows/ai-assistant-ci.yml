@@ -1,0 +1,95 @@
+name: AI Assistant CI
+
+on:
+  push:
+    branches: [ main, 'feature/**', 'chore/**', 'fix/**', 'feat/**' ]
+    paths:
+      - 'src/lib/ai-assistant/**'
+      - 'src/app/api/ai-assistant/**'
+      - 'tests/lib/ai-assistant/**'
+      - 'tests/integration/ai-assistant/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/lib/ai-assistant/**'
+      - 'src/app/api/ai-assistant/**'
+      - 'tests/lib/ai-assistant/**'
+      - 'tests/integration/ai-assistant/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  ai-assistant-ci:
+    name: AI Assistant CI Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint Check
+        run: npm run lint -- --quiet --dir src/lib/ai-assistant --dir src/app/api/ai-assistant
+        continue-on-error: true
+
+      - name: TypeScript Check
+        run: npm run typecheck
+
+      - name: Run AI Assistant Tests
+        run: npm test -- tests/lib/ai-assistant/ --ci --reporters=default --reporters=jest-junit
+
+      - name: Coverage Check
+        run: |
+          npm test -- tests/lib/ai-assistant/ --coverage \
+            --coveragePathIgnorePatterns="node_modules|tests|\.test\.|\.spec\." \
+            --collectCoverageFrom="src/lib/ai-assistant/**/*.ts" \
+            --collectCoverageFrom="src/app/api/ai-assistant/**/*.ts" \
+            --coverageReporters=json-summary \
+            --coverageReporters=text
+
+      - name: Verify Coverage Thresholds
+        run: |
+          LINES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.lines.pct);")
+          BRANCHES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.branches.pct);")
+          echo "Lines: ${LINES}%, Branches: ${BRANCHES}%"
+          if (( $(echo "$LINES < 85" | bc -l) )); then
+            echo "❌ Lines coverage ${LINES}% below 85% threshold"
+            exit 1
+          fi
+          if (( $(echo "$BRANCHES < 70" | bc -l) )); then
+            echo "❌ Branches coverage ${BRANCHES}% below 70% threshold"
+            exit 1
+          fi
+          echo "✅ Coverage thresholds met: Lines ${LINES}% ≥ 85%, Branches ${BRANCHES}% ≥ 70%"
+
+      - name: Build Check
+        run: npm run build
+
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: ai-assistant
+          name: ai-assistant-coverage
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-assistant-test-results
+          path: |
+            junit.xml
+            coverage/coverage-summary.json
+

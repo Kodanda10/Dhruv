@@ -120,7 +120,7 @@ describe('Dynamic Learning API with Real Data', () => {
 
       expect(response.status).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid action');
+      expect(result.error).toBe('Invalid action or type');
     });
 
     it('should handle request parsing errors', async () => {
