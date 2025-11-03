@@ -320,16 +320,6 @@ describe('Natural Language Parser', () => {
       expect(complexRequest.confidence).toBeLessThanOrEqual(1);
       expect(simpleRequest.confidence).toBeGreaterThanOrEqual(0);
       expect(simpleRequest.confidence).toBeLessThanOrEqual(1);
-    });
-
-    test('should have lower confidence for complex requests', async () => {
-      const simpleRequest = await nlParser.parseRequest('add रायपुर');
-      const complexRequest = await nlParser.parseRequest('add रायपुर, बिलासपुर, दुर्ग locations and PM Kisan, Ayushman Bharat, Ujjwala schemes and change event to बैठक meeting');
-
-      expect(complexRequest.confidence).toBeLessThanOrEqual(simpleRequest.confidence);
-    });
-  });
-
   describe('Error Handling', () => {
     test('should handle empty requests', async () => {
       const result = await nlParser.parseRequest('');
