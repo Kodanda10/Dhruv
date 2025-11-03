@@ -211,7 +211,8 @@ describe('Natural Language Parser', () => {
       expect(Array.isArray(result.actions)).toBe(true);
       // If multiple actions extracted, check they include expected ones
       if (result.actions.length > 1) {
-        expect(['addLocation', 'addScheme'].some(action => result.actions.includes(action))).toBe(true);
+        const expectedActions: Array<'addLocation' | 'addScheme'> = ['addLocation', 'addScheme'];
+        expect(expectedActions.some(action => result.actions.includes(action))).toBe(true);
       }
     });
 
