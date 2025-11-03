@@ -174,6 +174,7 @@ describe('Natural Language Parser', () => {
       expect(Array.isArray(result.entities.eventTypes)).toBe(true);
       expect(Array.isArray(result.entities.locations)).toBe(true);
       expect(result.entities.eventTypes.some(event => event.text.includes('बैठक'))).toBe(true);
+    });
     test('should extract schemes', async () => {
       const result = await nlParser.parseRequest('add PM Kisan scheme');
 
