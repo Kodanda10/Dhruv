@@ -48,8 +48,8 @@ test.describe('GeoHierarchyMindmap E2E', () => {
     await expect(mindmap).toBeVisible({ timeout: 10000 });
     
     // Check for export buttons
-    const csvButton = page.getByLabelText('Export to CSV');
-    const jsonButton = page.getByLabelText('Export to JSON');
+    const csvButton = page.getByRole('button', { name: /CSV/i });
+    const jsonButton = page.getByRole('button', { name: /JSON/i });
     
     await expect(csvButton).toBeVisible();
     await expect(jsonButton).toBeVisible();
@@ -206,7 +206,7 @@ test.describe('GeoHierarchyMindmap E2E', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
     
     // Click CSV export button
-    const csvButton = page.getByLabelText('Export to CSV');
+    const csvButton = page.getByRole('button', { name: /CSV/i });
     await csvButton.click();
     
     // Wait for download (if it happens)
@@ -225,7 +225,7 @@ test.describe('GeoHierarchyMindmap E2E', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
     
     // Click JSON export button
-    const jsonButton = page.getByLabelText('Export to JSON');
+    const jsonButton = page.getByRole('button', { name: /JSON/i });
     await jsonButton.click();
     
     // Wait for download (if it happens)
