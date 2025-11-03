@@ -1,0 +1,120 @@
+name: Automated Tweet Pipeline
+
+on:
+  schedule:
+    # Run every hour at minute 0 (e.g., 1:00, 2:00, 3:00, etc.)
+    - cron: '0 * * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write  # Required to update parsed_tweets.json
+
+jobs:
+  fetch-and-process-tweets:
+    name: Fetch, Parse, and Update Tweets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # Maximum 30 minutes per run
+    
+    env:
+      # Twitter API credentials
+      X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+      
+      # Database connection
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      # Python path
+      PYTHONPATH: api/src
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better debugging
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+          pip install tweepy psycopg2-binary python-dotenv requests
+      
+      - name: Create logs directory
+        run: mkdir -p logs
+      
+      - name: Check rate limit before fetching
+        id: check_rate_limit
+        run: |
+          echo "Checking Twitter API rate limit status..."
+          python scripts/check_rate_limit_before_fetch.py
+          echo "rate_limit_ok=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true  # Continue even if rate limited
+        timeout-minutes: 2
+      
+      - name: Fetch latest tweets
+        id: fetch_tweets
+        run: |
+          echo "Fetching latest tweets from Twitter API..."
+          python fetch_5_latest_tweets_final.py || echo "Fetch completed with warnings/rate limit"
+        continue-on-error: true  # Continue even if rate limited
+        timeout-minutes: 15  # Allow time for rate limit waits
+      
+      - name: Parse fetched tweets
+        id: parse_tweets
+        run: |
+          echo "Parsing fetched tweets..."
+          python scripts/parse_tweets.py --limit 10 || echo "Parsing completed with warnings"
+        continue-on-error: true
+        timeout-minutes: 5
+      
+      - name: Update parsed_tweets.json
+        id: update_json
+        run: |
+          echo "Updating parsed_tweets.json for dashboard..."
+          python update_parsed_tweets.py || echo "Update completed with warnings"
+        continue-on-error: true
+        timeout-minutes: 2
+      
+      - name: Commit updated parsed_tweets.json
+        if: success() || steps.update_json.outcome != 'failure'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          if [ -n "$(git status --porcelain data/parsed_tweets.json)" ]; then
+            git add data/parsed_tweets.json
+            git commit -m "chore(automation): update parsed_tweets.json from hourly pipeline [skip ci]" || echo "No changes to commit"
+            git push || echo "Failed to push (may be non-critical)"
+          else
+            echo "No changes to parsed_tweets.json"
+          fi
+        continue-on-error: true  # Don't fail workflow if commit fails
+      
+      - name: Upload pipeline logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tweet-pipeline-logs
+          path: |
+            logs/tweet_pipeline.log
+            logs/*.log
+          retention-days: 7
+      
+      - name: Pipeline summary
+        if: always()
+        run: |
+          echo "## Tweet Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Rate Limit Check | ${{ steps.check_rate_limit.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Fetch Tweets | ${{ steps.fetch_tweets.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Parse Tweets | ${{ steps.parse_tweets.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Update JSON | ${{ steps.update_json.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** Pipeline steps use \`continue-on-error: true\` to handle rate limits gracefully." >> $GITHUB_STEP_SUMMARY
+
