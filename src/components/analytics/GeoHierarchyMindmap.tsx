@@ -206,7 +206,7 @@ export default function GeoHierarchyMindmap({
 
   const maxValue = useMemo(() => {
     if (displayData.length === 0) return 1;
-    return Math.max(...displayData.map((node) => node.value));
+    return Math.max(...displayData.map((node: GeoHierarchyNode) => node.value));
   }, [displayData]);
 
   // Handle node click for drilldown
