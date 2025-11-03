@@ -9,6 +9,13 @@ import type {
   GeoAnalyticsSummaryResponse,
   GeoHierarchyExportData,
 } from '@/types/geo-analytics';
+import {
+  getNextLevel,
+  getPreviousLevel,
+  findNodeByPath,
+  calculateColorByIntensity,
+  flattenHierarchy as flattenHierarchyUtil,
+} from '@/utils/geo-hierarchy-utils';
 
 /**
  * GeoHierarchyMindmap Component
@@ -163,46 +170,12 @@ export default function GeoHierarchyMindmap({
       return treemapData;
     }
 
-    // Find the selected node's children by traversing the path
-    const findNodeByPath = (
-      nodes: GeoHierarchyNode[],
-      path: string[],
-      currentIndex: number = 0
-    ): GeoHierarchyNode | null => {
-      if (currentIndex >= path.length) return null;
-
-      const targetName = path[currentIndex];
-      const node = nodes.find((n) => n.name === targetName);
-
-      if (!node) return null;
-
-      if (currentIndex === path.length - 1) {
-        // Found the target node
-        return node;
-      }
-
-      // Continue searching in children
-      if (node.children && node.children.length > 0) {
-        return findNodeByPath(node.children, path, currentIndex + 1);
-      }
-
-      return null;
-    };
-
     const targetNode = findNodeByPath(treemapData, drilldown.selectedPath);
     return targetNode?.children || [];
   }, [drilldown, treemapData]);
 
-  // Calculate color based on event count
-  const getColor = (value: number, maxValue: number): string => {
-    if (maxValue === 0) return '#10B981';
-    const intensity = Math.min(value / maxValue, 1);
-    // Gradient from light green (#D1FAE5) to dark green (#10B981)
-    const r = Math.round(209 - (209 - 16) * intensity);
-    const g = Math.round(250 - (250 - 185) * intensity);
-    const b = Math.round(229 - (229 - 129) * intensity);
-    return `rgb(${r}, ${g}, ${b})`;
-  };
+  // Calculate color based on event count (using utility function)
+  const getColor = calculateColorByIntensity;
 
   const maxValue = useMemo(() => {
     if (displayData.length === 0) return 1;
@@ -221,20 +194,7 @@ export default function GeoHierarchyMindmap({
     }
   };
 
-  // Get next level in hierarchy
-  const getNextLevel = (
-    currentLevel: 'district' | 'assembly' | 'block' | 'village' | 'ulb'
-  ): 'district' | 'assembly' | 'block' | 'village' | 'ulb' => {
-    const levels: ('district' | 'assembly' | 'block' | 'village' | 'ulb')[] = [
-      'district',
-      'assembly',
-      'block',
-      'village',
-      'ulb',
-    ];
-    const currentIndex = levels.indexOf(currentLevel);
-    return levels[Math.min(currentIndex + 1, levels.length - 1)];
-  };
+  // getNextLevel is imported from utils
 
   // Navigate back up hierarchy
   const handleBack = () => {
@@ -279,38 +239,11 @@ export default function GeoHierarchyMindmap({
     }
   };
 
-  // Flatten hierarchy for export
-  const flattenHierarchy = (nodes: GeoHierarchyNode[]): GeoHierarchyExportData[] => {
-    const result: GeoHierarchyExportData[] = [];
-
-    const traverse = (node: GeoHierarchyNode) => {
-      const exportItem: GeoHierarchyExportData = {
-        hierarchy_path: node.path?.join(' → ') || node.name,
-        event_count: node.value,
-        location_type: node.level || 'district',
-        district: node.district || '',
-        assembly: node.assembly,
-        block: node.block,
-        village: node.village,
-        ulb: node.ulb,
-        is_urban: node.is_urban,
-      };
-      result.push(exportItem);
-
-      if (node.children) {
-        node.children.forEach(traverse);
-      }
-    };
-
-    nodes.forEach(traverse);
-    return result;
-  };
-
   // Export to CSV
   const handleExportCSV = () => {
     if (!data) return;
 
-    const exportData = flattenHierarchy(treemapData);
+    const exportData = flattenHierarchyUtil(treemapData);
     const headers = [
       'Hierarchy Path',
       'Event Count',
@@ -356,7 +289,7 @@ export default function GeoHierarchyMindmap({
   const handleExportJSON = () => {
     if (!data) return;
 
-    const exportData = flattenHierarchy(treemapData);
+    const exportData = flattenHierarchyUtil(treemapData);
     const jsonContent = JSON.stringify(
       {
         exported_at: new Date().toISOString(),
@@ -378,20 +311,7 @@ export default function GeoHierarchyMindmap({
     document.body.removeChild(link);
   };
 
-  // Get previous level
-  const getPreviousLevel = (
-    currentLevel: 'district' | 'assembly' | 'block' | 'village' | 'ulb'
-  ): 'district' | 'assembly' | 'block' | 'village' | 'ulb' => {
-    const levels: ('district' | 'assembly' | 'block' | 'village' | 'ulb')[] = [
-      'district',
-      'assembly',
-      'block',
-      'village',
-      'ulb',
-    ];
-    const currentIndex = levels.indexOf(currentLevel);
-    return levels[Math.max(currentIndex - 1, 0)];
-  };
+  // getPreviousLevel is imported from utils
 
   // Custom cell renderer with event count badge
   const renderCell = (entry: any) => {

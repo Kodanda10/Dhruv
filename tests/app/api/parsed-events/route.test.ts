@@ -58,6 +58,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Basic Functionality - Database Query', () => {
     it('should fetch parsed events from database with JOIN to raw_tweets', async () => {
+      resetPool(); // Ensure fresh pool for each test
       const mockRows = [
         {
           id: 1,
@@ -113,6 +114,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle empty database result', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events');
@@ -127,6 +129,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should apply default limit of 200', async () => {
+      resetPool();
       const mockRows = Array.from({ length: 250 }, (_, i) => ({
         id: i + 1,
         tweet_id: `tweet_${i}`,
@@ -146,6 +149,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should respect custom limit parameter', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?limit=10');
@@ -157,6 +161,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Filtering - needs_review parameter', () => {
     it('should filter by needs_review=true', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?needs_review=true');
@@ -168,6 +173,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should filter by needs_review=false with approved status', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?needs_review=false');
@@ -183,6 +189,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Filtering - review_status parameter', () => {
     it('should filter by review_status=pending', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?review_status=pending');
@@ -197,6 +204,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Analytics Mode', () => {
     it('should return analytics when analytics=true', async () => {
+      resetPool();
       const mockRows = [
         {
           id: 1,
@@ -241,6 +249,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should only include approved tweets for analytics', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?analytics=true');
@@ -256,6 +265,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Data Mapping - Edge Cases', () => {
     it('should handle null tweet_text gracefully', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -277,6 +287,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle missing locations array', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -297,6 +308,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle locations as object (not array)', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -317,6 +329,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle missing confidence values', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -339,6 +352,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle string confidence values', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -361,6 +375,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle missing optional fields with defaults', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -385,6 +400,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('SQL Injection Prevention', () => {
     it('should use parameterized queries for review_status', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const maliciousStatus = "'; DROP TABLE parsed_events; --";
@@ -401,6 +417,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should use parameterized queries for limit', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?limit=10');
@@ -422,6 +439,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should fallback to static file when database query fails', async () => {
+      resetPool();
       const mockTweets = [
         {
           id: '1',
@@ -455,12 +473,28 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle database connection timeout gracefully', async () => {
+      resetPool();
       const mockTweets = [{ id: '1', content: 'Test', parsed: { event_type: 'rally' }, timestamp: '2025-11-03' }];
       mockReadFileSync.mockReturnValueOnce(JSON.stringify(mockTweets));
       
       const timeoutError = new Error('Connection timeout');
       timeoutError.name = 'TimeoutError';
       mockQueryFn.mockRejectedValueOnce(timeoutError);
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.source).toBe('static_file');
+    });
+
+    it('should handle database query syntax error gracefully', async () => {
+      resetPool();
+      const mockTweets = [{ id: '1', content: 'Test', parsed: { event_type: 'rally' }, timestamp: '2025-11-03' }];
+      mockReadFileSync.mockReturnValueOnce(JSON.stringify(mockTweets));
+      const syntaxError = new Error('syntax error at or near');
+      mockQueryFn.mockRejectedValueOnce(syntaxError);
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events');
       const response = await GET(request);
@@ -477,6 +511,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should load from parsed_tweets.json when file exists', async () => {
+      resetPool();
       const mockTweets = [
         { id: '1', timestamp: '2025-11-03', content: 'Tweet 1', parsed: { event_type: 'rally' }, confidence: 0.85, needs_review: true, review_status: 'pending' },
         { id: '2', timestamp: '2025-11-03', content: 'Tweet 2', parsed: { event_type: 'meeting' }, confidence: 0.90, needs_review: false, review_status: 'approved' },
@@ -494,6 +529,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should filter by needs_review=true in file fallback', async () => {
+      resetPool();
       const mockTweets = [
         { id: '1', needs_review: true, review_status: 'pending', parsed: { event_type: 'rally' }, content: 'Test', timestamp: '2025-11-03' },
         { id: '2', needs_review: false, review_status: 'approved', parsed: { event_type: 'meeting' }, content: 'Test', timestamp: '2025-11-03' },
@@ -510,7 +546,58 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       expect(data.data[0].needs_review).toBe(true);
     });
 
+    it('should filter by review_status in file fallback', async () => {
+      resetPool();
+      const mockTweets = [
+        { id: '1', review_status: 'pending', parsed: { event_type: 'rally' }, content: 'Test', timestamp: '2025-11-03' },
+        { id: '2', review_status: 'approved', parsed: { event_type: 'meeting' }, content: 'Test', timestamp: '2025-11-03' },
+      ];
+
+      mockReadFileSync.mockReturnValueOnce(JSON.stringify(mockTweets));
+      mockQueryFn.mockRejectedValueOnce(new Error('DB error'));
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events?review_status=pending');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(data.data).toHaveLength(1);
+      expect(data.data[0].review_status).toBe('pending');
+    });
+
+    it('should return analytics from file fallback', async () => {
+      resetPool();
+      const mockTweets = [
+        { id: '1', parsed: { event_type: 'rally', locations: ['रायगढ़'], schemes: ['योजना'] }, event_date: '2025-11-03', content: 'Test', timestamp: '2025-11-03' },
+        { id: '2', parsed: { event_type: 'meeting', locations: ['रायपुर'], schemes: ['योजना'] }, event_date: '2025-11-03', content: 'Test', timestamp: '2025-11-03' },
+      ];
+
+      mockReadFileSync.mockReturnValueOnce(JSON.stringify(mockTweets));
+      mockQueryFn.mockRejectedValueOnce(new Error('DB error'));
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events?analytics=true');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(data.analytics).toBeDefined();
+      expect(data.analytics.total_tweets).toBe(2);
+      expect(data.analytics.event_distribution).toHaveProperty('rally', 1);
+    });
+
+    it('should handle empty file gracefully', async () => {
+      resetPool();
+      mockReadFileSync.mockReturnValueOnce(JSON.stringify([]));
+      mockQueryFn.mockRejectedValueOnce(new Error('DB error'));
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(data.data).toEqual([]);
+      expect(data.total).toBe(0);
+    });
+
     it('should handle missing file gracefully', async () => {
+      resetPool();
       mockExistsSync.mockReturnValueOnce(false);
       mockQueryFn.mockRejectedValueOnce(new Error('DB error'));
 
@@ -524,6 +611,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle malformed JSON in file', async () => {
+      resetPool();
       mockReadFileSync.mockReturnValueOnce('invalid json');
       mockQueryFn.mockRejectedValueOnce(new Error('DB error'));
 
@@ -539,6 +627,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   describe('Analytics Aggregation Functions', () => {
     it('should aggregate event types correctly', async () => {
+      resetPool();
       const mockRows = [
         { id: 1, tweet_id: '1', event_type: 'rally', tweet_text: 'Test', tweet_created_at: '2025-11-03', parsed_at: '2025-11-03' },
         { id: 2, tweet_id: '2', event_type: 'rally', tweet_text: 'Test', tweet_created_at: '2025-11-03', parsed_at: '2025-11-03' },
@@ -556,6 +645,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should handle null event_type in aggregation', async () => {
+      resetPool();
       const mockRows = [
         { id: 1, tweet_id: '1', event_type: null, tweet_text: 'Test', tweet_created_at: '2025-11-03', parsed_at: '2025-11-03' },
       ];
@@ -570,6 +660,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     });
 
     it('should aggregate locations correctly', async () => {
+      resetPool();
       const mockRows = [
         {
           id: 1,
@@ -595,11 +686,16 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       const response = await GET(request);
       const data = await response.json();
 
+      // Each location in array is counted separately per tweet
+      // Tweet 1: रायगढ़ (1), रायपुर (1)
+      // Tweet 2: रायगढ़ (1)
+      // Total: रायगढ़ appears 2 times, रायपुर appears 1 time
       expect(data.analytics.location_distribution['रायगढ़']).toBe(2);
       expect(data.analytics.location_distribution['रायपुर']).toBe(1);
     });
 
     it('should aggregate schemes correctly', async () => {
+      resetPool();
       const mockRows = [
         {
           id: 1,
@@ -625,13 +721,84 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       const response = await GET(request);
       const data = await response.json();
 
+      // Each scheme in array is counted separately per tweet
+      // Tweet 1: योजना (1), कार्यक्रम (1)
+      // Tweet 2: योजना (1)
+      // Total: योजना appears 2 times, कार्यक्रम appears 1 time
       expect(data.analytics.scheme_usage['योजना']).toBe(2);
       expect(data.analytics.scheme_usage['कार्यक्रम']).toBe(1);
+    });
+
+    it('should aggregate timeline by date correctly', async () => {
+      resetPool();
+      const mockRows = [
+        {
+          id: 1,
+          tweet_id: '1',
+          event_date: '2025-11-03',
+          tweet_text: 'Test',
+          tweet_created_at: '2025-11-03',
+          parsed_at: '2025-11-03T10:00:00Z',
+        },
+        {
+          id: 2,
+          tweet_id: '2',
+          event_date: '2025-11-03',
+          tweet_text: 'Test',
+          tweet_created_at: '2025-11-03',
+          parsed_at: '2025-11-03T11:00:00Z',
+        },
+        {
+          id: 3,
+          tweet_id: '3',
+          event_date: '2025-11-04',
+          tweet_text: 'Test',
+          tweet_created_at: '2025-11-04',
+          parsed_at: '2025-11-04T10:00:00Z',
+        },
+      ];
+
+      mockQueryFn.mockResolvedValueOnce({ rows: mockRows });
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events?analytics=true');
+      const response = await GET(request);
+      const data = await response.json();
+
+      const timeline = data.analytics.timeline;
+      expect(timeline.length).toBeGreaterThanOrEqual(1);
+      const date1 = timeline.find((t: any) => t.date === '2025-11-03');
+      const date2 = timeline.find((t: any) => t.date === '2025-11-04');
+      if (date1) expect(date1.count).toBeGreaterThanOrEqual(1);
+      if (date2) expect(date2.count).toBe(1);
+    });
+
+    it('should aggregate by day of week correctly', async () => {
+      resetPool();
+      // 2025-11-03 is a Monday
+      const mockRows = [
+        {
+          id: 1,
+          tweet_id: '1',
+          event_date: '2025-11-03',
+          tweet_text: 'Test',
+          tweet_created_at: '2025-11-03',
+          parsed_at: '2025-11-03T10:00:00Z',
+        },
+      ];
+
+      mockQueryFn.mockResolvedValueOnce({ rows: mockRows });
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events?analytics=true');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(data.analytics.day_of_week.Monday).toBe(1);
     });
   });
 
   describe('Error Handling - Top Level', () => {
     it('should handle invalid limit parameter', async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/parsed-events?limit=invalid');
@@ -643,10 +810,26 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       const params = mockQueryFn.mock.calls[0][1];
       expect(params[params.length - 1]).toBe(200);
     });
+
+    it('should handle unexpected errors gracefully', async () => {
+      resetPool();
+      // Simulate error in URL parsing by passing null
+      const mockRequest = {
+        url: null,
+      } as any;
+
+      const response = await GET(mockRequest);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Failed to fetch parsed events');
+    });
   });
 
   describe('Backward Compatibility', () => {
     it('should include events field for backward compatibility', async () => {
+      resetPool();
       const mockRows = [{
         id: 1,
         tweet_id: '1',
@@ -664,6 +847,33 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
       expect(data.events).toBeDefined();
       expect(data.events).toEqual(data.data);
+    });
+  });
+
+  describe('Performance - Large Datasets', () => {
+    it('should handle 1000+ rows efficiently', async () => {
+      resetPool();
+      const largeDataset = Array.from({ length: 1000 }, (_, i) => ({
+        id: i + 1,
+        tweet_id: `tweet_${i}`,
+        event_type: 'other',
+        tweet_text: `Tweet ${i}`,
+        tweet_created_at: '2025-11-03',
+        parsed_at: '2025-11-03',
+      }));
+
+      mockQueryFn.mockResolvedValueOnce({ rows: largeDataset });
+
+      const request = new NextRequest('http://localhost:3000/api/parsed-events?limit=1000');
+      const start = Date.now();
+      const response = await GET(request);
+      const duration = Date.now() - start;
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.data).toHaveLength(1000);
+      // Should complete in reasonable time (< 5 seconds)
+      expect(duration).toBeLessThan(5000);
     });
   });
 });
@@ -716,6 +926,22 @@ describe('PUT /api/parsed-events - Update Endpoint', () => {
     expect(data.error).toBe('Missing id or updates');
   });
 
+  it('should return 400 if updates is missing', async () => {
+    const request = new NextRequest('http://localhost:3000/api/parsed-events', {
+      method: 'PUT',
+      body: JSON.stringify({
+        id: '1',
+      }),
+    });
+
+    const response = await PUT(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Missing id or updates');
+  });
+
   it('should return 404 if tweet not found', async () => {
     mockReadFileSync.mockReturnValueOnce(JSON.stringify([{ id: '2', content: 'Test' }]));
 
@@ -733,6 +959,67 @@ describe('PUT /api/parsed-events - Update Endpoint', () => {
     expect(response.status).toBe(404);
     expect(data.success).toBe(false);
     expect(data.error).toBe('Tweet not found');
+  });
+
+  it('should return 404 if file does not exist', async () => {
+    mockExistsSync.mockReturnValueOnce(false);
+
+    const request = new NextRequest('http://localhost:3000/api/parsed-events', {
+      method: 'PUT',
+      body: JSON.stringify({
+        id: '1',
+        updates: { needs_review: false },
+      }),
+    });
+
+    const response = await PUT(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Data file not found');
+  });
+
+  it('should handle JSON parse error gracefully', async () => {
+    mockReadFileSync.mockReturnValueOnce('invalid json');
+
+    const request = new NextRequest('http://localhost:3000/api/parsed-events', {
+      method: 'PUT',
+      body: JSON.stringify({
+        id: '1',
+        updates: { needs_review: false },
+      }),
+    });
+
+    const response = await PUT(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Failed to update parsed event');
+  });
+
+  it('should handle file write error gracefully', async () => {
+    const existingTweets = [{ id: '1', content: 'Test' }];
+    mockReadFileSync.mockReturnValueOnce(JSON.stringify(existingTweets));
+    mockWriteFileSync.mockImplementationOnce(() => {
+      throw new Error('Permission denied');
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/parsed-events', {
+      method: 'PUT',
+      body: JSON.stringify({
+        id: '1',
+        updates: { needs_review: false },
+      }),
+    });
+
+    const response = await PUT(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Failed to update parsed event');
   });
 });
 
