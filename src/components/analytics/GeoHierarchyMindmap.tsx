@@ -107,7 +107,7 @@ export default function GeoHierarchyMindmap({
     });
 
     // Process assemblies (second level)
-    data.by_assembly.forEach((assembly) => {
+    data.by_assembly.forEach((assembly: { district: string; assembly: string; event_count: number }) => {
       const districtNode = hierarchyMap.get(assembly.district);
       if (districtNode) {
         const assemblyNode: GeoHierarchyNode = {
@@ -127,7 +127,7 @@ export default function GeoHierarchyMindmap({
     });
 
     // Process blocks (third level)
-    data.by_block.forEach((block) => {
+    data.by_block.forEach((block: { district: string; assembly: string; block: string; event_count: number }) => {
       const districtNode = hierarchyMap.get(block.district);
       if (districtNode && districtNode.children) {
         const assemblyNode = districtNode.children.find(
@@ -589,7 +589,7 @@ export default function GeoHierarchyMindmap({
                 >
                   Root
                 </button>
-                {drilldown.selectedPath.map((item, index) => (
+                {drilldown.selectedPath.map((item: string, index: number) => (
                   <React.Fragment key={index}>
                     <span className="text-gray-500">→</span>
                     <button
