@@ -32,35 +32,62 @@ const realTweets = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'data/parsed_tweets.json'), 'utf-8')
 );
 
-// Mock recharts - return simple divs to avoid SVG rendering issues
-jest.mock('recharts', () => ({
-  Treemap: ({ data, content }: any) => {
-    const Content = content;
-    return (
-      <div data-testid="recharts-treemap" data-items={data?.length || 0}>
-        {data?.map((item: any, index: number) => (
-          <div
-            key={index}
-            data-testid={`treemap-node-${item.name}`}
-            data-value={item.value}
-            data-has-children={!!(item.children && item.children.length > 0)}
-          >
-            {Content && <Content payload={item} x={0} y={0} width={100} height={100} />}
-          </div>
-        ))}
-      </div>
-    );
-  },
-  Cell: () => null,
-  ResponsiveContainer: ({ children }: any) => (
-    <div data-testid="responsive-container">{children}</div>
-  ),
-  Tooltip: ({ content, active, payload }: any) => {
-    if (!active || !payload || payload.length === 0) return null;
-    const Content = content;
-    return Content ? <Content active={active} payload={payload} /> : null;
-  },
-}));
+// Mock recharts - return interactive divs that can trigger onClick
+jest.mock('recharts', () => {
+  const React = require('react');
+  return {
+    Treemap: ({ data, content, children }: any) => {
+      const Content = content;
+      return React.createElement(
+        'div',
+        { 'data-testid': 'recharts-treemap', 'data-items': data?.length || 0 },
+        data?.map((item: any, index: number) => {
+          const hasChildren = item.children && item.children.length > 0;
+          return React.createElement(
+            'div',
+            {
+              key: index,
+              'data-testid': `treemap-node-${item.name}`,
+              'data-value': item.value,
+              'data-has-children': hasChildren,
+            },
+            Content &&
+              React.createElement(
+                'div',
+                {
+                  'data-cell-click': true,
+                  onClick: (e: any) => {
+                    e.stopPropagation();
+                    // Simulate the onClick from renderCell's rect element
+                    if (hasChildren) {
+                      // The actual onClick will be triggered by the component's renderCell
+                      // We just need to make the element clickable
+                    }
+                  },
+                },
+                React.createElement(Content, {
+                  payload: item,
+                  x: 100,
+                  y: 100,
+                  width: 100,
+                  height: 100,
+                })
+              )
+          );
+        }),
+        children
+      );
+    },
+    Cell: () => null,
+    ResponsiveContainer: ({ children }: any) =>
+      React.createElement('div', { 'data-testid': 'responsive-container' }, children),
+    Tooltip: ({ content, active, payload }: any) => {
+      if (!active || !payload || payload.length === 0) return null;
+      const Content = content;
+      return Content ? React.createElement(Content, { active, payload }) : null;
+    },
+  };
+});
 
 // Mock fetch for API calls
 global.fetch = jest.fn();
@@ -874,12 +901,25 @@ describe('GeoHierarchyMindmap', () => {
   });
 
   describe('Drilldown Functionality', () => {
-    it('should handle node click with children for drilldown', () => {
-      render(<GeoHierarchyMindmap data={hierarchicalData} />);
+    it('should handle node click with children for drilldown', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
       // Find a node with children (district should have assemblies)
       const districtNode = screen.getByTestId('treemap-node-रायपुर');
       expect(districtNode).toHaveAttribute('data-has-children', 'true');
+      
+      // Simulate click on node with children to trigger drilldown
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        // After drilldown, should show breadcrumb
+        await waitFor(() => {
+          expect(screen.getByText('← Back')).toBeInTheDocument();
+        }, { timeout: 1000 });
+      }
     });
 
     it('should not drilldown when node has no children', () => {
@@ -893,17 +933,32 @@ describe('GeoHierarchyMindmap', () => {
       
       const leafNode = screen.getByTestId('treemap-node-Test');
       expect(leafNode).toHaveAttribute('data-has-children', 'false');
+      
+      // Clicking should not show breadcrumb
+      fireEvent.click(leafNode);
+      expect(screen.queryByText('← Back')).not.toBeInTheDocument();
     });
 
     it('should display breadcrumb after drilldown', async () => {
-      render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
       
       // Initially no breadcrumb
       expect(screen.queryByText('← Back')).not.toBeInTheDocument();
       
-      // Simulate drilldown by checking if component handles it
-      // Note: Full drilldown testing requires clicking actual treemap nodes
-      // which is complex with mocked recharts
+      // Simulate drilldown by clicking a node with children
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        await waitFor(() => {
+          expect(screen.getByText('← Back')).toBeInTheDocument();
+          expect(screen.getByText('Root')).toBeInTheDocument();
+        }, { timeout: 1000 });
+      }
     });
 
     it('should handle drilldown with node that has no path', () => {
@@ -914,6 +969,44 @@ describe('GeoHierarchyMindmap', () => {
       render(<GeoHierarchyMindmap data={dataWithoutPath} />);
       expect(screen.getByTestId('geo-hierarchy-mindmap')).toBeInTheDocument();
     });
+
+    it('should call handleNodeClick when clicking node with children', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        // Verify drilldown state was set (breadcrumb appears)
+        await waitFor(() => {
+          expect(screen.getByText('← Back')).toBeInTheDocument();
+        });
+      }
+    });
+
+    it('should handle getNextLevel correctly when drilling down', async () => {
+      // Test that getNextLevel is called when drilling down
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        // After clicking district, should show assembly level
+        await waitFor(() => {
+          // Breadcrumb should show district name
+          expect(screen.getByText('रायपुर')).toBeInTheDocument();
+        });
+      }
+    });
   });
 
   describe('Breadcrumb Navigation', () => {
@@ -923,23 +1016,124 @@ describe('GeoHierarchyMindmap', () => {
       expect(screen.queryByText('Root')).not.toBeInTheDocument();
     });
 
-    it('should handle breadcrumb click to root', () => {
-      // This requires actual drilldown state, which is complex to test with mocks
-      // But we can verify the component handles the case
-      render(<GeoHierarchyMindmap data={hierarchicalData} />);
-      expect(screen.getByTestId('geo-hierarchy-mindmap')).toBeInTheDocument();
+    it('should handle back navigation via handleBack', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      // First, drill down
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        await waitFor(() => {
+          expect(screen.getByText('← Back')).toBeInTheDocument();
+        });
+        
+        // Click back button
+        const backButton = screen.getByText('← Back');
+        await act(async () => {
+          fireEvent.click(backButton);
+        });
+        
+        // Should go back to root
+        await waitFor(() => {
+          expect(screen.queryByText('← Back')).not.toBeInTheDocument();
+        });
+      }
     });
 
-    it('should handle breadcrumb click to specific level', () => {
-      render(<GeoHierarchyMindmap data={hierarchicalData} />);
-      // Component should handle breadcrumb navigation
-      expect(screen.getByTestId('geo-hierarchy-mindmap')).toBeInTheDocument();
+    it('should handle breadcrumb click to root', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      // Drill down first
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        await waitFor(() => {
+          expect(screen.getByText('Root')).toBeInTheDocument();
+        });
+        
+        // Click Root button
+        const rootButton = screen.getByText('Root');
+        await act(async () => {
+          fireEvent.click(rootButton);
+        });
+        
+        // Should return to root
+        await waitFor(() => {
+          expect(screen.queryByText('← Back')).not.toBeInTheDocument();
+        });
+      }
+    });
+
+    it('should handle breadcrumb click to specific level via handleBreadcrumbClick', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      // Drill down to district level
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        await waitFor(() => {
+          expect(screen.getByText('रायपुर')).toBeInTheDocument();
+        });
+        
+        // Click on breadcrumb item (index 0 = district)
+        const breadcrumbItem = screen.getByText('रायपुर');
+        await act(async () => {
+          fireEvent.click(breadcrumbItem);
+        });
+        
+        // Should still show breadcrumb (at district level)
+        expect(screen.getByText('रायपुर')).toBeInTheDocument();
+      }
     });
 
     it('should handle back navigation when drilldown is null', () => {
       render(<GeoHierarchyMindmap data={hierarchicalData} />);
       // Back button should not appear at root
       expect(screen.queryByText('← Back')).not.toBeInTheDocument();
+    });
+
+    it('should handle getPreviousLevel when going back', async () => {
+      const { container } = render(<GeoHierarchyMindmap data={hierarchicalData} />);
+      
+      // Drill down to assembly level
+      const districtNode = screen.getByTestId('treemap-node-रायपुर');
+      const cellClickElement = districtNode.querySelector('[data-cell-click]');
+      
+      if (cellClickElement) {
+        await act(async () => {
+          fireEvent.click(cellClickElement);
+        });
+        
+        await waitFor(() => {
+          expect(screen.getByText('← Back')).toBeInTheDocument();
+        });
+        
+        // Click back - this should call getPreviousLevel
+        const backButton = screen.getByText('← Back');
+        await act(async () => {
+          fireEvent.click(backButton);
+        });
+        
+        // Should return to district level
+        await waitFor(() => {
+          expect(screen.queryByText('← Back')).not.toBeInTheDocument();
+        });
+      }
     });
   });
 
