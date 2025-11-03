@@ -133,8 +133,17 @@ const createMockGeoAnalyticsData = (tweets: any[]): GeoAnalyticsSummaryResponse[
       district,
       event_count: count,
     })),
-    by_assembly: Array.from(assemblies.values()),
-    by_block: Array.from(blocks.values()),
+    by_assembly: Array.from(assemblies.values()).map(item => ({
+      district: item.district,
+      assembly: item.assembly,
+      event_count: item.count,
+    })),
+    by_block: Array.from(blocks.values()).map(item => ({
+      district: item.district,
+      assembly: item.assembly,
+      block: item.block,
+      event_count: item.count,
+    })),
     urban_rural: { urban: 0, rural: 0 },
     top_locations: [],
     filters: { start_date: null, end_date: null, event_type: null },
@@ -308,7 +317,7 @@ describe('GeoHierarchyMindmap', () => {
 
   describe('Empty State', () => {
     it('should show empty state when no data', () => {
-      render(<GeoHierarchyMindmap data={null} />);
+      render(<GeoHierarchyMindmap data={undefined} />);
       expect(screen.getByText('कोई डेटा उपलब्ध नहीं है')).toBeInTheDocument();
     });
 
@@ -548,7 +557,7 @@ describe('GeoHierarchyMindmap', () => {
     });
 
     it('should not export when no data', () => {
-      render(<GeoHierarchyMindmap data={null} />);
+      render(<GeoHierarchyMindmap data={undefined} />);
       expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
     });
 

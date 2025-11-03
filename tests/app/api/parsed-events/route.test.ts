@@ -14,27 +14,19 @@
 
 import { NextRequest } from 'next/server';
 
-// Mock pg module - MUST be before route import
-// This uses the __mocks__ directory pattern
-jest.mock('pg');
-
-// Mock pg module properly
+// Mock pg module BEFORE any imports that use it
 const mockQueryFn = jest.fn();
-const mockEndFn = jest.fn();
 
 jest.mock('pg', () => {
   return {
     Pool: jest.fn().mockImplementation(() => ({
       query: mockQueryFn,
-      end: mockEndFn,
+      end: jest.fn(),
     })),
   };
 });
 
-// Import route AFTER mocks are set up
-const { GET, PUT, resetPool } = require('@/app/api/parsed-events/route');
-
-// Mock fs with explicit functions
+// Mock fs
 const mockExistsSync = jest.fn();
 const mockReadFileSync = jest.fn();
 const mockWriteFileSync = jest.fn();
@@ -50,12 +42,15 @@ jest.mock('path', () => ({
   join: (...args: string[]) => args.join('/'),
 }));
 
+// Now import the route AFTER all mocks are set up
+const routeModule = require('@/app/api/parsed-events/route');
+const { GET, PUT, resetPool } = routeModule;
+
 describe('GET /api/parsed-events - Database Primary Source', () => {
   beforeEach(() => {
-    resetPool(); // Reset pool instance
+    resetPool(); // Reset pool instance to force re-initialization
     jest.clearAllMocks();
     mockQueryFn.mockClear();
-    mockEndFn.mockClear();
     mockExistsSync.mockReturnValue(false);
     mockReadFileSync.mockClear();
     mockWriteFileSync.mockClear();
@@ -167,7 +162,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       const request = new NextRequest('http://localhost:3000/api/parsed-events?needs_review=true');
       await GET(request);
 
-      const query = mockQuery.mock.calls[0][0];
+      const query = mockQueryFn.mock.calls[0][0];
       expect(query).toContain('pe.needs_review = true');
       expect(query).not.toContain('$1'); // No parameter needed for boolean
     });
@@ -764,6 +759,7 @@ describe('Comprehensive Scenario Testing - 100+ Combinations', () => {
   // Test first 50 scenarios to avoid timeout
   scenarios.slice(0, 50).forEach((scenario, index) => {
     it(`should handle scenario ${index + 1}: limit=${scenario.limit}, needsReview=${scenario.needsReview}, reviewStatus=${scenario.reviewStatus}, analytics=${scenario.analytics}`, async () => {
+      resetPool();
       mockQueryFn.mockResolvedValueOnce({ rows: [] });
 
       const params = new URLSearchParams();
@@ -782,4 +778,3 @@ describe('Comprehensive Scenario Testing - 100+ Combinations', () => {
     });
   });
 });
-
