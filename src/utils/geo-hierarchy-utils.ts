@@ -3,7 +3,7 @@
  * Extracted for testability and reusability
  */
 
-import type { GeoHierarchyNode } from '@/types/geo-analytics';
+import type { GeoHierarchyNode, GeoHierarchyExportData } from '@/types/geo-analytics';
 
 /**
  * Get next level in hierarchy after current level
@@ -78,5 +78,34 @@ export const calculateColorByIntensity = (value: number, maxValue: number): stri
   const g = Math.round(250 - (250 - 185) * intensity);
   const b = Math.round(229 - (229 - 129) * intensity);
   return `rgb(${r}, ${g}, ${b})`;
+};
+
+/**
+ * Flatten hierarchical node structure into flat export data
+ */
+export const flattenHierarchy = (nodes: GeoHierarchyNode[]): GeoHierarchyExportData[] => {
+  const result: GeoHierarchyExportData[] = [];
+
+  const traverse = (node: GeoHierarchyNode) => {
+    const exportItem: GeoHierarchyExportData = {
+      hierarchy_path: node.path?.join(' → ') || node.name,
+      event_count: node.value,
+      location_type: (node.level || 'district') as GeoHierarchyExportData['location_type'],
+      district: node.district || '',
+      assembly: node.assembly,
+      block: node.block,
+      village: node.village,
+      ulb: node.ulb,
+      is_urban: node.is_urban,
+    };
+    result.push(exportItem);
+
+    if (node.children) {
+      node.children.forEach(traverse);
+    }
+  };
+
+  nodes.forEach(traverse);
+  return result;
 };
 

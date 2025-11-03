@@ -14,6 +14,7 @@ import {
   getPreviousLevel,
   findNodeByPath,
   calculateColorByIntensity,
+  flattenHierarchy as flattenHierarchyUtil,
 } from '@/utils/geo-hierarchy-utils';
 
 /**
@@ -238,38 +239,11 @@ export default function GeoHierarchyMindmap({
     }
   };
 
-  // Flatten hierarchy for export
-  const flattenHierarchy = (nodes: GeoHierarchyNode[]): GeoHierarchyExportData[] => {
-    const result: GeoHierarchyExportData[] = [];
-
-    const traverse = (node: GeoHierarchyNode) => {
-      const exportItem: GeoHierarchyExportData = {
-        hierarchy_path: node.path?.join(' → ') || node.name,
-        event_count: node.value,
-        location_type: node.level || 'district',
-        district: node.district || '',
-        assembly: node.assembly,
-        block: node.block,
-        village: node.village,
-        ulb: node.ulb,
-        is_urban: node.is_urban,
-      };
-      result.push(exportItem);
-
-      if (node.children) {
-        node.children.forEach(traverse);
-      }
-    };
-
-    nodes.forEach(traverse);
-    return result;
-  };
-
   // Export to CSV
   const handleExportCSV = () => {
     if (!data) return;
 
-    const exportData = flattenHierarchy(treemapData);
+    const exportData = flattenHierarchyUtil(treemapData);
     const headers = [
       'Hierarchy Path',
       'Event Count',
@@ -315,7 +289,7 @@ export default function GeoHierarchyMindmap({
   const handleExportJSON = () => {
     if (!data) return;
 
-    const exportData = flattenHierarchy(treemapData);
+    const exportData = flattenHierarchyUtil(treemapData);
     const jsonContent = JSON.stringify(
       {
         exported_at: new Date().toISOString(),

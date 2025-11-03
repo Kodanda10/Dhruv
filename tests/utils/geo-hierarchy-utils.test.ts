@@ -8,6 +8,7 @@ import {
   getPreviousLevel,
   findNodeByPath,
   calculateColorByIntensity,
+  flattenHierarchy,
 } from '@/utils/geo-hierarchy-utils';
 import type { GeoHierarchyNode } from '@/types/geo-analytics';
 
@@ -223,6 +224,267 @@ describe('geo-hierarchy-utils', () => {
     it('should handle zero value with non-zero maxValue', () => {
       const color = calculateColorByIntensity(0, 100);
       expect(color).toBe('rgb(209, 250, 229)'); // Minimum intensity (light green)
+    });
+  });
+
+  describe('flattenHierarchy', () => {
+    const mockHierarchy: GeoHierarchyNode[] = [
+      {
+        name: 'रायपुर',
+        value: 5,
+        level: 'district',
+        district: 'रायपुर',
+        path: ['रायपुर'],
+        children: [
+          {
+            name: 'रायपुर शहर',
+            value: 3,
+            level: 'assembly',
+            district: 'रायपुर',
+            assembly: 'रायपुर शहर',
+            path: ['रायपुर', 'रायपुर शहर'],
+            children: [
+              {
+                name: 'रायपुर ब्लॉक',
+                value: 2,
+                level: 'block',
+                district: 'रायपुर',
+                assembly: 'रायपुर शहर',
+                block: 'रायपुर ब्लॉक',
+                path: ['रायपुर', 'रायपुर शहर', 'रायपुर ब्लॉक'],
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: 'बिलासपुर',
+        value: 5,
+        level: 'district',
+        district: 'बिलासपुर',
+        path: ['बिलासपुर'],
+        children: [],
+      },
+    ];
+
+    it('should flatten simple hierarchy with one level', () => {
+      const simpleHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'रायपुर',
+          value: 5,
+          level: 'district',
+          district: 'रायपुर',
+          path: ['रायपुर'],
+          children: [],
+        },
+      ];
+
+      const result = flattenHierarchy(simpleHierarchy);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        hierarchy_path: 'रायपुर',
+        event_count: 5,
+        location_type: 'district',
+        district: 'रायपुर',
+        assembly: undefined,
+        block: undefined,
+        village: undefined,
+        ulb: undefined,
+        is_urban: undefined,
+      });
+    });
+
+    it('should flatten nested hierarchy with multiple levels', () => {
+      const result = flattenHierarchy(mockHierarchy);
+      
+      // Should flatten all nodes: 2 districts + 1 assembly + 1 block = 4 nodes
+      expect(result).toHaveLength(4);
+      
+      // Check district
+      const district = result.find(r => r.location_type === 'district' && r.district === 'रायपुर');
+      expect(district).toBeDefined();
+      
+      // Check assembly
+      const assembly = result.find(r => r.location_type === 'assembly');
+      expect(assembly).toBeDefined();
+      expect(assembly?.assembly).toBe('रायपुर शहर');
+      expect(assembly?.hierarchy_path).toContain('→');
+      
+      // Check block
+      const block = result.find(r => r.location_type === 'block');
+      expect(block).toBeDefined();
+      expect(block?.block).toBe('रायपुर ब्लॉक');
+    });
+
+    it('should include all nodes in nested hierarchy', () => {
+      const result = flattenHierarchy(mockHierarchy);
+      
+      // Verify all levels are present
+      expect(result.some(r => r.location_type === 'district')).toBe(true);
+      expect(result.some(r => r.location_type === 'assembly')).toBe(true);
+      expect(result.some(r => r.location_type === 'block')).toBe(true);
+    });
+
+    it('should use path property for hierarchy_path when available', () => {
+      const result = flattenHierarchy(mockHierarchy);
+      
+      const assembly = result.find(r => r.assembly === 'रायपुर शहर');
+      expect(assembly?.hierarchy_path).toBe('रायपुर → रायपुर शहर');
+    });
+
+    it('should use node name as fallback when path is missing', () => {
+      const noPathHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'Test District',
+          value: 1,
+          level: 'district',
+          district: 'Test District',
+          children: [],
+        },
+      ];
+
+      const result = flattenHierarchy(noPathHierarchy);
+      expect(result[0].hierarchy_path).toBe('Test District');
+    });
+
+    it('should handle nodes with missing optional fields', () => {
+      const minimalHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'Test',
+          value: 1,
+          level: 'district',
+          district: 'Test',
+          children: [],
+        },
+      ];
+
+      const result = flattenHierarchy(minimalHierarchy);
+      expect(result[0].assembly).toBeUndefined();
+      expect(result[0].block).toBeUndefined();
+      expect(result[0].is_urban).toBeUndefined();
+    });
+
+    it('should handle empty hierarchy', () => {
+      const result = flattenHierarchy([]);
+      expect(result).toEqual([]);
+    });
+
+    it('should preserve all metadata fields in export', () => {
+      const fullMetadataHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'Test',
+          value: 10,
+          level: 'village',
+          district: 'Test District',
+          assembly: 'Test Assembly',
+          block: 'Test Block',
+          village: 'Test Village',
+          is_urban: false,
+          path: ['Test District', 'Test Assembly', 'Test Block', 'Test Village'],
+          children: [],
+        },
+      ];
+
+      const result = flattenHierarchy(fullMetadataHierarchy);
+      expect(result[0]).toMatchObject({
+        hierarchy_path: 'Test District → Test Assembly → Test Block → Test Village',
+        event_count: 10,
+        location_type: 'village',
+        district: 'Test District',
+        assembly: 'Test Assembly',
+        block: 'Test Block',
+        village: 'Test Village',
+        is_urban: false,
+      });
+    });
+
+    it('should traverse all children recursively', () => {
+      const deepHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'District1',
+          value: 10,
+          level: 'district',
+          district: 'District1',
+          path: ['District1'],
+          children: [
+            {
+              name: 'Assembly1',
+              value: 5,
+              level: 'assembly',
+              district: 'District1',
+              assembly: 'Assembly1',
+              path: ['District1', 'Assembly1'],
+              children: [
+                {
+                  name: 'Block1',
+                  value: 3,
+                  level: 'block',
+                  district: 'District1',
+                  assembly: 'Assembly1',
+                  block: 'Block1',
+                  path: ['District1', 'Assembly1', 'Block1'],
+                  children: [],
+                },
+                {
+                  name: 'Block2',
+                  value: 2,
+                  level: 'block',
+                  district: 'District1',
+                  assembly: 'Assembly1',
+                  block: 'Block2',
+                  path: ['District1', 'Assembly1', 'Block2'],
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      const result = flattenHierarchy(deepHierarchy);
+      expect(result).toHaveLength(4); // 1 district + 1 assembly + 2 blocks
+      
+      const blocks = result.filter(r => r.location_type === 'block');
+      expect(blocks).toHaveLength(2);
+    });
+
+    it('should handle nodes with multiple children at same level', () => {
+      const multiChildrenHierarchy: GeoHierarchyNode[] = [
+        {
+          name: 'District1',
+          value: 10,
+          level: 'district',
+          district: 'District1',
+          path: ['District1'],
+          children: [
+            {
+              name: 'Assembly1',
+              value: 5,
+              level: 'assembly',
+              district: 'District1',
+              assembly: 'Assembly1',
+              path: ['District1', 'Assembly1'],
+              children: [],
+            },
+            {
+              name: 'Assembly2',
+              value: 5,
+              level: 'assembly',
+              district: 'District1',
+              assembly: 'Assembly2',
+              path: ['District1', 'Assembly2'],
+              children: [],
+            },
+          ],
+        },
+      ];
+
+      const result = flattenHierarchy(multiChildrenHierarchy);
+      expect(result).toHaveLength(3); // 1 district + 2 assemblies
+      
+      const assemblies = result.filter(r => r.location_type === 'assembly');
+      expect(assemblies).toHaveLength(2);
     });
   });
 });
