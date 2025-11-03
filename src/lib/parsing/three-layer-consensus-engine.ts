@@ -92,23 +92,36 @@ export class ThreeLayerConsensusEngine {
     // Layer 1: Gemini API
     try {
       layerResults.gemini = await this.parseWithGemini(tweet);
+      console.log(`✅ Gemini layer succeeded for tweet ${tweet.tweet_id}`);
     } catch (error) {
-      errors.push(`Gemini failed: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      errors.push(`Gemini failed: ${errorMsg}`);
+      console.warn(`❌ Gemini layer failed for tweet ${tweet.tweet_id}: ${errorMsg}`);
     }
 
     // Layer 2: Ollama Local Model
     try {
       layerResults.ollama = await this.parseWithOllama(tweet);
+      console.log(`✅ Ollama layer succeeded for tweet ${tweet.tweet_id}`);
     } catch (error) {
-      errors.push(`Ollama failed: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      errors.push(`Ollama failed: ${errorMsg}`);
+      console.warn(`❌ Ollama layer failed for tweet ${tweet.tweet_id}: ${errorMsg}`);
     }
 
     // Layer 3: Custom Parsing Engine
     try {
       layerResults.custom = await this.parseWithCustomEngine(tweet);
+      console.log(`✅ Custom layer succeeded for tweet ${tweet.tweet_id}`);
     } catch (error) {
-      errors.push(`Custom engine failed: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      errors.push(`Custom engine failed: ${errorMsg}`);
+      console.warn(`❌ Custom layer failed for tweet ${tweet.tweet_id}: ${errorMsg}`);
     }
+    
+    // Log layer success summary
+    const successfulLayers = Object.values(layerResults).filter(r => r !== null).length;
+    console.log(`📊 Layer summary for tweet ${tweet.tweet_id}: ${successfulLayers}/3 layers succeeded`);
 
     // Apply consensus algorithm (synchronous)
     const consensusResult = this.applyConsensusAlgorithm(layerResults, tweet);
@@ -225,7 +238,7 @@ export class ThreeLayerConsensusEngine {
   }
 
   /**
-   * Layer 1: Gemini API Parsing
+   * Layer 1: Gemini API Parsing with rate limit handling
    */
   private async parseWithGemini(tweet: TweetData): Promise<ParsingResult> {
     if (!this.gemini) {
@@ -256,24 +269,56 @@ Respond in JSON format:
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Retry logic with exponential backoff for rate limits
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-    // Parse JSON response
-    const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, ''));
+        // Parse JSON response
+        const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, ''));
 
-    return {
-      locations: parsed.locations || [],
-      event_type: parsed.event_type || null,
-      schemes_mentioned: parsed.schemes_mentioned || [],
-      hashtags: parsed.hashtags || [],
-      people_mentioned: parsed.people_mentioned || [],
-      geo_hierarchy: [],
-      confidence: 0.9,
-      parser_source: 'gemini',
-      raw_response: text,
-    };
+        return {
+          locations: parsed.locations || [],
+          event_type: parsed.event_type || null,
+          schemes_mentioned: parsed.schemes_mentioned || [],
+          hashtags: parsed.hashtags || [],
+          people_mentioned: parsed.people_mentioned || [],
+          geo_hierarchy: [],
+          confidence: 0.9,
+          parser_source: 'gemini',
+          raw_response: text,
+        };
+      } catch (error: any) {
+        lastError = error;
+        const errorMessage = error?.message || String(error);
+        
+        // Check for rate limit errors
+        const isRateLimit = 
+          errorMessage.includes('429') ||
+          errorMessage.includes('RESOURCE_EXHAUSTED') ||
+          errorMessage.includes('quota') ||
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('RATE_LIMIT_EXCEEDED');
+        
+        if (isRateLimit && attempt < maxRetries - 1) {
+          // Exponential backoff: 2s, 4s, 8s
+          const waitTime = Math.min(1000 * Math.pow(2, attempt), 8000);
+          console.warn(`Gemini rate limit hit (attempt ${attempt + 1}/${maxRetries}). Waiting ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        
+        // If not rate limit or last attempt, throw
+        throw error;
+      }
+    }
+    
+    throw lastError || new Error('Gemini API failed after retries');
   }
 
   /**
@@ -472,6 +517,13 @@ Respond in JSON format:
     if (results.length === 0) {
       throw new Error('All parsing layers failed');
     }
+    
+    // Log which layers are available for consensus
+    const availableLayers = [];
+    if (layerResults.gemini) availableLayers.push('Gemini');
+    if (layerResults.ollama) availableLayers.push('Ollama');
+    if (layerResults.custom) availableLayers.push('Custom');
+    console.log(`🔄 Applying 2/3 consensus for tweet ${tweet.tweet_id} with layers: ${availableLayers.join(', ')}`);
 
     // Calculate consensus for each field
     const consensusFields = {
