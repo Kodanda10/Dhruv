@@ -83,6 +83,7 @@ export default function GeoHierarchyMindmap({
           setError(result.message || 'Failed to load geo analytics data');
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching geo analytics:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
       } finally {
