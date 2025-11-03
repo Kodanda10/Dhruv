@@ -185,12 +185,19 @@ export default function GeoHierarchyMindmap({
   // Handle node click for drilldown
   const handleNodeClick = (node: GeoHierarchyNode) => {
     if (node.children && node.children.length > 0) {
+      const nextLevel = getNextLevel(node.level || 'district');
       setDrilldown({
-        level: getNextLevel(node.level || 'district'),
+        level: nextLevel,
         selectedPath: node.path || [],
         currentData: displayData,
       });
       setSelectedNode(node);
+      
+      // Announce state change to screen readers
+      const announcement = document.getElementById('drilldown-announcement');
+      if (announcement) {
+        announcement.textContent = `Expanded ${node.name}, now viewing ${nextLevel} level with ${node.children.length} items`;
+      }
     }
   };
 
@@ -206,6 +213,12 @@ export default function GeoHierarchyMindmap({
       // Back to root
       setDrilldown(null);
       setSelectedNode(null);
+      
+      // Announce state change to screen readers
+      const announcement = document.getElementById('drilldown-announcement');
+      if (announcement) {
+        announcement.textContent = `Returned to root level, viewing all districts`;
+      }
     } else {
       // Go up one level
       const newLevel = getPreviousLevel(drilldown.level);
@@ -214,6 +227,12 @@ export default function GeoHierarchyMindmap({
         selectedPath: newPath,
         currentData: [],
       });
+      
+      // Announce state change to screen readers
+      const announcement = document.getElementById('drilldown-announcement');
+      if (announcement) {
+        announcement.textContent = `Navigated back to ${newLevel} level`;
+      }
     }
   };
 
@@ -223,6 +242,12 @@ export default function GeoHierarchyMindmap({
     if (targetPath.length === 0) {
       setDrilldown(null);
       setSelectedNode(null);
+      
+      // Announce state change to screen readers
+      const announcement = document.getElementById('drilldown-announcement');
+      if (announcement) {
+        announcement.textContent = `Returned to root level, viewing all districts`;
+      }
     } else {
       const levels: ('district' | 'assembly' | 'block' | 'village' | 'ulb')[] = [
         'district',
@@ -231,11 +256,18 @@ export default function GeoHierarchyMindmap({
         'village',
         'ulb',
       ];
+      const targetLevel = levels[Math.min(index, levels.length - 1)];
       setDrilldown({
-        level: levels[Math.min(index, levels.length - 1)],
+        level: targetLevel,
         selectedPath: targetPath,
         currentData: [],
       });
+      
+      // Announce state change to screen readers
+      const announcement = document.getElementById('drilldown-announcement');
+      if (announcement) {
+        announcement.textContent = `Navigated to ${targetPath[targetPath.length - 1]}, ${targetLevel} level`;
+      }
     }
   };
 
@@ -313,15 +345,28 @@ export default function GeoHierarchyMindmap({
 
   // getPreviousLevel is imported from utils
 
+  // Handle keyboard navigation for treemap cells
+  const handleCellKeyDown = (e: React.KeyboardEvent, node: GeoHierarchyNode) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (node.children && node.children.length > 0) {
+        handleNodeClick(node);
+      }
+    }
+  };
+
   // Custom cell renderer with event count badge
   const renderCell = (entry: any) => {
     const { x, y, width: w, height: h, payload } = entry;
     const node = payload as GeoHierarchyNode;
     const hasChildren = node.children && node.children.length > 0;
+    const nodeId = `treemap-node-${node.name.replace(/\s+/g, '-')}`;
+    const ariaLabel = `${node.name}, ${node.value} event${node.value !== 1 ? 's' : ''}${hasChildren ? `. Press Enter or Space to view ${node.children.length} child ${node.children.length === 1 ? 'item' : 'items'}` : ', no sub-items'}`;
 
     return (
-      <g>
+      <g role="group" aria-label={node.name}>
         <rect
+          id={nodeId}
           x={x}
           y={y}
           width={w}
@@ -331,9 +376,13 @@ export default function GeoHierarchyMindmap({
           strokeWidth={2}
           style={{ cursor: hasChildren ? 'pointer' : 'default' }}
           onClick={() => hasChildren && handleNodeClick(node)}
+          onKeyDown={(e: any) => hasChildren && handleCellKeyDown(e, node)}
           role={hasChildren ? 'button' : 'img'}
           tabIndex={hasChildren ? 0 : -1}
-          aria-label={`${node.name}: ${node.value} events${hasChildren ? ', press Enter or Space to expand' : ''}`}
+          aria-label={ariaLabel}
+          aria-expanded={hasChildren ? (drilldown?.selectedPath.includes(node.name) ? 'true' : 'false') : undefined}
+          aria-current={selectedNode?.name === node.name ? 'location' : undefined}
+          aria-describedby={`tooltip-${nodeId}`}
         />
         {/* Event count badge */}
         {w > 60 && h > 30 && (
@@ -415,137 +464,216 @@ export default function GeoHierarchyMindmap({
   // Loading state
   if (loading) {
     return (
-      <div
+      <section
         className={`bg-[#192734] border border-gray-800 rounded-xl p-6 ${className}`}
         data-testid="geo-hierarchy-mindmap"
+        aria-labelledby="geo-hierarchy-title-loading"
+        role="region"
+        aria-busy="true"
+        aria-live="polite"
       >
-        <h3 className="text-lg font-semibold mb-4 text-white">
+        <h3 id="geo-hierarchy-title-loading" className="text-lg font-semibold mb-4 text-white">
           भू-पदानुक्रम माइंडमैप
         </h3>
-        <div className="flex items-center justify-center h-64 text-gray-400">
+        <div className="flex items-center justify-center h-64 text-gray-400" role="status">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-            <p>डेटा लोड हो रहा है...</p>
+            <div 
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"
+              aria-hidden="true"
+            ></div>
+            <p>
+              <span className="sr-only">Loading: </span>
+              डेटा लोड हो रहा है...
+            </p>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div
+      <section
         className={`bg-[#192734] border border-gray-800 rounded-xl p-6 ${className}`}
         data-testid="geo-hierarchy-mindmap"
+        aria-labelledby="geo-hierarchy-title-error"
+        role="alert"
+        aria-live="assertive"
       >
-        <h3 className="text-lg font-semibold mb-4 text-white">
+        <h3 id="geo-hierarchy-title-error" className="text-lg font-semibold mb-4 text-white">
           भू-पदानुक्रम माइंडमैप
         </h3>
         <div className="flex items-center justify-center h-64 text-red-400">
           <div className="text-center">
-            <p className="mb-2">❌ {error}</p>
+            <p className="mb-2" role="status">
+              <span className="sr-only">Error: </span>
+              <span aria-hidden="true">❌</span> {error}
+            </p>
             <button
               onClick={() => {
                 setError(null);
                 setLoading(true);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setError(null);
+                  setLoading(true);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors"
+              aria-label="Retry loading data"
             >
               पुनः प्रयास करें
             </button>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   // Empty state
   if (!data || displayData.length === 0) {
     return (
-      <div
+      <section
         className={`bg-[#192734] border border-gray-800 rounded-xl p-6 ${className}`}
         data-testid="geo-hierarchy-mindmap"
+        aria-labelledby="geo-hierarchy-title-empty"
+        role="region"
+        aria-live="polite"
       >
-        <h3 className="text-lg font-semibold mb-4 text-white">
+        <h3 id="geo-hierarchy-title-empty" className="text-lg font-semibold mb-4 text-white">
           भू-पदानुक्रम माइंडमैप
         </h3>
-        <div className="flex items-center justify-center h-64 text-gray-400">
-          <p>कोई डेटा उपलब्ध नहीं है</p>
+        <div className="flex items-center justify-center h-64 text-gray-400" role="status">
+          <p>
+            <span className="sr-only">Information: </span>
+            कोई डेटा उपलब्ध नहीं है
+            <span className="sr-only">: No data available for the selected filters</span>
+          </p>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div
+    <section
       className={`bg-[#192734] border border-gray-800 rounded-xl p-6 ${className}`}
       data-testid="geo-hierarchy-mindmap"
+      aria-labelledby="geo-hierarchy-title"
+      aria-describedby="geo-hierarchy-description"
+      role="region"
     >
       {/* Header with breadcrumb */}
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white mb-2">
+          <h3 id="geo-hierarchy-title" className="text-lg font-semibold text-white mb-2">
             भू-पदानुक्रम माइंडमैप
           </h3>
+          <p id="geo-hierarchy-description" className="sr-only">
+            Interactive treemap visualization showing geographic hierarchy of events. Use keyboard to navigate: Tab to move between items, Enter or Space to expand levels, Esc to go back.
+          </p>
           {drilldown && drilldown.selectedPath.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <nav 
+              className="flex items-center gap-2 text-sm text-gray-300"
+              aria-label="Breadcrumb navigation"
+              role="navigation"
+            >
               <button
                 onClick={handleBack}
-                className="text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 rounded hover:bg-blue-900/20"
-                aria-label="Go back to previous level"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleBack();
+                  }
+                }}
+                className="text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors px-2 py-1 rounded hover:bg-blue-900/20"
+                aria-label={`Go back to ${getPreviousLevel(drilldown.level)} level`}
               >
                 ← Back
               </button>
-              <span className="text-gray-500">|</span>
-              <div className="flex items-center gap-1 flex-wrap">
-                <button
-                  onClick={() => {
-                    setDrilldown(null);
-                    setSelectedNode(null);
-                  }}
-                  className="text-gray-400 hover:text-white transition-colors px-1"
-                  aria-label="Go to root level"
-                >
-                  Root
-                </button>
+              <span className="text-gray-500" aria-hidden="true">|</span>
+              <ol className="flex items-center gap-1 flex-wrap" aria-label="Current location in hierarchy">
+                <li>
+                  <button
+                    onClick={() => {
+                      setDrilldown(null);
+                      setSelectedNode(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setDrilldown(null);
+                        setSelectedNode(null);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors px-1"
+                    aria-label="Go to root level, showing all districts"
+                  >
+                    Root
+                  </button>
+                </li>
                 {drilldown.selectedPath.map((item: string, index: number) => (
-                  <React.Fragment key={index}>
-                    <span className="text-gray-500">→</span>
+                  <li key={index} className="flex items-center gap-1">
+                    <span className="text-gray-500" aria-hidden="true">→</span>
                     <button
                       onClick={() => handleBreadcrumbClick(index)}
-                      className="text-blue-400 hover:text-blue-300 transition-colors px-1 rounded hover:bg-blue-900/20"
-                      aria-label={`Go to ${item}`}
+                      className="text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors px-1 rounded hover:bg-blue-900/20"
+                      aria-label={`Navigate to ${item}, level ${index + 1} of ${drilldown.selectedPath.length}`}
+                      aria-current={index === drilldown.selectedPath.length - 1 ? 'page' : undefined}
                     >
                       {item}
                     </button>
-                  </React.Fragment>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ol>
+            </nav>
           )}
         </div>
         {/* Export buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="toolbar" aria-label="Export options">
           <button
             onClick={handleExportCSV}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            aria-label="Export to CSV"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleExportCSV();
+              }
+            }}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors"
+            aria-label={`Export ${displayData.length} items to CSV file`}
+            aria-describedby="export-csv-description"
           >
             CSV
           </button>
+          <span id="export-csv-description" className="sr-only">Download data as comma-separated values file</span>
           <button
             onClick={handleExportJSON}
-            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            aria-label="Export to JSON"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleExportJSON();
+              }
+            }}
+            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-[#192734] transition-colors"
+            aria-label={`Export ${displayData.length} items to JSON file`}
+            aria-describedby="export-json-description"
           >
             JSON
           </button>
+          <span id="export-json-description" className="sr-only">Download data as JSON file</span>
         </div>
       </div>
 
       {/* Treemap visualization */}
-      <div style={{ height: `${height}px`, width: width ? `${width}px` : '100%' }}>
+      <div 
+        style={{ height: `${height}px`, width: width ? `${width}px` : '100%' }}
+        role="application"
+        aria-label={`Geographic hierarchy treemap showing ${displayData.length} ${drilldown ? `${drilldown.level} level` : 'district level'} items`}
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <Treemap
             data={displayData as any}
@@ -560,20 +688,44 @@ export default function GeoHierarchyMindmap({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
+      <div 
+        className="mt-4 flex items-center gap-4 text-sm text-gray-400"
+        role="group"
+        aria-label="Color legend and interaction instructions"
+      >
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-[#D1FAE5] border border-gray-700"></div>
+          <div 
+            className="w-4 h-4 bg-[#D1FAE5] border border-gray-700"
+            aria-label="Light green color indicates lower event count"
+            role="img"
+          ></div>
           <span>कम घटनाएं</span>
+          <span className="sr-only">: Fewer events</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-[#10B981] border border-gray-700"></div>
+          <div 
+            className="w-4 h-4 bg-[#10B981] border border-gray-700"
+            aria-label="Dark green color indicates higher event count"
+            role="img"
+          ></div>
           <span>अधिक घटनाएं</span>
+          <span className="sr-only">: More events</span>
         </div>
         <div className="text-gray-500">
+          <span className="sr-only">Keyboard navigation: </span>
           क्लिक करें विस्तार करने के लिए
+          <span className="sr-only">, or press Enter or Space on an item to expand</span>
         </div>
       </div>
-    </div>
+      
+      {/* Screen reader announcements for state changes */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true" id="drilldown-announcement">
+        {drilldown 
+          ? `Viewing ${drilldown.level} level with ${displayData.length} items`
+          : `Viewing district level with ${displayData.length} districts`
+        }
+      </div>
+    </section>
   );
 }
 
