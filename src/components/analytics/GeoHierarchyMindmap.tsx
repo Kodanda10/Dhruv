@@ -362,7 +362,7 @@ export default function GeoHierarchyMindmap({
     const node = payload as GeoHierarchyNode;
     const hasChildren = node.children && node.children.length > 0;
     const nodeId = `treemap-node-${node.name.replace(/\s+/g, '-')}`;
-    const ariaLabel = `${node.name}, ${node.value} event${node.value !== 1 ? 's' : ''}${hasChildren ? `. Press Enter or Space to view ${node.children.length} child ${node.children.length === 1 ? 'item' : 'items'}` : ', no sub-items'}`;
+    const ariaLabel = `${node.name}, ${node.value} event${node.value !== 1 ? 's' : ''}${hasChildren ? `. Press Enter or Space to view ${node.children?.length || 0} child ${(node.children?.length || 0) === 1 ? 'item' : 'items'}` : ', no sub-items'}`;
 
     return (
       <g role="group" aria-label={node.name}>
