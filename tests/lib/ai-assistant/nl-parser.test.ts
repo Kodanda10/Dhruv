@@ -161,20 +161,18 @@ describe('Natural Language Parser', () => {
     test('should extract locations from English text', async () => {
       const result = await nlParser.parseRequest('add raipur, bilaspur as locations');
 
-      // Mock returns रायपुर - verify we get locations
       expect(result.entities.locations.length).toBeGreaterThan(0);
-      expect(result.entities.locations[0].text).toBe('रायपुर');
+      expect(result.entities.locations.some(loc => loc.text.toLowerCase().includes('raipur'))).toBe(true);
+      expect(result.entities.locations.some(loc => loc.text.toLowerCase().includes('bilaspur'))).toBe(true);
     });
 
     test('should extract event types', async () => {
       const result = await nlParser.parseRequest('change to बैठक meeting');
-      // Mock may not extract event types - just verify parsing succeeds
-      expect(result).toBeDefined();
-      expect(result.entities).toBeDefined();
-      expect(Array.isArray(result.entities.eventTypes)).toBe(true);
-      expect(Array.isArray(result.entities.locations)).toBe(true);
+
+      expect(result.entities.eventTypes.length).toBeGreaterThan(0);
       expect(result.entities.eventTypes.some(event => event.text.includes('बैठक'))).toBe(true);
     });
+
     test('should extract schemes', async () => {
       const result = await nlParser.parseRequest('add PM Kisan scheme');
 
@@ -195,11 +193,8 @@ describe('Natural Language Parser', () => {
       expect(result.entities.numbers.length).toBeGreaterThan(0);
       expect(result.entities.numbers.some(num => num.text.includes('3'))).toBe(true);
     });
-      // Mock may not extract dates - just verify structure
-      expect(result).toBeDefined();
-      expect(result.entities).toBeDefined();
-      expect(Array.isArray(result.entities.dates)).toBe(true);
-      expect(Array.isArray(result.entities.locations)).toBe(true);
+
+    test('should extract dates', async () => {
       const result = await nlParser.parseRequest('event on 15/01/2024');
 
       expect(result.entities.dates.length).toBeGreaterThan(0);
@@ -216,8 +211,7 @@ describe('Natural Language Parser', () => {
       expect(Array.isArray(result.actions)).toBe(true);
       // If multiple actions extracted, check they include expected ones
       if (result.actions.length > 1) {
-        const expectedActions: Array<'addLocation' | 'addScheme'> = ['addLocation', 'addScheme'];
-        expect(expectedActions.some(action => result.actions.includes(action))).toBe(true);
+        expect(['addLocation', 'addScheme'].some(action => result.actions.includes(action))).toBe(true);
       }
     });
 
@@ -264,13 +258,9 @@ describe('Natural Language Parser', () => {
         expect(result.entities).toBeDefined();
         expect(result.actions).toBeInstanceOf(Array);
         expect(result.confidence).toBeGreaterThan(0);
-      // Mock only returns locations - verify parsing works
-      expect(result).toBeDefined();
-      expect(result.entities).toBeDefined();
-      expect(result.entities.locations.length).toBeGreaterThan(0);
-      // Verify arrays exist even if empty
-      expect(Array.isArray(result.entities.eventTypes)).toBe(true);
-      expect(Array.isArray(result.entities.schemes)).toBe(true);
+      }
+    });
+
     test('should extract entities from real tweet content', async () => {
       const tweet = 'राज्य सरकार ने रायपुर में बैठक की और PM Kisan योजना की घोषणा की।';
       const result = await nlParser.parseRequest(`add ${tweet}`);
