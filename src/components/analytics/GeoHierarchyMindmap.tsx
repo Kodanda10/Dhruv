@@ -628,7 +628,7 @@ export default function GeoHierarchyMindmap({
       <div style={{ height: `${height}px`, width: width ? `${width}px` : '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <Treemap
-            data={displayData}
+            data={displayData as any}
             dataKey="value"
             aspectRatio={4 / 3}
             stroke="#1E293B"
