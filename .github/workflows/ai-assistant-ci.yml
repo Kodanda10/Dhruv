@@ -37,10 +37,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Lint Check
-        run: npm run lint -- --quiet --dir src/lib/ai-assistant --dir src/app/api/ai-assistant
+        run: npm run lint
         continue-on-error: true
 
       - name: TypeScript Check
@@ -56,18 +56,23 @@ jobs:
             --collectCoverageFrom="src/lib/ai-assistant/**/*.ts" \
             --collectCoverageFrom="src/app/api/ai-assistant/**/*.ts" \
             --coverageReporters=json-summary \
-            --coverageReporters=text
+            --coverageReporters=text \
+            --coverageReporters=json
 
       - name: Verify Coverage Thresholds
         run: |
+          if [ ! -f "coverage/coverage-summary.json" ]; then
+            echo "❌ Coverage file not found"
+            exit 1
+          fi
           LINES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.lines.pct);")
           BRANCHES=$(node -e "const data = require('./coverage/coverage-summary.json'); console.log(data.total.branches.pct);")
           echo "Lines: ${LINES}%, Branches: ${BRANCHES}%"
-          if (( $(echo "$LINES < 85" | bc -l) )); then
+          if (( $(echo "$LINES < 85" | awk '{print ($1 < 85)}') )); then
             echo "❌ Lines coverage ${LINES}% below 85% threshold"
             exit 1
           fi
-          if (( $(echo "$BRANCHES < 70" | bc -l) )); then
+          if (( $(echo "$BRANCHES < 70" | awk '{print ($1 < 70)}') )); then
             echo "❌ Branches coverage ${BRANCHES}% below 70% threshold"
             exit 1
           fi
@@ -78,11 +83,13 @@ jobs:
 
       - name: Upload Coverage Reports
         uses: codecov/codecov-action@v4
-        if: always()
+        if: success() && always()
+        continue-on-error: true
         with:
           files: ./coverage/coverage-final.json
           flags: ai-assistant
           name: ai-assistant-coverage
+          fail_ci_if_error: false
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
