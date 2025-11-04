@@ -24,7 +24,7 @@ export default function Home() {
   // Available tabs based on authentication
   const availableTabs = isAuthenticated
     ? ['home', 'review', 'analytics'] as const
-    : ['analytics'] as const;
+    : (['analytics'] as readonly ('home' | 'review' | 'analytics')[]);
 
   return (
     <main className={`${notoDevanagari.className} min-h-screen bg-dark-gradient text-primary`}>
