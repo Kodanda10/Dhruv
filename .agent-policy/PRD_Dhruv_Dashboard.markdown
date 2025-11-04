@@ -142,6 +142,50 @@ Each task: 1–4h, one concern. Execution loop: Checklist emit -> Failing tests 
 ## Mandatory GitHub Checks (Ironclad)
 - lint-type, unit-tests, coverage-gate (95/70), security (TruffleHog, CodeQL), licenses-sbom (SBOM + license-checker), web-a11y-perf (Lighthouse + axe), perf-k6 (API p95), e2e-smoke (Playwright), iac-validate (Vercel), audit-trail (artifact JSON).
 
+## Phase 2: Smart Dataset Creation (Backend Parsing Module)
+Planned initiative to enhance parsing and enrichment for X posts via a Python/Flask module while retaining the Next.js frontend.
+
+- Architecture: Python/Flask API at `api/`, parsing module in `api/src/parsing/`, unit tests in `api/tests/unit/test_parsing/`. Internal dataset at `api/data/internal_dataset.csv`.
+- Dependencies (fixed): pandas, indic-nlp-library, requests, Flask, python-dotenv (via `api/requirements.txt`). No new packages.
+- Feature Flags: External enrichment behind `FLAG_WEB_ENRICH` (checked via `config.is_flag_enabled('FLAG_WEB_ENRICH')`).
+
+Epics (High-Level)
+1) Initial Direct Parsing (mentions, hashtags, Devanagari entities)
+2) Internal Dataset Reverse Search (CSV lookup + enrichment fields)
+3) External Web Enrichment (flag-gated; mock search API via requests)
+4) Dataset Update (append consolidated enriched records)
+5) Error Handling & Observability (structured logging + trace IDs)
+6) API Wiring + CI (Flask endpoints, 95/70 coverage)
+
+Execution Rules
+- Atomicity (1–4h tasks), TDD (red→green→refactor), scope lock to spec above, coverage 95/70, reversible via feature flags.
+
+Parsing Logic Enhancement Outline (Acceptance Checklist)
+- Layer 1: Direct parse mentions, hashtags, and potential Devanagari entities (indic tokenizer).
+- Layer 2: Reverse-search internal dataset (case-insensitive) to enrich entity_id/type/context.
+- Layer 3: External web search enrichment (requests) behind `FLAG_WEB_ENRICH`; parse mock response to short description.
+- Layer 4: Build enriched records (DataFrame/list) consolidating info; tag web-enriched as `unverified`.
+- Layer 5: Robust error handling (file/network/parse) and structured logs with trace IDs.
+
+Constraints
+- No new Python packages beyond requirements. Use `re`, `pandas`, `indic-nlp-library`, `requests`, `Flask`.
+- Feature flags for risky changes; rollback ≤10 min. All changes documented (inline + runbook).
+
+### Phase 2 — Sprint 1 (Now)
+Scope: bootstrap backend API + normalization baseline + alias store/loader and minimal /api/normalize contract. No UI dependency changes beyond feature flag wiring.
+
+Deliverables (all TDD, 95/70):
+- api/ Flask app with `/api/health`, `/api/normalize` (stub), `/api/aliases` (GET), `/api/aliases/reload` (POST, gated).
+- Normalization core: nukta folding, Devanagari→Latin transliteration, Hinglish phonetics, schwa handling, dedupe. Unit + perf (sanity) tests.
+- Alias store: `api/data/aliases.json` (seed for locations/tags/schemes/events) + loader with variant→canonical index; hot reload.
+- Structured logs with `traceId`, counters for alias hits/misses.
+- Runbook additions (flags, reload, rollback). 
+
+Acceptance:
+- p95 `/api/health` ≤ 300ms (local/k6).
+- `/api/normalize` echoes minimal enrichment with lineage fields.
+- Flags: `FLAG_ALIAS_LOADER`, `FLAG_PARSE_ENGINE` respected.
+
 ## Risk & Rollback
 - **Risk**: Low (static data, basic UI).
 - **Rollback**: Vercel rollback to previous deploy (<=10 min); flags off for features.

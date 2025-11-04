@@ -1,0 +1,36 @@
+name: github-actions
+description: Manage and monitor GitHub workflows through Codex CLI
+version: 1.0.0
+
+env:
+  GH_TOKEN: ${{ env.GITHUB_TOKEN }}
+
+commands:
+  dispatch:
+    description: Trigger a GitHub Actions workflow
+    run: gh workflow run {{workflow}} --repo {{repo}} --ref {{ref}} ${{inputs}}
+    args:
+      - name: repo
+        required: true
+      - name: workflow
+        required: true
+      - name: ref
+        required: true
+      - name: inputs
+        required: false
+
+  status:
+    description: List recent workflow runs for a repository
+    run: gh run list --repo {{repo}} --limit 5 --json name,headBranch,status,conclusion
+    args:
+      - name: repo
+        required: true
+
+  view:
+    description: View details and logs for a specific run
+    run: gh run view {{runId}} --repo {{repo}} --log
+    args:
+      - name: repo
+        required: true
+      - name: runId
+        required: true

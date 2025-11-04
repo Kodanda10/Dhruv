@@ -1,0 +1,49 @@
+Project_Dhruv/.cursorrules
+{
+  "$schema": "https://raw.githubusercontent.com/getcursor/cursorrules/main/schema.json",
+  "name": "Ironclad DevOps Rulebook v2.1 — It Just Works",
+  "description": "Atomic, TDD-first, shift-left security & observability. Enforce production-ready, accessible, performant, reversible software.",
+  "priority": 100,
+  "appliesTo": ["*"],
+  "readFiles": [
+    "devops_agent_policy.yaml",
+    "README.md",
+    "gemini.md",
+    "agent.md",
+    ".github/workflows/**",
+    "package.json",
+    "requirements.txt",
+    "pyproject.toml",
+    "pubspec.yaml",
+    "terraform/**",
+    "infra/**"
+  ],
+  "disallowFiles": ["/archive/**", "node_modules/**", "build/**", "dist/**", ".next/**"],
+  "rules": [
+    {"title":"Scope Lock","content":"Extract acceptance criteria and create a living checklist. Implement ONLY listed items. Refuse drift.","severity":"error"},
+    {"title":"Atomic Tasks","content":"Each change 1–4h. One concern per PR (theme/test/button/naming/alignment/animation). No bundling.","severity":"error"},
+    {"title":"TDD Red→Green→Refactor","content":"Write failing tests first (unit/integration/acceptance), minimal code to pass, then refactor. Coverage: lines ≥ 85%, branches ≥ 70%.","severity":"error"},
+    {"title":"CI Gates","content":"lint, typecheck, unit, integration, e2e/smoke, perf (Lighthouse/k6), a11y (axe/pa11y), SAST/DAST/secrets/SCA, SBOM/licenses, contract (PACT), IaC (OPA/Conftest).","severity":"error"},
+    {"title":"Shift-Left Security","content":"No secrets. Param queries. Validate I/O. AuthN/AuthZ. CSP/SSRF guards. Fail on high/critical vulns.","severity":"error"},
+    {"title":"Privacy","content":"Minimize PII; data map; export/delete tests (GDPR/DPDP).","severity":"error"},
+    {"title":"Performance","content":"Web: LCP ≤ 2.5s, CLS ≤ 0.1 (p75). API: p95 ≤ 300ms. Mobile: 60fps, <1% jank. Provide tests.","severity":"warn"},
+    {"title":"Accessibility","content":"WCAG 2.1 AA. No axe/pa11y violations.","severity":"error"},
+    {"title":"Observability","content":"Structured logs + trace IDs, RED/USE metrics, `/health`, synthetic ping/click checks.","severity":"error"},
+    {"title":"Reversibility","content":"Feature flags, reversible migrations, canary, rollback ≤ 10 min.","severity":"error"},
+    {"title":"Naming & Style","content":"Consistent naming; idiomatic style; fix lint/type before suggesting code.","severity":"warn"},
+    {"title":"Docs","content":"Update inline docs, README/CHANGELOG, runbook.","severity":"warn"},
+    {"title":"Resilience & Scalability","content":"Retries/backoff, circuit breakers. Stateless, containers, cache/index. Load/perf tests.","severity":"warn"},
+    {"title":"Autonomy with Locality","content":"Proceed stepwise without approvals; modify only local scope; verify against hallucinations.","severity":"error"}
+  ],
+  "patterns": [
+    {"trigger":"create feature","instruction":"1) Checklist. 2) Failing tests. 3) Minimal code to green. 4) Refactor + self-review (security/a11y/perf/observability). 5) PR with diff, tests, reports, docs, flag."},
+    {"trigger":"add endpoint","instruction":"Include validation, AuthZ, param queries, logs/trace, metrics, /health, contract tests (PACT), k6 script, OpenAPI update."},
+    {"trigger":"ui change","instruction":"Add a11y labels/contrast/keyboard nav; e2e click test; Lighthouse; snapshots; guard behind flag if risky."}
+  ],
+  "forbidden": [
+    "Committing secrets",
+    "Bypassing tests or CI gates",
+    "Bundling unrelated changes",
+    "Deleting files outside /archive"
+  ]
+}

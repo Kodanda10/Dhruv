@@ -1,0 +1,38 @@
+[
+  {
+    "village": "रायपुर",
+    "hindi": "रायपुर",
+    "nukta_hindi": "रायपुर",
+    "english": "Raipur",
+    "transliteration": "Raipur",
+    "district": "रायपुर",
+    "applications": 150,
+    "status": "approved",
+    "assembly_constituency": "रायपुर शहर उत्तर",
+    "parliamentary_constituency": "रायपुर"
+  },
+  {
+    "village": "पंडरी",
+    "hindi": "पंडरी",
+    "nukta_hindi": "पंडरी",
+    "english": "Pandri",
+    "transliteration": "Pandri",
+    "district": "रायपुर",
+    "applications": 45,
+    "status": "pending",
+    "assembly_constituency": "रायपुर शहर उत्तर",
+    "parliamentary_constituency": "रायपुर"
+  },
+  {
+    "village": "कोटा",
+    "hindi": "कोटा",
+    "nukta_hindi": "कोटा",
+    "english": "Kota",
+    "transliteration": "Kota",
+    "district": "रायपुर",
+    "applications": 78,
+    "status": "approved",
+    "assembly_constituency": "रायपुर शहर उत्तर",
+    "parliamentary_constituency": "रायपुर"
+  }
+]
