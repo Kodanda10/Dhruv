@@ -9,7 +9,6 @@ import type { Route } from 'next';
 import Card from './Card';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
-import ReviewStatus from './ReviewStatus';
 import FeedbackSummary from './FeedbackSummary';
 
 type Post = { id: string | number; timestamp: string; content: string };
