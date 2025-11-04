@@ -35,10 +35,10 @@ export default function ReviewPage() {
         </h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <Link href="/api/review/list?status=pending&limit=10" as="/api/review/list?status=pending&limit=10">Pending review items (API)</Link>
+            <a href="/api/review/list?status=pending&limit=10" target="_blank" rel="noopener noreferrer">Pending review items (API)</a>
           </li>
           <li>
-            <Link href="/api/review/list?status=reviewed&limit=10" as="/api/review/list?status=reviewed&limit=10">Reviewed items (API)</Link>
+            <a href="/api/review/list?status=reviewed&limit=10" target="_blank" rel="noopener noreferrer">Reviewed items (API)</a>
           </li>
           <li>
             <Link href="/api/review/status">Review status summary (API)</Link>
