@@ -325,7 +325,7 @@ export default function DashboardDark() {
   const { sortedData, handleSort, getSortIcon } = useSortableTable(sanitizedData, getFieldValue);
 
   // Fix count discrepancy: Use actual data source count, not parsed length
-  const totalCount = serverRows.length > 0 ? serverRows.length : parsedTweets.length;
+  const totalCount = serverRows.length > 0 ? serverRows.length : 0;
   const shownCount = filtered.length;
 
   return (
