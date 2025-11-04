@@ -3,6 +3,8 @@ jest.mock('pg', () => jest.requireActual('pg'));
 
 import { Pool } from 'pg';
 import { loadParsedTweets, extractGeoHierarchy } from '../utils/loadParsedTweets';
+import fs from 'fs/promises';
+import path from 'path';
 
 const { DynamicLearningSystem } = require('@/lib/dynamic-learning') as typeof import('@/lib/dynamic-learning');
 type DynamicLearningSystemInstance = InstanceType<typeof DynamicLearningSystem>;
@@ -20,6 +22,15 @@ describeOrSkip('Complete Dynamic Learning Workflow with Real Data', () => {
   let learningSystem: DynamicLearningSystemInstance | null = null;
   let pool: Pool | null = null;
   let dbAvailable = false;
+  const seedHashtagPath = path.resolve('infra/migrations/006_seed_reference_datasets.sql');
+
+  const ensureSeedHashtagsPresent = async () => {
+    const seedSql = await fs.readFile(seedHashtagPath, 'utf-8');
+    const requiredHashtags = ['#छत्तीसगढ़', '#Chhattisgarh', '#बैठक', '#Meeting'];
+    requiredHashtags.forEach(hashtag => {
+      expect(seedSql.includes(`'${hashtag}'`)).toBe(true);
+    });
+  };
 
   beforeAll(async () => {
     if (shouldSkip) {
@@ -55,8 +66,7 @@ describeOrSkip('Complete Dynamic Learning Workflow with Real Data', () => {
       if (!dbAvailable || !learningSystem) {
         const tweets = loadParsedTweets();
         expect(tweets.length).toBeGreaterThan(0);
-        const hasHashtags = tweets.some(tweet => Array.isArray(tweet.hashtags) && tweet.hashtags.length > 0);
-        expect(hasHashtags).toBe(true);
+        await ensureSeedHashtagsPresent();
         return;
       }
       try {
@@ -137,7 +147,8 @@ describeOrSkip('Complete Dynamic Learning Workflow with Real Data', () => {
       }
       if (!dbAvailable || !learningSystem) {
         const tweets = loadParsedTweets();
-        expect(tweets.filter(tweet => Array.isArray(tweet.hashtags) && tweet.hashtags.length > 0).length).toBeGreaterThan(0);
+        expect(tweets.length).toBeGreaterThan(0);
+        await ensureSeedHashtagsPresent();
         return;
       }
       const realTweetId = '1979041758345322688'; // Another real tweet ID

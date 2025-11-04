@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import GeoHierarchyMindmap from '@/components/analytics/GeoHierarchyMindmap';
 import type { GeoAnalyticsSummaryResponse } from '@/types/geo-analytics';
@@ -20,7 +20,14 @@ jest.mock('recharts', () => {
       React.createElement('div', { 'data-testid': 'recharts-treemap' }, children),
     Cell: () => null,
     ResponsiveContainer: ({ children }: any) =>
-      React.createElement('div', { 'data-testid': 'responsive-container' }, children),
+      React.createElement(
+        'div',
+        {
+          'data-testid': 'responsive-container',
+          style: { width: '800px', height: '600px' },
+        },
+        children
+      ),
     Tooltip: () => null,
   };
 });
@@ -42,14 +49,38 @@ describe('GeoHierarchyMindmap Accessibility', () => {
     filters: { start_date: null, end_date: null, event_type: null },
   };
 
+  let fetchSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, data: mockData }),
+      } as any);
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  const renderWithAct = async (ui: React.ReactElement) => {
+    let result: ReturnType<typeof render>;
+    await act(async () => {
+      result = render(ui);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    return result!;
+  };
+
   it('should have no accessibility violations in default state', async () => {
-    const { container } = render(<GeoHierarchyMindmap data={mockData} />);
+    const { container } = await renderWithAct(<GeoHierarchyMindmap data={mockData} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('should have no accessibility violations in loading state', async () => {
-    const { container } = render(<GeoHierarchyMindmap data={undefined} />);
+    const { container } = await renderWithAct(<GeoHierarchyMindmap data={undefined} />);
     // Wait for loading state
     await new Promise(resolve => setTimeout(resolve, 100));
     const results = await axe(container);
@@ -57,14 +88,16 @@ describe('GeoHierarchyMindmap Accessibility', () => {
   });
 
   it('should have no accessibility violations in error state', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     // Mock fetch to return error
-    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
-    
-    const { container } = render(<GeoHierarchyMindmap />);
+    fetchSpy.mockRejectedValueOnce(new Error('Network error'));
+
+    const { container } = await renderWithAct(<GeoHierarchyMindmap />);
     // Wait for error state
     await new Promise(resolve => setTimeout(resolve, 1000));
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+    consoleError.mockRestore();
   });
 
   it('should have no accessibility violations in empty state', async () => {
@@ -78,7 +111,7 @@ describe('GeoHierarchyMindmap Accessibility', () => {
       filters: { start_date: null, end_date: null, event_type: null },
     };
 
-    const { container } = render(<GeoHierarchyMindmap data={emptyData} />);
+    const { container } = await renderWithAct(<GeoHierarchyMindmap data={emptyData} />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
@@ -167,4 +200,3 @@ describe('GeoHierarchyMindmap Accessibility', () => {
     expect(statusRegion || liveRegion).toBeTruthy();
   });
 });
-

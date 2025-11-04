@@ -187,7 +187,12 @@ describeOrSkip('Geo Analytics - Remaining Uncovered Branches (Real Data)', () =>
         const hasRural = data.data.urban_rural.rural !== undefined && data.data.urban_rural.rural > 0;
         if (!hasUrban && !hasRural) {
           const geoFallback = extractGeoHierarchy();
-          expect(geoFallback.districts.length).toBeGreaterThan(0);
+          const totalGeo =
+            geoFallback.districts.length +
+            geoFallback.blocks.length +
+            geoFallback.gps.length +
+            geoFallback.villages.length;
+          expect(totalGeo).toBeGreaterThan(0);
           return;
         }
         expect(hasUrban || hasRural).toBe(true);

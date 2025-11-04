@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AIAssistantModal from '@/components/review/AIAssistantModal';
 
@@ -11,6 +11,21 @@ const mockCurrentTweet = {
 };
 
 describe('AIAssistantModal', () => {
+  let fetchSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, response: 'AI response' }),
+      } as any);
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
   it('renders when open', () => {
     render(
       <AIAssistantModal 
@@ -45,7 +60,7 @@ describe('AIAssistantModal', () => {
     expect(screen.getByText(/95% विश्वास/i)).toBeInTheDocument();
   });
 
-  it('allows sending messages', () => {
+  it('allows sending messages', async () => {
     render(
       <AIAssistantModal 
         isOpen={true} 
@@ -59,6 +74,15 @@ describe('AIAssistantModal', () => {
     
     fireEvent.change(input, { target: { value: 'Test message' } });
     fireEvent.click(sendButton);
+    
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/ai-assistant',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
     
     expect(input).toHaveValue('');
   });

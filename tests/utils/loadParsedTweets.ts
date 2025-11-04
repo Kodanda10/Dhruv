@@ -1,42 +1,33 @@
 import fs from "fs";
 import path from "path";
 
+type GeoRecord = {
+  district?: string;
+  block?: string;
+  gp?: string;
+  gram_panchayat?: string;
+  gramPanchayat?: string;
+  assembly?: string;
+  village?: string;
+  name?: string;
+};
+
 interface ParsedTweet {
   id: string;
   text?: string;
   content?: string;
   date?: string;
   timestamp?: string;
-  geo?: { district?: string; block?: string; gp?: string; village?: string };
-  geo_hierarchy?: Array<{
-    district?: string;
-    block?: string;
-    assembly?: string;
-    gram_panchayat?: string;
-    village?: string;
-  }>;
-  locations?: Array<
-    | string
-    | {
-        district?: string;
-        block?: string;
-        gp?: string;
-        gram_panchayat?: string;
-        village?: string;
-        name?: string;
-      }
-  >;
-  hierarchy?: {
-    district?: string;
-    block?: string;
-    gramPanchayat?: string;
-    village?: string;
-  };
+  geo?: GeoRecord;
+  geo_hierarchy?: GeoRecord[];
+  locations?: Array<string | GeoRecord>;
+  hierarchy?: GeoRecord;
   review_status?: string;
   type?: string;
   scheme?: string;
   schemes?: string[];
   hashtags?: string[];
+  parsed?: any;
 }
 
 interface GeoHierarchySnapshot {
@@ -54,7 +45,94 @@ export function loadParsedTweets(): ParsedTweet[] {
     return [];
   }
   const content = fs.readFileSync(jsonPath, "utf-8");
-  return JSON.parse(content);
+  const raw = JSON.parse(content);
+  if (!Array.isArray(raw)) {
+    console.warn('⚠️ parsed_tweets.json is not an array, returning empty array');
+    return [];
+  }
+
+  return raw.map((entry: any) => {
+    const parsed = entry?.parsed ?? {};
+    const normalized: ParsedTweet = {
+      ...entry,
+      parsed,
+    };
+
+    // Normalise event type / intent
+    const candidateEventTypes: Array<string | undefined> = [
+      entry?.type,
+      parsed?.event_type,
+      parsed?.intent,
+      parsed?.intent_type,
+    ];
+    normalized.type = candidateEventTypes.find(value => typeof value === 'string' && value.trim().length > 0) ?? normalized.type;
+
+    // Normalise schemes
+    const schemeSet = new Set<string>();
+    const addScheme = (value: unknown) => {
+      if (typeof value === 'string' && value.trim().length > 0) {
+        schemeSet.add(value.trim());
+      }
+    };
+    addScheme(entry?.scheme);
+    (Array.isArray(entry?.schemes) ? entry.schemes : []).forEach(addScheme);
+    (Array.isArray(parsed?.schemes) ? parsed.schemes : []).forEach(addScheme);
+    (Array.isArray(parsed?.scheme_names) ? parsed.scheme_names : []).forEach(addScheme);
+    if (schemeSet.size > 0) {
+      normalized.schemes = Array.from(schemeSet);
+      normalized.scheme = normalized.scheme ?? normalized.schemes[0];
+    }
+
+    // Normalise hashtags
+    const hashtagSet = new Set<string>();
+    const addHashtag = (value: unknown) => {
+      if (typeof value === 'string' && value.trim().length > 0) {
+        hashtagSet.add(value.trim());
+      }
+    };
+    (Array.isArray(entry?.hashtags) ? entry.hashtags : []).forEach(addHashtag);
+    (Array.isArray(parsed?.generated_hashtags) ? parsed.generated_hashtags : []).forEach(addHashtag);
+    (Array.isArray(parsed?.hashtags) ? parsed.hashtags : []).forEach(addHashtag);
+    if (hashtagSet.size > 0) {
+      normalized.hashtags = Array.from(hashtagSet);
+    }
+
+    // Normalise locations / geo hierarchy
+    const geoEntries: GeoRecord[] = [];
+    const addGeoRecord = (value: unknown) => {
+      if (typeof value === 'string' && value.trim().length > 0) {
+        geoEntries.push({ name: value.trim(), village: value.trim() });
+      } else if (value && typeof value === 'object') {
+        const record = value as GeoRecord;
+        if (Object.keys(record).length > 0) {
+          geoEntries.push(record);
+        }
+      }
+    };
+
+    addGeoRecord(entry?.geo);
+    (Array.isArray(entry?.locations) ? entry.locations : []).forEach(addGeoRecord);
+    (Array.isArray(parsed?.locations) ? parsed.locations : []).forEach(addGeoRecord);
+    (Array.isArray(parsed?.geo_hierarchy) ? parsed.geo_hierarchy : []).forEach(addGeoRecord);
+    addGeoRecord(entry?.hierarchy);
+    addGeoRecord(parsed?.hierarchy);
+
+    if (geoEntries.length > 0) {
+      normalized.geo_hierarchy = geoEntries;
+      normalized.locations = geoEntries;
+      const primary = geoEntries.find(record => record.district || record.block || record.village);
+      if (primary) {
+        normalized.geo = {
+          district: primary.district,
+          block: primary.block,
+          gp: primary.gp ?? primary.gram_panchayat ?? primary.gramPanchayat,
+          village: primary.village ?? primary.name,
+        };
+      }
+    }
+
+    return normalized;
+  });
 }
 
 export function getApprovedTweets(): ParsedTweet[] {
@@ -102,6 +180,7 @@ export function extractGeoHierarchy(): GeoHierarchySnapshot {
       if (t.hierarchy.district) districts.add(t.hierarchy.district);
       if (t.hierarchy.block) blocks.add(t.hierarchy.block);
       if (t.hierarchy.gramPanchayat) gps.add(t.hierarchy.gramPanchayat);
+      if ((t.hierarchy as GeoRecord).gram_panchayat) gps.add((t.hierarchy as GeoRecord).gram_panchayat as string);
       if (t.hierarchy.village) villages.add(t.hierarchy.village);
     }
   }

@@ -21,27 +21,31 @@ export async function GET(request: NextRequest) {
       `);
       
       if (result.rows && result.rows.length > 0) {
-        const tweets = result.rows.map((row: any) => ({
-          id: row.tweet_id,
-          tweet_id: row.tweet_id,
-          event_type: row.event_type,
-          locations: row.locations || [],
-          schemes_mentioned: row.schemes_mentioned || [],
-          people_mentioned: row.people_mentioned || [],
-          organizations: row.organizations || [],
-          event_date: row.event_date,
-          timestamp: row.tweet_created_at,
-          parsed_at: row.created_at,
-          content: row.tweet_text,
-          text: row.tweet_text,
-          parsed: {
+        const tweets = result.rows
+          .map((row: any) => ({
+            id: row.tweet_id,
+            tweet_id: row.tweet_id,
             event_type: row.event_type,
             locations: row.locations || [],
-            schemes: row.schemes_mentioned || [],
-          },
-        }));
+            schemes_mentioned: row.schemes_mentioned || [],
+            people_mentioned: row.people_mentioned || [],
+            organizations: row.organizations || [],
+            event_date: row.event_date,
+            timestamp: row.tweet_created_at,
+            parsed_at: row.created_at,
+            content: row.tweet_text,
+            text: row.tweet_text,
+            review_status: row.review_status || 'pending',
+            parsed: {
+              event_type: row.event_type,
+              locations: row.locations || [],
+              schemes: row.schemes_mentioned || [],
+            },
+          }))
+          // Exclude skipped items from analytics - they should not be part of analysis
+          .filter((t: any) => t.review_status !== 'skipped');
         
-        logger.info(`Loaded ${tweets.length} tweets from database for analytics`);
+        logger.info(`Loaded ${tweets.length} tweets from database for analytics (skipped items excluded)`);
         
         // Generate comprehensive analytics from database data
         const analytics = {
@@ -82,10 +86,12 @@ export async function GET(request: NextRequest) {
       const fileContent = fs.readFileSync(dataPath, 'utf8');
       const tweets = JSON.parse(fileContent);
       
-      logger.info(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
+      // Exclude skipped items from analytics - they should not be part of analysis
+      const allTweets = tweets.filter((t: any) => 
+        !t.review_status || t.review_status !== 'skipped'
+      );
       
-      // Use all tweets for analytics (not just approved ones)
-      const allTweets = tweets;
+      logger.info(`Loaded ${allTweets.length} tweets from parsed_tweets.json (skipped items excluded, original: ${tweets.length})`);
       
       // Generate comprehensive analytics from real data
       const analytics = {

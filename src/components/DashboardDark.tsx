@@ -185,8 +185,9 @@ export default function DashboardDark() {
     logger.debug('DashboardDark: parsed length:', parsed.length);
     logger.debug('DashboardDark: first parsed item:', parsed[0]);
     
-    let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
-    logger.debug('DashboardDark: after skip filter:', rows.length);
+    // Include ALL rows including skipped - home page table shows everything
+    let rows = parsed;
+    logger.debug('DashboardDark: rows (including skipped):', rows.length);
     if (locFilter.trim()) {
       const q = locFilter.trim();
       rows = rows.filter((r) => {

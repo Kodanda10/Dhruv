@@ -109,6 +109,8 @@ export default function ReviewQueueNew() {
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
   const [loading, setLoading] = useState(false); // Set to false since we're using static data
 
+  const currentTweet = useMemo(() => tweets[currentIndex], [tweets, currentIndex]);
+
   // Add missing functions
   const handleAISend = async (message: string) => {
     if (!message.trim()) return;
@@ -166,10 +168,53 @@ export default function ReviewQueueNew() {
   };
 
   const handleSkip = () => {
-    setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1));
+    if (currentIndex < tweets.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
     setEditMode(false);
     setEditedData({});
     setCorrectionReason('');
+  };
+
+  const handleReject = async () => {
+    if (!currentTweet) return;
+    
+    try {
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          review_status: 'rejected',
+          needs_review: true,
+        })
+      });
+
+      if (response.ok) {
+        setTweets(prev => prev.map(tweet => 
+          tweet.id === currentTweet.id 
+            ? { ...tweet, review_status: 'rejected', needs_review: true }
+            : tweet
+        ));
+        
+        // Move to next tweet
+        handleSkip();
+      }
+    } catch (error) {
+      logger.error('Error rejecting tweet:', error as Error);
+    }
+  };
+
+  const handleSaveAndApprove = async () => {
+    if (!currentTweet || !correctionReason.trim()) {
+      alert('कृपया सुधार का कारण दर्ज करें');
+      return;
+    }
+    
+    await handleSave();
+    await handleApprove();
   };
 
   const handleApprove = async () => {
@@ -391,7 +436,16 @@ export default function ReviewQueueNew() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editMode, currentTweet, correctionReason]);
+  }, [
+    editMode,
+    currentTweet,
+    correctionReason,
+    fetchIntelligentSuggestions,
+    handleApprove,
+    handleReject,
+    handleSaveAndApprove,
+    handleSkip
+  ]);
 
   // Fetch tweets from API on component mount
   useEffect(() => {
@@ -461,8 +515,6 @@ export default function ReviewQueueNew() {
     fetchTweets();
   }, []);
 
-  const currentTweet = tweets[currentIndex];
-  
   logger.debug('ReviewQueueNew: tweets length:', tweets.length);
   logger.debug('ReviewQueueNew: currentIndex:', currentIndex);
   logger.debug('ReviewQueueNew: currentTweet:', currentTweet);
@@ -497,6 +549,55 @@ export default function ReviewQueueNew() {
     if (!currentTweet || !correctionReason.trim()) {
       alert('कृपया सुधार का कारण दर्ज करें (Please enter correction reason)');
       return;
+    }
+    
+    try {
+      // Save corrections to learning system
+      const learningResponse = await fetch('/api/learning', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'learn_from_feedback',
+          data: {
+            tweetId: currentTweet.tweet_id,
+            originalParsed: currentTweet,
+            humanCorrection: { ...currentTweet, ...editedData },
+            correctionReason: correctionReason,
+            reviewer: 'human'
+          }
+        })
+      });
+
+      if (learningResponse.ok) {
+        const learningResult = await learningResponse.json();
+        logger.info('Learning from feedback:', learningResult);
+      }
+      
+      // Update parsed event
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          ...editedData,
+          correction_reason: correctionReason,
+          review_status: 'corrected',
+        })
+      });
+
+      if (response.ok) {
+        setTweets(prev => prev.map(tweet => 
+          tweet.id === currentTweet.id 
+            ? { ...tweet, ...editedData, review_status: 'corrected' }
+            : tweet
+        ));
+      }
+    } catch (error) {
+      logger.error('Error saving corrections:', error as Error);
     }
     
     setEditMode(false);

@@ -33,7 +33,9 @@ export default function AnalyticsDashboardDark() {
     timeRange: '30d',
     location: 'all',
     eventType: 'all',
-    theme: 'all'
+    theme: 'all',
+    startDate: '',
+    endDate: '',
   });
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -42,12 +44,21 @@ export default function AnalyticsDashboardDark() {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/analytics');
+      // Build query params from filters
+      const params = new URLSearchParams();
+      if (filters.timeRange !== 'all') params.append('timeRange', filters.timeRange);
+      if (filters.location !== 'all') params.append('location', filters.location);
+      if (filters.eventType !== 'all') params.append('eventType', filters.eventType);
+      if (filters.theme !== 'all') params.append('theme', filters.theme);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      
+      const response = await fetch(`/api/analytics?${params.toString()}`);
       const result = await response.json();
       
       if (result.success && result.analytics) {
@@ -195,14 +206,46 @@ export default function AnalyticsDashboardDark() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">समय सीमा</label>
                 <select 
                   value={filters.timeRange} 
-                  onChange={(e) => setFilters({...filters, timeRange: e.target.value})}
+                  onChange={(e) => {
+                    const newRange = e.target.value;
+                    setFilters({
+                      ...filters, 
+                      timeRange: newRange,
+                      startDate: newRange === 'custom' ? filters.startDate : '',
+                      endDate: newRange === 'custom' ? filters.endDate : '',
+                    });
+                  }}
                   className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="7d">7 दिन</option>
                   <option value="30d">30 दिन</option>
                   <option value="90d">90 दिन</option>
+                  <option value="custom">कस्टम</option>
+                  <option value="all">सभी</option>
                 </select>
               </div>
+              {filters.timeRange === 'custom' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">शुरुआत तिथि</label>
+                    <input
+                      type="date"
+                      value={filters.startDate}
+                      onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                      className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">अंत तिथि</label>
+                    <input
+                      type="date"
+                      value={filters.endDate}
+                      onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                      className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">स्थान</label>
                 <select 
@@ -240,6 +283,55 @@ export default function AnalyticsDashboardDark() {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Export Buttons */}
+          <div className="mb-6 flex gap-3 justify-end">
+            <button
+              onClick={() => {
+                if (!analyticsData) return;
+                const csvData = [
+                  ['Date', 'Event Count'].join(','),
+                  ...analyticsData.timeSeriesData.map(d => [d.date, d.value].join(','))
+                ].join('\n');
+                const blob = new Blob([csvData], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              disabled={!analyticsData || loading}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              CSV एक्सपोर्ट करें
+            </button>
+            <button
+              onClick={() => {
+                if (!analyticsData) return;
+                const jsonData = JSON.stringify({
+                  filters,
+                  timeSeriesData: analyticsData.timeSeriesData,
+                  eventTypeData: analyticsData.eventTypeData,
+                  dayOfWeekData: analyticsData.dayOfWeekData,
+                  locationData: analyticsData.locationData,
+                  schemeData: analyticsData.schemeData,
+                  exportedAt: new Date().toISOString(),
+                }, null, 2);
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `analytics-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              disabled={!analyticsData || loading}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              JSON एक्सपोर्ट करें
+            </button>
           </div>
 
           {/* Charts Grid */}
