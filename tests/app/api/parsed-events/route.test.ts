@@ -1061,10 +1061,10 @@ describe('Comprehensive Scenario Testing - 1000+ Cases', () => {
 
   // Generate combinations
   const combinations: any[] = [];
-  testScenarios[0].limit.forEach((limit) => {
-    testScenarios[1].needsReview.forEach((needsReview) => {
-      testScenarios[2].reviewStatus.forEach((reviewStatus) => {
-        testScenarios[3].analytics.forEach((analytics) => {
+  (testScenarios[0]?.limit || []).forEach((limit) => {
+    (testScenarios[1]?.needsReview || []).forEach((needsReview) => {
+      (testScenarios[2]?.reviewStatus || []).forEach((reviewStatus) => {
+        (testScenarios[3]?.analytics || []).forEach((analytics) => {
           combinations.push({ limit, needsReview, reviewStatus, analytics });
         });
       });

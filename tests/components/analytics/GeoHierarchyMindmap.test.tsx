@@ -165,8 +165,10 @@ const createHierarchicalData = () => {
 
 const hierarchicalData = createHierarchicalData();
 
-describe('GeoHierarchyMindmap', () => {
-  beforeEach(() => {
+  describe('GeoHierarchyMindmap', () => {
+    beforeEach(() => {
+      // Clear all mocks
+      jest.clearAllMocks();
     jest.clearAllMocks();
     (global.fetch as jest.Mock).mockClear();
     // Reset URL methods
