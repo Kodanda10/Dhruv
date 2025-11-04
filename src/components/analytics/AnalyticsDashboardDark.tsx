@@ -154,10 +154,10 @@ export default function AnalyticsDashboardDark() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#101922] text-gray-200 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">एनालिटिक्स डेटा लोड हो रहा है...</p>
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="glassmorphic-card text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-green mx-auto mb-4"></div>
+          <p className="text-gray-300">एनालिटिक्स डेटा लोड हो रहा है...</p>
         </div>
       </div>
     );
@@ -165,12 +165,12 @@ export default function AnalyticsDashboardDark() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#101922] text-gray-200 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="glassmorphic-card text-center">
           <p className="text-red-400 mb-4">❌ {error}</p>
           <button 
             onClick={fetchAnalyticsData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40 rounded-lg hover:bg-opacity-30 transition-colors"
           >
             पुनः प्रयास करें
           </button>
@@ -181,16 +181,16 @@ export default function AnalyticsDashboardDark() {
 
   if (!analyticsData) {
     return (
-      <div className="min-h-screen bg-[#101922] text-gray-200 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-400">कोई डेटा उपलब्ध नहीं है</p>
+      <div className="min-h-screen text-white flex items-center justify-center">
+        <div className="glassmorphic-card text-center">
+          <p className="text-gray-300">कोई डेटा उपलब्ध नहीं है</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#101922] text-gray-200">
+    <div className="min-h-screen text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">एनालिटिक्स डैशबोर्ड</h1>
@@ -199,7 +199,7 @@ export default function AnalyticsDashboardDark() {
 
         <div className="space-y-8" data-testid="analytics-dashboard">
           {/* Filters Section */}
-          <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
+          <div className="glassmorphic-card rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-white">फ़िल्टर</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
@@ -215,7 +215,7 @@ export default function AnalyticsDashboardDark() {
                       endDate: newRange === 'custom' ? filters.endDate : '',
                     });
                   }}
-                  className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="7d">7 दिन</option>
                   <option value="30d">30 दिन</option>
@@ -232,7 +232,7 @@ export default function AnalyticsDashboardDark() {
                       type="date"
                       value={filters.startDate}
                       onChange={(e) => setFilters({...filters, startDate: e.target.value})}
-                      className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                     />
                   </div>
                   <div>
@@ -241,7 +241,7 @@ export default function AnalyticsDashboardDark() {
                       type="date"
                       value={filters.endDate}
                       onChange={(e) => setFilters({...filters, endDate: e.target.value})}
-                      className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                     />
                   </div>
                 </>
@@ -251,7 +251,7 @@ export default function AnalyticsDashboardDark() {
                 <select 
                   value={filters.location} 
                   onChange={(e) => setFilters({...filters, location: e.target.value})}
-                  className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="raipur">रायपुर</option>
@@ -263,7 +263,7 @@ export default function AnalyticsDashboardDark() {
                 <select 
                   value={filters.eventType} 
                   onChange={(e) => setFilters({...filters, eventType: e.target.value})}
-                  className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="meeting">बैठक</option>
@@ -275,7 +275,7 @@ export default function AnalyticsDashboardDark() {
                 <select 
                   value={filters.theme} 
                   onChange={(e) => setFilters({...filters, theme: e.target.value})}
-                  className="w-full rounded-md border border-gray-700 bg-[#0d1117] text-gray-100 py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="development">विकास</option>
@@ -303,7 +303,7 @@ export default function AnalyticsDashboardDark() {
                 URL.revokeObjectURL(url);
               }}
               disabled={!analyticsData || loading}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40 hover:bg-opacity-30 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               CSV एक्सपोर्ट करें
             </button>
@@ -328,7 +328,7 @@ export default function AnalyticsDashboardDark() {
                 URL.revokeObjectURL(url);
               }}
               disabled={!analyticsData || loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-white bg-opacity-10 text-white border border-white border-opacity-20 hover:bg-opacity-15 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               JSON एक्सपोर्ट करें
             </button>
@@ -338,7 +338,7 @@ export default function AnalyticsDashboardDark() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Time Series Chart */}
             <div className="lg:col-span-2">
-              <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
+              <div className="glassmorphic-card rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4 text-white">समय के साथ गतिविधि (30 दिन)</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -374,7 +374,7 @@ export default function AnalyticsDashboardDark() {
             </div>
 
             {/* Event Type Distribution */}
-            <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
+            <div className="glassmorphic-card rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">दौरा/कार्यक्रम वितरण</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -411,7 +411,7 @@ export default function AnalyticsDashboardDark() {
             </div>
 
             {/* Day of Week Chart */}
-            <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
+            <div className="glassmorphic-card rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">सप्ताह के दिन के अनुसार गतिविधि</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">

@@ -60,6 +60,14 @@ export const colors = {
     tertiary: '#F3F4F6',   // Card hover, tertiary sections
     dark: '#1E293B',       // Dark sections (optional)
   },
+  
+  // Kusha Theme Colors (for glassmorphic design)
+  kusha: {
+    mintGreen: '#66FFCC',
+    darkPurple: '#5B2C87',
+    darkerPurple: '#3A1A5C',
+    gradient: 'linear-gradient(135deg, #5B2C87 0%, #3A1A5C 100%)',
+  },
 } as const;
 
 /**

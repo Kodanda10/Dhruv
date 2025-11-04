@@ -12,11 +12,11 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'review' | 'analytics'>('home');
 
   return (
-    <main className={`${notoDevanagari.className} min-h-screen bg-[#101922] text-gray-200`}>
-      {/* Background Effects */}
+    <main className={`${notoDevanagari.className} min-h-screen bg-dark-gradient text-white`}>
+      {/* Background Effects - Enhanced with Kusha theme */}
       <div className="fixed inset-0 -z-10 h-full w-full">
-        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(44,0,95,0.7),rgba(255,255,255,0))]"></div>
-        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,75,79,0.6),rgba(255,255,255,0))]"></div>
+        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(91,44,135,0.6),rgba(255,255,255,0))]"></div>
+        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(102,255,204,0.3),rgba(255,255,255,0))]"></div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
@@ -26,14 +26,14 @@ export default function Home() {
           </h1>
         </header>
 
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-8 gap-2 bg-[#192734] rounded-lg p-1 shadow-sm max-w-2xl mx-auto border border-gray-800">
+        {/* Tab Navigation - Glassmorphic Style */}
+        <div className="flex justify-center mb-8 gap-2 glassmorphic-card rounded-lg p-1 max-w-2xl mx-auto">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'home'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-gray-300 hover:text-white'
             }`}
           >
             🏠 होम
@@ -42,8 +42,8 @@ export default function Home() {
             onClick={() => setActiveTab('review')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'review'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-gray-300 hover:text-white'
             }`}
           >
             📝 समीक्षा
@@ -52,16 +52,16 @@ export default function Home() {
             onClick={() => setActiveTab('analytics')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'analytics'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-gray-300 hover:text-white'
             }`}
           >
             📊 एनालिटिक्स
           </button>
         </div>
 
-        {/* Tab Content - Unified Layout */}
-        <div className="min-h-[600px] bg-[#192734] rounded-xl border border-gray-800 shadow-lg">
+        {/* Tab Content - Glassmorphic Card Layout */}
+        <div className="min-h-[600px] glassmorphic-card shadow-lg">
           {activeTab === 'home' && (
             <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Tweets...</div>}>
