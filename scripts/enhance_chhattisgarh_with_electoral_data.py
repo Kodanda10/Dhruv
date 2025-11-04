@@ -84,7 +84,7 @@ class ElectoralDataEnhancer:
             return result if result else None
 
         except requests.RequestException as e:
-            logger.error(f"API request failed for ({lat}, {lon}): {e}")
+            logger.error(f"API request failed for constituency lookup: {type(e).__name__}")
             return None
         finally:
             time.sleep(self.rate_limit_delay)

@@ -1,30 +1,39 @@
 'use client';
-import Dashboard from '@/components/Dashboard';
-import Metrics from '@/components/Metrics';
-import ReviewQueue from '@/components/review/ReviewQueue';
+import React from 'react';
+import DashboardDark from '@/components/DashboardDark';
+import ReviewQueueNew from '@/components/review/ReviewQueueNew';
 import { Suspense, useState } from 'react';
 import { titleFont, notoDevanagari } from './fonts';
+
+// Lazy load AnalyticsDashboard to avoid D3 import issues in tests
+const AnalyticsDashboardDark = React.lazy(() => import('@/components/analytics/AnalyticsDashboardDark'));
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'review' | 'analytics'>('home');
 
   return (
-    <main className={`${notoDevanagari.className} min-h-screen bg-gray-50`}>
+    <main className={`${notoDevanagari.className} min-h-screen bg-[#101922] text-gray-200`}>
+      {/* Background Effects */}
+      <div className="fixed inset-0 -z-10 h-full w-full">
+        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(44,0,95,0.7),rgba(255,255,255,0))]"></div>
+        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,75,79,0.6),rgba(255,255,255,0))]"></div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className={`${titleFont.className} text-4xl md:text-5xl text-gray-900 font-bold mb-2`}>
+          <h1 className={`${titleFont.className} text-4xl md:text-5xl text-white font-bold mb-2`}>
             सोशल मीडिया एनालिटिक्स डैशबोर्ड
           </h1>
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-8 gap-2 bg-white rounded-lg p-1 shadow-sm max-w-2xl mx-auto">
+        <div className="flex justify-center mb-8 gap-2 bg-[#192734] rounded-lg p-1 shadow-sm max-w-2xl mx-auto border border-gray-800">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'home'
-                ? 'bg-green-500 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             🏠 होम
@@ -33,8 +42,8 @@ export default function Home() {
             onClick={() => setActiveTab('review')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'review'
-                ? 'bg-green-500 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             📝 समीक्षा
@@ -43,36 +52,38 @@ export default function Home() {
             onClick={() => setActiveTab('analytics')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'analytics'
-                ? 'bg-green-500 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
             }`}
           >
             📊 एनालिटिक्स
           </button>
         </div>
 
-        {/* Tab Content */}
-        <div className="min-h-[600px]">
+        {/* Tab Content - Unified Layout */}
+        <div className="min-h-[600px] bg-[#192734] rounded-xl border border-gray-800 shadow-lg">
           {activeTab === 'home' && (
-            <section>
-              <Suspense fallback={<div className="text-center p-8 text-gray-600">Loading Tweets...</div>}>
-                <Dashboard />
+            <div className="p-6">
+              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Tweets...</div>}>
+                <DashboardDark />
               </Suspense>
-            </section>
+            </div>
           )}
 
           {activeTab === 'review' && (
-            <section>
-              <Suspense fallback={<div className="text-center p-8 text-gray-600">Loading Review Interface...</div>}>
-                <ReviewQueue />
+            <div className="p-6">
+              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Review Interface...</div>}>
+                <ReviewQueueNew />
               </Suspense>
-            </section>
+            </div>
           )}
 
           {activeTab === 'analytics' && (
-            <section>
-              <Metrics />
-            </section>
+            <div className="p-6">
+              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Analytics...</div>}>
+                <AnalyticsDashboardDark />
+              </Suspense>
+            </div>
           )}
         </div>
       </div>

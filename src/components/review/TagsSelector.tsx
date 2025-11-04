@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Input from '../ui/Input';
 import TagBubble from './TagBubble';
 import { api } from '@/lib/api';
@@ -17,10 +17,16 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
   const [all, setAll] = useState<TagItem[]>([]);
   const [suggested, setSuggested] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>(initialSelected);
+  const onChangeRef = useRef(onChange);
+
+  // Keep onChange ref up to date
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     setSelected(initialSelected);
-  }, [initialSelected]);
+  }, [JSON.stringify(initialSelected)]);
 
   useEffect(() => {
     let mounted = true;
@@ -47,7 +53,10 @@ export default function TagsSelector({ tweetId, initialSelected = [], onChange }
     return () => { mounted = false; };
   }, [tweetId]);
 
-  useEffect(() => { onChange?.(selected); }, [selected, onChange]);
+  // Only call onChange when selected actually changes, using ref to avoid dependency
+  useEffect(() => { 
+    onChangeRef.current?.(selected); 
+  }, [selected]);
 
   const shown = useMemo(() => {
     const q = query.trim();

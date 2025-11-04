@@ -1,5 +1,8 @@
 name: api-contract
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main ]

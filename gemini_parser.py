@@ -1,209 +1,340 @@
-#!/usr/bin/env python3
-"""
-Simple Gemini Parser for Dhruv Project Posts
-Processes posts using Gemini AI with proper rate limiting
-"""
-
+import google.generativeai as genai
+import psycopg2
 import os
 import json
-import time
-import sys
-from datetime import datetime
+from typing import Dict, List, Optional
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
+# SOTA Context for Chhattisgarh
+CHHATTISGARH_CONTEXT = """
+You are an expert parser for political tweets from Chhattisgarh, India. Your task is to extract structured information from Hindi/English tweets about political activities, government schemes, and public events.
 
-def create_simple_gemini_parser():
-    """Create a simple Gemini parser without complex dependencies"""
-    try:
-        import google.generativeai as genai
-    except ImportError:
-        raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
+CONTEXT:
+- Chhattisgarh is a state in central India
+- Capital: Raipur
+- Major districts: Raigarh, Bilaspur, Durg, Rajnandgaon, Bastar, Surguja
+- Language: Hindi (Devanagari script), some English
+- Political context: State government activities, central government schemes, local governance
 
-    class SimpleGeminiParser:
-        def __init__(self):
-            api_key = os.getenv("GEMINI_API_KEY")
-            if not api_key:
-                raise ValueError("GEMINI_API_KEY not found in environment")
+GEOGRAPHY HIERARCHY:
+State → District → Assembly Constituency → Block → Gram Panchayat → Village
+- Raigarh district includes: Raigarh AC, Sarangarh AC
+- Bilaspur district includes: Bilaspur AC, Kota AC, Takhatpur AC
+- Durg district includes: Durg AC, Bhilai AC, Patan AC
 
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
-            self.request_count = 0
-            self.last_request_time = 0
-            self.min_delay = 2  # 2 seconds between requests (30 requests/minute max)
+COMMON ENTITIES:
+- People: Chief Minister, Ministers, MLAs, MPs, local leaders
+- Organizations: Government departments, political parties, NGOs
+- Schemes: Central and state government welfare programs
+- Events: Meetings, rallies, inaugurations, inspections, distributions
+"""
 
-        def parse(self, text: str, entity: str) -> str:
-            """Parse text for entity with rate limiting"""
-            # Rate limiting
-            current_time = time.time()
-            time_since_last = current_time - self.last_request_time
-            if time_since_last < self.min_delay:
-                sleep_time = self.min_delay - time_since_last
-                time.sleep(sleep_time)
-
-            # Create prompt based on entity
-            if entity == "sentiment":
-                prompt = f"Analyze the sentiment of this text and respond with only one word: 'positive', 'negative', or 'neutral'.\n\nText: {text}"
-            elif entity == "theme":
-                prompt = f"Extract the main theme/topic from this text. Respond with a short phrase in the same language as the text.\n\nText: {text}"
-            elif entity == "location":
-                prompt = f"Extract the primary location mentioned in this text. If no location is mentioned, respond with 'unknown'.\n\nText: {text}"
-            else:
-                return "unknown"
-
-            try:
-                response = self.model.generate_content(prompt)
-                result = response.text.strip()
-                self.last_request_time = time.time()
-                self.request_count += 1
-
-                # Progress indicator
-                if self.request_count % 10 == 0:
-                    print(f"   Processed {self.request_count} requests...")
-
-                return result
-            except Exception as e:
-                print(f"   Error: {e}")
-                return "unknown"
-
-    return SimpleGeminiParser()
-
-def main():
-    print("🚀 Dhruv Project - Gemini Post Parser")
-    print("=" * 50)
-
-    # Check if posts file exists
-    posts_file = "data/posts_new.json"
-    if not os.path.exists(posts_file):
-        print(f"❌ Posts file not found: {posts_file}")
-        return
-
-    # Load posts
-    print("📂 Loading posts...")
-    with open(posts_file, 'r', encoding='utf-8') as f:
-        posts = json.load(f)
-
-    print(f"✅ Loaded {len(posts)} posts (IDs {posts[0]['id']} to {posts[-1]['id']})")
-
-    # Check for existing processed posts
-    processed_file = "data/posts_new_processed.json"
-    processed_posts = []
-    if os.path.exists(processed_file):
+class ReferenceDataLoader:
+    """Load and cache reference datasets for parsing"""
+    
+    def __init__(self):
+        self.schemes_cache = None
+        self.event_types_cache = None
+        self._load_reference_data()
+    
+    def _load_reference_data(self):
+        """Load reference data from database"""
         try:
-            with open(processed_file, 'r', encoding='utf-8') as f:
-                processed_posts = json.load(f)
-            print(f"📂 Found {len(processed_posts)} already processed posts")
-        except:
-            print("⚠️  Processed posts file exists but is corrupted - starting fresh")
-            processed_posts = []
+            conn = psycopg2.connect(
+                host=os.getenv('DB_HOST', 'localhost'),
+                database=os.getenv('DB_NAME', 'dhruv_db'),
+                user=os.getenv('DB_USER', 'dhruv_user'),
+                password=os.getenv('DB_PASSWORD', 'dhruv_pass')
+            )
+            cursor = conn.cursor()
+            
+            # Load schemes
+            cursor.execute("""
+                SELECT id, scheme_code, name_hi, name_en, category, 
+                       ministry, description_hi
+                FROM ref_schemes
+                WHERE is_active = true
+                ORDER BY usage_count DESC
+            """)
+            self.schemes_cache = cursor.fetchall()
+            
+            # Load event types with aliases
+            cursor.execute("""
+                SELECT id, event_code, name_hi, name_en, 
+                       aliases_hi, aliases_en, category
+                FROM ref_event_types
+                WHERE is_active = true
+                ORDER BY usage_count DESC
+            """)
+            self.event_types_cache = cursor.fetchall()
+            
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Error loading reference data: {e}")
+            self.schemes_cache = []
+            self.event_types_cache = []
+    
+    def get_schemes_context(self) -> str:
+        """Format schemes for Gemini prompt"""
+        if not self.schemes_cache:
+            return ""
+        
+        central = [s for s in self.schemes_cache if s[4] == 'central']
+        state = [s for s in self.schemes_cache if s[4] == 'state']
+        
+        context = "GOVERNMENT SCHEMES:\n"
+        context += "Central Schemes:\n"
+        for scheme in central[:10]:  # Top 10 by usage
+            context += f"- {scheme[2]} ({scheme[3]})\n"
+        
+        context += "\nChhattisgarh State Schemes:\n"
+        for scheme in state[:10]:
+            context += f"- {scheme[2]} ({scheme[3]})\n"
+        
+        return context
+    
+    def get_event_types_context(self) -> str:
+        """Format event types for Gemini prompt"""
+        if not self.event_types_cache:
+            return ""
+        
+        context = "EVENT TYPES (with Hindi aliases):\n"
+        for evt in self.event_types_cache:
+            evt_id, code, name_hi, name_en, aliases_hi, aliases_en, category = evt
+            aliases_str = ", ".join(aliases_hi or [])
+            context += f"- {name_hi} ({name_en})"
+            if aliases_str:
+                context += f" | Aliases: {aliases_str}"
+            context += "\n"
+        
+        return context
+    
+    def match_scheme(self, text: str) -> List[Dict]:
+        """Match schemes in text using fuzzy matching"""
+        matched = []
+        if not self.schemes_cache:
+            return matched
+        
+        for scheme in self.schemes_cache:
+            scheme_id, code, name_hi, name_en, category, ministry, desc = scheme
+            
+            # Check direct match
+            if name_hi in text or name_en in text:
+                matched.append({
+                    'id': scheme_id,
+                    'code': code,
+                    'name_hi': name_hi,
+                    'name_en': name_en,
+                    'category': category
+                })
+                continue
+            
+            # Check partial match (key terms)
+            if 'किसान' in name_hi and 'किसान' in text:
+                matched.append({
+                    'id': scheme_id,
+                    'code': code,
+                    'name_hi': name_hi,
+                    'name_en': name_en,
+                    'category': category
+                })
+        
+        return matched
+    
+    def match_event_type(self, text: str) -> Optional[Dict]:
+        """Match event type including aliases"""
+        if not self.event_types_cache:
+            return None
+        
+        for evt in self.event_types_cache:
+            evt_id, code, name_hi, name_en, aliases_hi, aliases_en, category = evt
+            
+            # Check main names
+            if name_hi in text or name_en in text:
+                return {
+                    'id': evt_id,
+                    'code': code,
+                    'name_hi': name_hi,
+                    'name_en': name_en,
+                    'category': category
+                }
+            
+            # Check aliases
+            if aliases_hi:
+                for alias in aliases_hi:
+                    if alias in text:
+                        return {
+                            'id': evt_id,
+                            'code': code,
+                            'name_hi': name_hi,
+                            'name_en': name_en,
+                            'category': category,
+                            'matched_via': alias
+                        }
+        
+        return None
 
-    # Find which posts still need processing
-    processed_ids = {p['id'] for p in processed_posts}
-    posts_to_process = [p for p in posts if p['id'] not in processed_ids]
+# Global reference data loader
+ref_loader = ReferenceDataLoader()
 
-    if not posts_to_process:
-        print("✅ All posts have already been processed!")
-        return
+def normalize_for_matching(text: str) -> str:
+    """Normalize text for matching (simplified version)"""
+    return text.lower().strip()
 
-    print(f"🎯 Need to process {len(posts_to_process)} posts")
-    print(f"   Already processed: {len(processed_posts)} posts")
-    print(f"   Remaining: {len(posts_to_process)} posts")
+def transliterate_devanagari(text: str) -> str:
+    """Simple transliteration (simplified version)"""
+    # Basic transliteration mapping
+    mapping = {
+        'रायगढ़': 'Raigarh',
+        'किसान': 'Kisan',
+        'योजना': 'Yojana',
+        'मुख्यमंत्री': 'CM',
+        'प्रधानमंत्री': 'PM'
+    }
+    
+    for hindi, english in mapping.items():
+        text = text.replace(hindi, english)
+    
+    return text
 
-    # Initialize Gemini parser
-    print("🤖 Initializing Gemini parser...")
+def generate_contextual_hashtags(parsed_data: Dict) -> List[str]:
+    """Generate intelligent hashtags based on parsed data"""
+    hashtags = []
+    
+    # From locations
+    if parsed_data.get('locations'):
+        for loc in parsed_data['locations'][:2]:  # Max 2
+            # Hindi version
+            hashtags.append(f"#{loc.replace(' ', '')}")
+            # Transliterated version
+            hashtags.append(f"#{transliterate_devanagari(loc)}")
+    
+    # From event type
+    if parsed_data.get('event_type'):
+        evt = parsed_data['event_type']
+        hashtags.append(f"#{evt.replace(' ', '')}")
+    
+    # From schemes
+    if parsed_data.get('schemes'):
+        for scheme in parsed_data['schemes'][:1]:  # Max 1
+            # Extract key term (e.g., "किसान" from "मुख्यमंत्री किसान योजना")
+            terms = scheme.split()
+            if len(terms) >= 2:
+                key_term = terms[1]  # Usually the category
+                hashtags.append(f"#{key_term}")
+    
+    # General political hashtags
+    hashtags.append("#छत्तीसगढ़")
+    hashtags.append("#Chhattisgarh")
+    
+    # Deduplicate
+    return list(set(hashtags))
+
+def parse_tweet_with_gemini(tweet_text: str) -> dict:
+    """Enhanced parser with reference datasets"""
+    
+    # Pre-match using reference data
+    matched_schemes = ref_loader.match_scheme(tweet_text)
+    matched_event = ref_loader.match_event_type(tweet_text)
+    
+    # Build enhanced context
+    schemes_context = ref_loader.get_schemes_context()
+    events_context = ref_loader.get_event_types_context()
+    
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    prompt = f"""
+{CHHATTISGARH_CONTEXT}
+
+{schemes_context}
+
+{events_context}
+
+PRE-MATCHED DATA (use as hints):
+- Schemes detected: {[s['name_hi'] for s in matched_schemes]}
+- Event type hint: {matched_event['name_hi'] if matched_event else 'Unknown'}
+
+TASK: Analyze this tweet and extract structured information.
+
+TWEET TEXT:
+{tweet_text}
+
+OUTPUT FORMAT (JSON):
+{{
+  "event_type": "Use one from EVENT TYPES list above",
+  "event_type_en": "English name",
+  "event_code": "CODE from list",
+  "locations": ["District/Block/Village names"],
+  "people": ["Person names mentioned"],
+  "organizations": ["Organization names"],
+  "schemes": ["Use EXACT names from GOVERNMENT SCHEMES list"],
+  "schemes_en": ["English names of schemes"],
+  "date": "YYYY-MM-DD or null",
+  "confidence": 0.0-1.0,
+  "reasoning": "Brief explanation",
+  "matched_scheme_ids": [1, 2],  // IDs of matched schemes
+  "matched_event_id": 5  // ID of matched event type
+}}
+
+IMPORTANT:
+- Use EXACT scheme names from the reference list
+- Match event type to one from the EVENT TYPES list
+- Include both Hindi and English names for schemes
+- Return scheme/event IDs for tracking
+
+Return ONLY valid JSON, no extra text.
+"""
+    
     try:
-        parser = create_simple_gemini_parser()
-        print("✅ Gemini parser ready")
-    except Exception as e:
-        print(f"❌ Failed to initialize Gemini: {e}")
-        return
-
-    # Process remaining posts
-    print("🎯 Starting processing with rate limiting...")
-    start_time = time.time()
-    errors = []
-    batch_size = 10  # Save every 10 posts
-
-    for i, post in enumerate(posts_to_process):
-        post_id = post['id']
-        content = post.get('content', '')
-
-        if not content:
-            print(f"⚠️  Skipping empty content for post {post_id}")
-            continue
-
-        # Progress indicator
-        if (i + 1) % 5 == 0 or i == 0:
-            elapsed = time.time() - start_time
-            progress = ((i + 1) / len(posts_to_process)) * 100
-            eta = (elapsed / (i + 1)) * (len(posts_to_process) - i - 1) if i > 0 else 0
-            print(".1f")
-        try:
-            # Parse with Gemini
-            sentiment = parser.parse(content, "sentiment")
-            theme = parser.parse(content, "theme")
-            location = parser.parse(content, "location")
-
-            # Create processed post
-            processed_post = {
-                'id': post_id,
-                'timestamp': post['timestamp'],
-                'content': content,
-                'sentiment': sentiment,
-                'purpose': theme,
-                'parsed_metadata': json.dumps({
-                    'theme': theme,
-                    'location': location,
-                    'sentiment': sentiment
-                }, ensure_ascii=False)
-            }
-
-            processed_posts.append(processed_post)
-            print(f"✅ Post {post_id}: sentiment='{sentiment}', theme='{theme}'")
-
-            # Save incrementally every batch_size posts
-            if len(processed_posts) % batch_size == 0:
-                print(f"💾 Saving progress... ({len(processed_posts)} posts)")
-                with open(processed_file, 'w', encoding='utf-8') as f:
-                    json.dump(processed_posts, f, ensure_ascii=False, indent=2)
+        response = model.generate_content(prompt)
+        result_text = response.text.strip()
+        
+        # Clean markdown
+        if result_text.startswith('```'):
+            result_text = result_text.split('```')[1]
+            if result_text.startswith('json'):
+                result_text = result_text[4:]
+        
+        parsed = json.loads(result_text)
+        
+        # Ensure confidence
+        if 'confidence' not in parsed:
+            parsed['confidence'] = 0.5
+        
+        # Add pre-matched data if Gemini missed it
+        if matched_schemes and not parsed.get('matched_scheme_ids'):
+            parsed['matched_scheme_ids'] = [s['id'] for s in matched_schemes]
+            if not parsed.get('schemes'):
+                parsed['schemes'] = [s['name_hi'] for s in matched_schemes]
+                parsed['schemes_en'] = [s['name_en'] for s in matched_schemes]
+        
+        if matched_event and not parsed.get('matched_event_id'):
+            parsed['matched_event_id'] = matched_event['id']
+        
+        # Generate hashtags
+        parsed['generated_hashtags'] = generate_contextual_hashtags(parsed)
+        
+        return parsed
 
         except Exception as e:
-            error_msg = f"Error processing post {post_id}: {str(e)}"
-            print(f"❌ {error_msg}")
-            errors.append({
-                'post_id': post_id,
-                'error': str(e),
-                'timestamp': datetime.now().isoformat()
-            })
-            continue
+        print(f"Gemini parsing error: {str(e)}")
+        return {
+            "event_type": "Unknown",
+            "locations": [],
+            "people": [],
+            "organizations": [],
+            "schemes": [],
+            "schemes_en": [],
+            "date": None,
+            "confidence": 0.0,
+            "error": str(e),
+            "generated_hashtags": []
+        }
 
-    # Final save
-    print(f"\n💾 Final save of {len(processed_posts)} processed posts...")
-    with open(processed_file, 'w', encoding='utf-8') as f:
-        json.dump(processed_posts, f, ensure_ascii=False, indent=2)
-
-    # Save error log if any
-    if errors:
-        error_file = "data/processing_errors.json"
-        with open(error_file, 'w', encoding='utf-8') as f:
-            json.dump(errors, f, ensure_ascii=False, indent=2)
-        print(f"⚠️  Errors saved to: {error_file}")
-
-    # Final summary
-    total_time = time.time() - start_time
-    print("\n" + "=" * 50)
-    print("🎉 PROCESSING COMPLETE!")
-    print("=" * 50)
-    print(f"📊 Total posts processed: {len(processed_posts)}/{len(posts)}")
-    print(f"❌ Errors encountered: {len(errors)}")
-    print(f"⏱️  Total processing time: {total_time:.1f} seconds")
-    print(f"🚀 Average time per post: {total_time / max(len(processed_posts) - len(processed_posts) + len(posts_to_process), 1):.2f} seconds")
-    print(f"💾 Results saved to: {processed_file}")
-    print("\n🎯 Next steps:")
-    print("   1. Check processed posts in data/posts_new_processed.json")
-    print("   2. Start the dashboard servers to view results")
-    print("   3. Use the Human Review Dashboard for corrections")
+# Test function for development
+if __name__ == "__main__":
+    test_tweet = "मुख्यमंत्री किसान योजना के तहत रायगढ़ में सहायता वितरित की"
+    result = parse_tweet_with_gemini(test_tweet)
+    print(json.dumps(result, indent=2, ensure_ascii=False))

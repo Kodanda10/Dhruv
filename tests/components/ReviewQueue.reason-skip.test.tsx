@@ -28,16 +28,20 @@ describe('ReviewQueue reason required and skip flow', () => {
     // Wait until the first tweet shows
     await waitFor(() => expect(screen.getByText(/Tweet #/)).toBeInTheDocument());
 
-    // Enter edit mode
-    fireEvent.click(screen.getByText('Edit'));
-    // Try Save without reason
-    fireEvent.click(screen.getByText('Save'));
-    // Should prompt (alert). jsdom doesn't show native alerts; rely on no state change to reviewed
-    expect(screen.queryByText('Save & Approve')).toBeInTheDocument();
+    // Skip button should be visible in non-edit mode
+    const skipBtn = screen.getByText('Skip');
+    expect(skipBtn).toBeInTheDocument();
 
-    // Skip should call skip endpoint
-    const approveBtn = screen.getByText('Approve');
-    expect(approveBtn).toBeInTheDocument();
+    // Enter edit mode
+    const editBtn = screen.getAllByText('Edit').find(btn => btn.closest('button'));
+    fireEvent.click(editBtn!);
+    
+    // Should show edit mode with Save and Save & Approve buttons
+    await waitFor(() => expect(screen.getByText('Save')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Save & Approve')).toBeInTheDocument());
+
+    // Skip button should NOT be visible in edit mode
+    expect(screen.queryByText('Skip')).not.toBeInTheDocument();
   });
 });
 

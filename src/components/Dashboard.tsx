@@ -128,7 +128,7 @@ export default function Dashboard() {
       schemes: [],
       how: p.content,
     };
-  }), []);
+  }), [baseRows]);
 
   const truncate = (s: string, max: number) => {
     if (s.length <= max) return { display: s, title: s };
@@ -140,7 +140,7 @@ export default function Dashboard() {
     let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
     if (locFilter.trim()) {
       const q = locFilter.trim();
-      rows = rows.filter((r) => r.where.some((w) => matchTextFlexible(w, q)));
+      rows = rows.filter((r) => r.where.some((w: string) => matchTextFlexible(w, q)));
     }
     if (tagFilter.trim()) {
       const tokens = tagFilter
@@ -153,7 +153,7 @@ export default function Dashboard() {
           tags.some((t) => matchTagFlexible(t, q)) ||
           matchTextFlexible(r.how, q) ||
           r.what.some((w) => matchTextFlexible(w, q)) ||
-          r.where.some((w) => matchTextFlexible(w, q))
+          r.where.some((w: string) => matchTextFlexible(w, q))
         );
       });
     }
@@ -197,41 +197,6 @@ export default function Dashboard() {
 
   return (
     <section>
-      {/* Simple summaries for tests and quick insights */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <h2 className="text-base font-semibold text-gray-800">स्थान सारांश</h2>
-          <div className="text-sm text-gray-600 mt-1">
-            {(() => {
-              const top = Object.entries(
-                filtered.reduce((acc: Record<string, number>, r: any) => {
-                  (r.where || []).forEach((w: string) => {
-                    acc[w] = (acc[w] || 0) + 1;
-                  });
-                  return acc;
-                }, {})
-              ).sort((a, b) => b[1] - a[1]).slice(0, 3);
-              return top.length ? top.map(([k, v]) => `${k} (${v})`).join(', ') : '—';
-            })()}
-          </div>
-        </div>
-        <div>
-          <h2 className="text-base font-semibold text-gray-800">गतिविधि सारांश</h2>
-          <div className="text-sm text-gray-600 mt-1">
-            {(() => {
-              const top = Object.entries(
-                filtered.reduce((acc: Record<string, number>, r: any) => {
-                  (r.what || []).forEach((w: string) => {
-                    acc[w] = (acc[w] || 0) + 1;
-                  });
-                  return acc;
-                }, {})
-              ).sort((a, b) => b[1] - a[1]).slice(0, 3);
-              return top.length ? top.map(([k, v]) => `${getEventTypeHindi(k)} (${v})`).join(', ') : '—';
-            })()}
-          </div>
-        </div>
-      </div>
       <div className="mb-4 flex items-end gap-4 flex-wrap bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         <label className="text-sm font-medium text-gray-700">
           स्थान फ़िल्टर

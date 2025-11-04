@@ -1,5 +1,10 @@
 name: Update Project Board on Deploy
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 on:
   deployment_status:
 

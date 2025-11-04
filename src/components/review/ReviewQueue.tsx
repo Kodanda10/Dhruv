@@ -13,6 +13,9 @@ import { getConfidenceColor, getConfidenceEmoji, formatConfidence } from '@/lib/
 import { Edit, Check, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import TagsSelector from './TagsSelector';
 import LocationHierarchyPicker, { GeoNode } from './LocationHierarchyPicker';
+import AutocompleteInput from './AutocompleteInput';
+import ProgressSidebar from './ProgressSidebar';
+import TagBubble from './TagBubble';
 
 interface ParsedTweet {
   id: string;
@@ -51,6 +54,7 @@ export default function ReviewQueue() {
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
   const [correctionReason, setCorrectionReason] = useState('');
+  const [notes, setNotes] = useState('');
   const [corrections, setCorrections] = useState<Record<string, Correction[]>>({});
   const [sortBy, setSortBy] = useState<'confidence' | 'date'>('confidence');
   const [customEventTypes, setCustomEventTypes] = useState<string[]>([]);
@@ -67,7 +71,7 @@ export default function ReviewQueue() {
       // Try server queue first
       try {
         const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true&limit=100`);
-        if (mounted && res.success) {
+        if (mounted && res.success && res.events && res.events.length > 0) {
           const mapped: ParsedTweet[] = res.events.map((e) => ({
             id: String(e.tweet_id),
             parsedEventId: e.id,
@@ -92,12 +96,16 @@ export default function ReviewQueue() {
           setTweets(sorted);
           return;
         }
-      } catch {}
+      } catch (error) {
+        // console.log('API not available, using static data:', error);
+      }
 
       // Fallback to static JSON
       const loaded = (parsedTweets as ParsedTweet[]).map(t => ({
         ...t,
         content: t.content || t.text || '',
+        needs_review: t.needs_review !== false, // Default to true for review
+        review_status: t.review_status || 'pending',
       }));
       const sorted = [...loaded].sort((a, b) => {
         if (sortBy === 'confidence') return (a.confidence || 0) - (b.confidence || 0);
@@ -154,6 +162,20 @@ export default function ReviewQueue() {
       schemes: currentTweet.parsed?.schemes_mentioned || currentTweet.parsed?.schemes || [],
     });
     setCorrectionReason('');
+    
+    // Load existing notes
+    try {
+      const notesKey = `tweet_notes:${String(currentTweet.id)}`;
+      const notesRaw = localStorage.getItem(notesKey);
+      if (notesRaw) {
+        const notesData = JSON.parse(notesRaw);
+        setNotes(notesData.notes || '');
+      } else {
+        setNotes('');
+      }
+    } catch {
+      setNotes('');
+    }
   };
 
   const handleSave = async () => {
@@ -172,6 +194,17 @@ export default function ReviewQueue() {
       reason: correctionReason,
       timestamp: new Date().toISOString(),
     };
+    
+    // Store notes separately
+    if (notes.trim()) {
+      try {
+        const notesKey = `tweet_notes:${String(currentTweet.id)}`;
+        localStorage.setItem(notesKey, JSON.stringify({
+          notes: notes.trim(),
+          timestamp: new Date().toISOString(),
+        }));
+      } catch {}
+    }
     
     setCorrections(prev => ({
       ...prev,
@@ -238,7 +271,7 @@ export default function ReviewQueue() {
     setCorrectionReason('');
     
     // Log for ML training
-    console.log('✅ Correction saved for ML training:', correction);
+    // console.log('✅ Correction saved for ML training:', correction);
   };
 
   const handleApprove = async () => {
@@ -345,9 +378,27 @@ export default function ReviewQueue() {
 
   if (!currentTweet) {
     return (
-      <Card className="p-8 text-center">
-        <p className="text-gray-600">कोई ट्वीट समीक्षा के लिए नहीं है (No tweets to review)</p>
-      </Card>
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
+          <p className="text-gray-500 mb-4">
+            {tweets.length === 0 
+              ? "अभी समीक्षा के लिए कोई ट्वीट उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
+              : "सभी ट्वीट की समीक्षा पूर्ण हो गई है।"
+            }
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              🔄 पुनः लोड करें
+            </Button>
+            {tweets.length > 0 && (
+              <Button variant="secondary" onClick={() => setCurrentIndex(0)}>
+                📝 पहला ट्वीट देखें
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -369,7 +420,9 @@ export default function ReviewQueue() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6">
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-4 text-center bg-gradient-to-br from-amber-50 to-white">
@@ -403,7 +456,7 @@ export default function ReviewQueue() {
       </div>
 
       {/* Review Card */}
-      <Card className={`border-2 bg-white ${confidence < 0.6 ? 'border-red-200' : confidence < 0.8 ? 'border-amber-200' : 'border-green-200'}`}>
+      <Card className={`border-2 bg-white ${confidence <= 0.5 ? 'border-red-500' : confidence <= 0.8 ? 'border-yellow-500' : 'border-green-500'}`}>
         <CardHeader className="bg-gray-50">
           <div className="flex justify-between items-start">
             <div>
@@ -434,30 +487,15 @@ export default function ReviewQueue() {
                 {/* Event Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    🎯 घटना प्रकार (Event Type)
+                    🎯 दौरा/कार्यक्रम (Event Type)
                   </label>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Select
-                        value={editedData.event_type}
-                        onChange={(e) => setEditedData({ ...editedData, event_type: e.target.value })}
-                        options={allEventOptions}
-                      />
-                    </div>
-                    <Input
-                      placeholder="नया प्रकार जोड़ें (e.g., सम्मान समारोह)"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val) {
-                            addCustomEventType(val);
-                            setEditedData({ ...editedData, event_type: val });
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }
-                      }}
-                    />
-                  </div>
+                  <AutocompleteInput
+                    fieldName="event_type"
+                    value={editedData.event_type || ''}
+                    onChange={(value) => setEditedData({ ...editedData, event_type: value })}
+                    placeholder="e.g., जन्मदिन शुभकामनाएं, बैठक, रैली, निरीक्षण, उद्घाटन"
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Locations - hierarchical picker */}
@@ -486,10 +524,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                  <AutocompleteInput
+                    fieldName="people"
                     value={(editedData.people || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, people: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, people: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                    className="w-full"
                   />
                 </div>
 
@@ -506,10 +546,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., भाजपा, राज्य शासन"
+                  <AutocompleteInput
+                    fieldName="organizations"
                     value={(editedData.organizations || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, organizations: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, organizations: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., भाजपा, राज्य शासन"
+                    className="w-full"
                   />
                 </div>
 
@@ -526,10 +568,12 @@ export default function ReviewQueue() {
                       <Plus className="w-3 h-3" /> Add
                     </button>
                   </div>
-                  <Input
-                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                  <AutocompleteInput
+                    fieldName="schemes"
                     value={(editedData.schemes || []).join(', ')}
-                    onChange={(e) => setEditedData({ ...editedData, schemes: e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    onChange={(value) => setEditedData({ ...editedData, schemes: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                    className="w-full"
                   />
                 </div>
 
@@ -568,6 +612,20 @@ export default function ReviewQueue() {
                     className="w-full"
                   />
                 </div>
+
+                {/* Notes Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    📝 नोट्स (Notes) - Optional
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Internal notes, edge cases, or training data annotations..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
               </div>
             </>
           ) : (
@@ -575,7 +633,7 @@ export default function ReviewQueue() {
               {/* View Mode */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">🎯 घटना प्रकार</div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">🎯 दौरा/कार्यक्रम</div>
                   <div className="text-sm font-semibold text-gray-900">
                     {getEventTypeHindi(currentTweet.parsed?.event_type)}
                   </div>
@@ -608,7 +666,11 @@ export default function ReviewQueue() {
                   <div className="text-xs font-medium text-gray-500 mb-1">🏷️ विषय (Topics/Tags)</div>
                   <div className="flex flex-wrap gap-1">
                     {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
-                      <Badge key={i}>{t?.label_hi || t?.label || String(t)}</Badge>
+                      <TagBubble 
+                        key={i} 
+                        label={t?.label_hi || t?.label || String(t)} 
+                        selected={false}
+                      />
                     ))}
                   </div>
                 </div>
@@ -681,6 +743,14 @@ export default function ReviewQueue() {
           ))}
         </Card>
       )}
+      </div>
+      
+      {/* Progress Sidebar */}
+      <ProgressSidebar 
+        tweets={tweets}
+        currentIndex={currentIndex}
+        onJumpToTweet={(index) => setCurrentIndex(index)}
+      />
     </div>
   );
 }

@@ -17,7 +17,45 @@
 				"OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
 				"MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
 				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
-				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
+				"OLLAMA_API_KEY": "YOUR_OLLAMA_KEY_HERE"
+			}
+		},
+		"context7": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"--package=@context7/mcp-server",
+				"context7-mcp-server"
+			],
+			"env": {
+				"CONTEXT7_API_KEY": "YOUR_CONTEXT7_API_KEY_HERE"
+			}
+		},
+		"github": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"--package=@github/mcp-server",
+				"github-mcp-server",
+				"--toolsets",
+				"repos,issues,pull_requests,actions,code_security,projects"
+			],
+			"env": {
+				"GITHUB_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+			}
+		},
+		"cloudbase": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"--package=@cloudbase/ai-toolkit",
+				"cloudbase-ai-toolkit"
+			],
+			"env": {
+				"CLOUDBASE_MCP_PLUGINS_ENABLED": "env,database,functions,hosting"
 			}
 		}
 	}
