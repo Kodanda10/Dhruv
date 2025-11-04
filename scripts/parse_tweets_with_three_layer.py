@@ -437,6 +437,8 @@ def main():
     parser.add_argument('--limit', type=int, help='Maximum number of tweets to parse')
     parser.add_argument('--reparse', action='store_true', help='Reparse all tweets (ignore status)')
     parser.add_argument('--batch-size', type=int, default=10, help='Batch size for processing (default: 10)')
+    parser.add_argument('--batch-delay', type=float, default=6.0, help='Seconds delay between tweets to respect Gemini rate limits (default: 6s = 10 RPM for Flash)')
+    parser.add_argument('--gemini-rpm', type=int, default=10, help='Gemini API requests per minute limit (default: 10 for Flash free tier)')
     parser.add_argument('--api-url', type=str, help='Next.js API base URL (default: http://localhost:3000)')
     parser.add_argument('--fallback', action='store_true', help='Use Python orchestrator as fallback if API fails')
     
@@ -473,6 +475,21 @@ def main():
         logger.info(f'Found {len(tweets)} tweets to parse')
         logger.info('')
         
+        # Calculate delay based on Gemini rate limits
+        # Each tweet uses 1 Gemini API call (primary layer)
+        # Free tier: Flash = 10 RPM (6s delay), Pro = 5 RPM (12s delay)
+        batch_delay = args.batch_delay
+        effective_rpm = 60.0 / batch_delay if batch_delay > 0 else float('inf')
+        
+        logger.info(f'⚠️  Gemini Rate Limit Protection:')
+        logger.info(f'   Delay between tweets: {batch_delay}s')
+        logger.info(f'   Effective rate: {effective_rpm:.1f} requests/minute')
+        logger.info(f'   Free tier limits: Flash=10 RPM, Pro=5 RPM')
+        if effective_rpm > args.gemini_rpm:
+            logger.warning(f'   ⚠️  WARNING: Rate ({effective_rpm:.1f} RPM) exceeds limit ({args.gemini_rpm} RPM)!')
+            logger.warning(f'      Consider increasing --batch-delay to {60.0/args.gemini_rpm:.1f}s')
+        logger.info('')
+        
         # Parse tweets in batches
         total_parsed = 0
         total_errors = 0
@@ -484,7 +501,7 @@ def main():
             
             logger.info(f'Batch #{batch_num}: Processing {len(batch)} tweets...')
             
-            for tweet in batch:
+            for idx, tweet in enumerate(batch):
                 try:
                     # Parse tweet using three-layer consensus
                     parsed = parse_with_fallback(
@@ -505,6 +522,11 @@ def main():
                     if total_parsed % 10 == 0:
                         logger.info(f'  Progress: {total_parsed}/{len(tweets)} tweets parsed')
                     
+                    # Rate limit delay: wait between tweets to respect Gemini API limits
+                    # Skip delay for last tweet in batch (delay happens between batches)
+                    if idx < len(batch) - 1 and batch_delay > 0:
+                        time.sleep(batch_delay)
+                    
                 except Exception as e:
                     logger.error(f'  Error parsing tweet {tweet["id"]}: {str(e)}')
                     total_errors += 1
@@ -514,13 +536,17 @@ def main():
                         update_tweet_status(conn, tweet['id'], 'error')
                     except:
                         pass
+                    
+                    # Still respect rate limit even on errors
+                    if idx < len(batch) - 1 and batch_delay > 0:
+                        time.sleep(batch_delay)
             
             logger.info(f'✓ Batch #{batch_num} complete')
             logger.info('')
             
-            # Small delay between batches
+            # Small delay between batches (additional safety)
             if i + batch_size < len(tweets):
-                time.sleep(0.5)
+                time.sleep(1.0)
         
         # Summary
         logger.info('=' * 60)
