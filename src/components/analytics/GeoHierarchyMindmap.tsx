@@ -76,7 +76,7 @@ export default function GeoHierarchyMindmap({
   const handleNodeClick = (node: any) => {
     if (node.level === 'district') {
       // Drill down to assemblies in this district
-      const assemblies = mockAssemblyData[node.district] || [];
+      const assemblies = mockAssemblyData[node.district as keyof typeof mockAssemblyData] || [];
       setDrilldown({
         level: 'assembly',
         selectedPath: [node.district],
