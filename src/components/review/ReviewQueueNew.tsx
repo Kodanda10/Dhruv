@@ -17,12 +17,13 @@ import {
   Plus, 
   Trash2 
 } from 'lucide-react';
+import { logger } from '@/lib/utils/logger';
 import AIAssistantModal from './AIAssistantModal';
 import GeoHierarchyTree from './GeoHierarchyTree';
 import GeoHierarchyEditor from './GeoHierarchyEditor';
 import { GeoHierarchy } from '@/lib/geo-extraction/hierarchy-resolver';
 import { api } from '@/lib/api';
-import { usePolling } from '@/hooks/usePolling';
+import { logger } from '@/lib/utils/logger';
 
 // Empty array - will be populated from API
 const initialTweets: any[] = [];
@@ -53,6 +54,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ReviewQueueNew() {
+  logger.debug('ReviewQueueNew: Component mounting...');
   
   // Initialize with empty array - will be populated from API
   const [tweets, setTweets] = useState<any[]>([]);
@@ -73,6 +75,7 @@ export default function ReviewQueueNew() {
   const [aiInput, setAiInput] = useState('');
   const [tags, setTags] = useState(['शहरी विकास', 'हरित अवसंरचना', 'स्थिरता', 'शहरी नियोजन']);
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
+  const [loading, setLoading] = useState(true); // Loading state for API fetch
 
   const currentTweet = useMemo(() => tweets[currentIndex], [tweets, currentIndex]);
 
@@ -275,6 +278,7 @@ export default function ReviewQueueNew() {
       if (response.ok) {
         const suggestions = await response.json();
         setIntelligentSuggestions(suggestions);
+        logger.debug('Intelligent suggestions:', suggestions);
       }
     } catch (error) {
       logger.error('Error fetching intelligent suggestions:', error as Error);
@@ -411,74 +415,96 @@ export default function ReviewQueueNew() {
     handleSkip
   ]);
 
-  const fetchTweets = useCallback(async () => {
-    try {
-      // Fetch only events that need review
-      const response = await fetch('/api/parsed-events?needs_review=true&limit=200');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // Use data or events (backward compatibility)
-        const rawData = result.data || result.events || [];
+  // Fetch tweets from API on component mount - only events that need review
+  useEffect(() => {
+    logger.debug('ReviewQueueNew: useEffect triggered - fetching tweets that need review');
+    
+    const fetchTweets = async () => {
+      try {
+        logger.debug('ReviewQueueNew: Starting to fetch tweets that need review...');
+        setLoading(true);
         
-        // Map to expected format
-        const reviewTweets = rawData.map((t: any) => ({
-          id: t.parsedEventId || t.id,
-          tweet_id: t.tweet_id || t.id,
-          event_type: t.event_type || 'other',
-          event_date: t.event_date || t.timestamp || t.created_at,
-          locations: Array.isArray(t.locations) 
-            ? t.locations.map((l: any) => typeof l === 'string' ? l : (l.name || l.location || l))
-            : [],
-          people_mentioned: Array.isArray(t.people_mentioned) ? t.people_mentioned : [],
-          organizations: Array.isArray(t.organizations) ? t.organizations : [],
-          schemes_mentioned: Array.isArray(t.schemes_mentioned) ? t.schemes_mentioned : [],
-          overall_confidence: String(t.overall_confidence || t.confidence || '0'),
-          needs_review: t.needs_review !== false, // Ensure it's true
-          review_status: t.review_status || 'pending',
-          parsed_at: t.parsed_at || t.timestamp || t.created_at,
-          parsed_by: t.parsed_by || 'system',
-          tweet_text: t.tweet_text || t.content || t.text || '',
-        }));
+        // Fetch only events that need review
+        const response = await fetch('/api/parsed-events?needs_review=true&limit=200');
+        logger.debug('ReviewQueueNew: Response status:', response.status);
         
-        // Sort by confidence (lowest first) or date
-        const sortedTweets = [...reviewTweets].sort((a, b) => {
-          if (sortBy === 'confidence') {
-            return parseFloat(a.overall_confidence) - parseFloat(b.overall_confidence);
-          }
-          return new Date(b.event_date || b.parsed_at).getTime() - new Date(a.event_date || a.parsed_at).getTime();
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        logger.debug('ReviewQueueNew: API result:', { 
+          success: result.success, 
+          count: result.data?.length || result.events?.length,
+          error: result.error,
+          details: result.details,
+          source: result.source
         });
         
-        return { data: sortedTweets, error: null };
-      } else {
-        logger.error('Failed to fetch tweets:', result.error);
-        return { data: [], error: result.error };
+        if (result.success) {
+          // Use data or events (backward compatibility)
+          const rawData = result.data || result.events || [];
+          
+          // Map to expected format
+          const reviewTweets = rawData.map((t: any) => ({
+            id: t.parsedEventId || t.id,
+            tweet_id: t.tweet_id || t.id,
+            event_type: t.event_type || 'other',
+            event_date: t.event_date || t.timestamp || t.created_at,
+            locations: Array.isArray(t.locations) 
+              ? t.locations.map((l: any) => typeof l === 'string' ? l : (l.name || l.location || l))
+              : [],
+            people_mentioned: Array.isArray(t.people_mentioned) ? t.people_mentioned : [],
+            organizations: Array.isArray(t.organizations) ? t.organizations : [],
+            schemes_mentioned: Array.isArray(t.schemes_mentioned) ? t.schemes_mentioned : [],
+            overall_confidence: String(t.overall_confidence || t.confidence || '0'),
+            needs_review: t.needs_review !== false, // Ensure it's true
+            review_status: t.review_status || 'pending',
+            parsed_at: t.parsed_at || t.timestamp || t.created_at,
+            parsed_by: t.parsed_by || 'system',
+            tweet_text: t.tweet_text || t.content || t.text || '',
+          }));
+          
+          // Sort by confidence (lowest first) or date
+          const sortedTweets = [...reviewTweets].sort((a, b) => {
+            if (sortBy === 'confidence') {
+              return parseFloat(a.overall_confidence) - parseFloat(b.overall_confidence);
+            }
+            return new Date(b.event_date || b.parsed_at).getTime() - new Date(a.event_date || a.parsed_at).getTime();
+          });
+          
+          logger.debug('ReviewQueueNew: Mapped and sorted tweets:', sortedTweets.length);
+          setTweets(sortedTweets);
+          
+          if (sortedTweets.length === 0) {
+            logger.info('ReviewQueueNew: No tweets need review');
+          }
+        } else {
+          logger.error('Failed to fetch tweets:', result.error);
+          setTweets([]); // Empty array - no static fallback
+        }
+      } catch (error) {
+        logger.error('Error fetching tweets:', error as Error);
+        setTweets([]); // Empty array - no static fallback
+      } finally {
+        logger.debug('ReviewQueueNew: Setting loading to false');
+        setLoading(false);
       }
-    } catch (error) {
-      logger.error('Error fetching tweets:', error as Error);
-      return { data: [], error: error instanceof Error ? error.message : 'Failed to fetch data' };
-    }
-  }, [sortBy]);
+    };
 
-  const { data: fetchedTweets, isLoading, error: fetchError } = usePolling(fetchTweets, 30000, [sortBy]);
+    fetchTweets();
+  }, [sortBy]); // Re-fetch when sortBy changes
 
-  useEffect(() => {
-    if (fetchedTweets) {
-      setTweets(fetchedTweets.data);
-    }
-  }, [fetchedTweets]);
-
+  logger.debug('ReviewQueueNew: tweets length:', tweets.length);
+  logger.debug('ReviewQueueNew: currentIndex:', currentIndex);
+  logger.debug('ReviewQueueNew: currentTweet:', currentTweet);
   
   const stats = useMemo(() => {
     const pending = tweets.filter(t => t.review_status !== 'approved').length;
     const reviewed = tweets.filter(t => t.review_status === 'approved').length;
     const avgConfidence = tweets.reduce((sum, t) => sum + (parseFloat(t.overall_confidence) || 0), 0) / tweets.length;
     
+    logger.debug('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
     return { pending, reviewed, avgConfidence };
   }, [tweets]);
 
@@ -561,22 +587,12 @@ export default function ReviewQueueNew() {
 
 
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="w-full flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-muted">समीक्षा डेटा लोड हो रहा है...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <div className="w-full flex items-center justify-center min-h-[400px]">
-        <div className="text-center text-red-400">
-          <p>Error loading review data: {fetchError}</p>
         </div>
       </div>
     );
