@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 type ReviewedPost = {
   id: string;
@@ -9,7 +10,7 @@ type ReviewedPost = {
 };
 
 function makeTraceId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return generateSecureTraceId();
 }
 
 function toBoundedInt(

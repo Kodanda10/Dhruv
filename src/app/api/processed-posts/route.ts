@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 type ProcessedPost = {
   id: string;
@@ -10,7 +11,7 @@ type ProcessedPost = {
 };
 
 function makeTraceId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return generateSecureTraceId();
 }
 
 // Minimal placeholder dataset to satisfy API contract during CI/build.
