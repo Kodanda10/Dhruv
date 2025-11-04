@@ -50,7 +50,7 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
     mockPool = {
       query: mockQuery,
     };
-    (Pool as jest.Mock).mockImplementation(() => mockPool);
+    (Pool as unknown as jest.Mock).mockImplementation(() => mockPool);
     
     // Default: file doesn't exist (database should be primary)
     mockFs.existsSync.mockReturnValue(false);
@@ -1046,7 +1046,7 @@ describe('Comprehensive Scenario Testing - 1000+ Cases', () => {
     jest.clearAllMocks();
     mockQuery = jest.fn();
     mockPool = { query: mockQuery };
-    (Pool as jest.Mock).mockImplementation(() => mockPool);
+    (Pool as unknown as jest.Mock).mockImplementation(() => mockPool);
     mockFs.existsSync.mockReturnValue(false);
   });
 
@@ -1061,10 +1061,10 @@ describe('Comprehensive Scenario Testing - 1000+ Cases', () => {
 
   // Generate combinations
   const combinations: any[] = [];
-  testScenarios[0].limit.forEach(limit => {
-    testScenarios[1].needsReview.forEach(needsReview => {
-      testScenarios[2].reviewStatus.forEach(reviewStatus => {
-        testScenarios[3].analytics.forEach(analytics => {
+  testScenarios[0].limit.forEach((limit) => {
+    testScenarios[1].needsReview.forEach((needsReview) => {
+      testScenarios[2].reviewStatus.forEach((reviewStatus) => {
+        testScenarios[3].analytics.forEach((analytics) => {
           combinations.push({ limit, needsReview, reviewStatus, analytics });
         });
       });

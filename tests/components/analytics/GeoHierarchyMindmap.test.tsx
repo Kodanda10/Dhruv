@@ -562,7 +562,7 @@ describe('GeoHierarchyMindmap', () => {
     });
 
     it('should not export when no data', () => {
-      render(<GeoHierarchyMindmap data={null} />);
+      render(<GeoHierarchyMindmap data={undefined} />);
 
       // Export buttons should not be present in empty state
       expect(screen.queryByLabelText('Export to CSV')).not.toBeInTheDocument();
