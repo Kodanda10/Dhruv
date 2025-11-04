@@ -154,10 +154,10 @@ export default function AnalyticsDashboardDark() {
 
   if (loading) {
     return (
-      <div className="min-h-screen text-white flex items-center justify-center">
+      <div className="min-h-screen text-primary flex items-center justify-center">
         <div className="glassmorphic-card text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-green mx-auto mb-4"></div>
-          <p className="text-gray-300">एनालिटिक्स डेटा लोड हो रहा है...</p>
+          <p className="text-secondary">एनालिटिक्स डेटा लोड हो रहा है...</p>
         </div>
       </div>
     );
@@ -165,7 +165,7 @@ export default function AnalyticsDashboardDark() {
 
   if (error) {
     return (
-      <div className="min-h-screen text-white flex items-center justify-center">
+      <div className="min-h-screen text-primary flex items-center justify-center">
         <div className="glassmorphic-card text-center">
           <p className="text-red-400 mb-4">❌ {error}</p>
           <button 
@@ -181,29 +181,29 @@ export default function AnalyticsDashboardDark() {
 
   if (!analyticsData) {
     return (
-      <div className="min-h-screen text-white flex items-center justify-center">
+      <div className="min-h-screen text-primary flex items-center justify-center">
         <div className="glassmorphic-card text-center">
-          <p className="text-gray-300">कोई डेटा उपलब्ध नहीं है</p>
+          <p className="text-secondary">कोई डेटा उपलब्ध नहीं है</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen text-primary">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">एनालिटिक्स डैशबोर्ड</h1>
-          <p className="text-gray-400">डेटा विश्लेषण और अंतर्दृष्टि</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">एनालिटिक्स डैशबोर्ड</h1>
+          <p className="text-muted">डेटा विश्लेषण और अंतर्दृष्टि</p>
         </div>
 
         <div className="space-y-8" data-testid="analytics-dashboard">
           {/* Filters Section */}
           <div className="glassmorphic-card rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">फ़िल्टर</h3>
+            <h3 className="text-lg font-semibold mb-4 text-primary">फ़िल्टर</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">समय सीमा</label>
+                <label className="block text-sm font-medium text-secondary mb-2">समय सीमा</label>
                 <select 
                   value={filters.timeRange} 
                   onChange={(e) => {
@@ -215,7 +215,7 @@ export default function AnalyticsDashboardDark() {
                       endDate: newRange === 'custom' ? filters.endDate : '',
                     });
                   }}
-                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="7d">7 दिन</option>
                   <option value="30d">30 दिन</option>
@@ -227,31 +227,31 @@ export default function AnalyticsDashboardDark() {
               {filters.timeRange === 'custom' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">शुरुआत तिथि</label>
+                    <label className="block text-sm font-medium text-secondary mb-2">शुरुआत तिथि</label>
                     <input
                       type="date"
                       value={filters.startDate}
                       onChange={(e) => setFilters({...filters, startDate: e.target.value})}
-                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">अंत तिथि</label>
+                    <label className="block text-sm font-medium text-secondary mb-2">अंत तिथि</label>
                     <input
                       type="date"
                       value={filters.endDate}
                       onChange={(e) => setFilters({...filters, endDate: e.target.value})}
-                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                      className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                     />
                   </div>
                 </>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">स्थान</label>
+                <label className="block text-sm font-medium text-secondary mb-2">स्थान</label>
                 <select 
                   value={filters.location} 
                   onChange={(e) => setFilters({...filters, location: e.target.value})}
-                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="raipur">रायपुर</option>
@@ -259,11 +259,11 @@ export default function AnalyticsDashboardDark() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">दौरा/कार्यक्रम</label>
+                <label className="block text-sm font-medium text-secondary mb-2">दौरा/कार्यक्रम</label>
                 <select 
                   value={filters.eventType} 
                   onChange={(e) => setFilters({...filters, eventType: e.target.value})}
-                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="meeting">बैठक</option>
@@ -271,11 +271,11 @@ export default function AnalyticsDashboardDark() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">थीम</label>
+                <label className="block text-sm font-medium text-secondary mb-2">थीम</label>
                 <select 
                   value={filters.theme} 
                   onChange={(e) => setFilters({...filters, theme: e.target.value})}
-                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-white py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
+                  className="w-full rounded-md border border-white border-opacity-20 bg-white bg-opacity-5 text-primary py-2 px-3 focus:ring-2 focus:ring-mint-green focus:border-mint-green"
                 >
                   <option value="all">सभी</option>
                   <option value="development">विकास</option>
@@ -328,7 +328,7 @@ export default function AnalyticsDashboardDark() {
                 URL.revokeObjectURL(url);
               }}
               disabled={!analyticsData || loading}
-              className="px-4 py-2 bg-white bg-opacity-10 text-white border border-white border-opacity-20 hover:bg-opacity-15 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-white bg-opacity-10 text-primary border border-white border-opacity-20 hover:bg-opacity-15 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               JSON एक्सपोर्ट करें
             </button>
@@ -339,7 +339,7 @@ export default function AnalyticsDashboardDark() {
             {/* Time Series Chart */}
             <div className="lg:col-span-2">
               <div className="glassmorphic-card rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4 text-white">समय के साथ गतिविधि (30 दिन)</h3>
+                <h3 className="text-lg font-semibold mb-4 text-primary">समय के साथ गतिविधि (30 दिन)</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={analyticsData.timeSeriesData.slice(-30)}>
@@ -375,7 +375,7 @@ export default function AnalyticsDashboardDark() {
 
             {/* Event Type Distribution */}
             <div className="glassmorphic-card rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">दौरा/कार्यक्रम वितरण</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">दौरा/कार्यक्रम वितरण</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -412,7 +412,7 @@ export default function AnalyticsDashboardDark() {
 
             {/* Day of Week Chart */}
             <div className="glassmorphic-card rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">सप्ताह के दिन के अनुसार गतिविधि</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">सप्ताह के दिन के अनुसार गतिविधि</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={analyticsData.dayOfWeekData}>
@@ -441,8 +441,8 @@ export default function AnalyticsDashboardDark() {
           </div>
 
           {/* Location Distribution */}
-          <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">स्थान वितरण (Top 10)</h3>
+          <div className="glassmorphic-card rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4 text-primary">स्थान वितरण (Top 10)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData.locationData.slice(0, 10)}>
@@ -479,8 +479,8 @@ export default function AnalyticsDashboardDark() {
           </div>
 
           {/* Scheme Usage */}
-          <div className="bg-[#192734] border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-white">योजना उपयोग</h3>
+          <div className="glassmorphic-card rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4 text-primary">योजना उपयोग</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
