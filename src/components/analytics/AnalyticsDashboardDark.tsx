@@ -176,11 +176,11 @@ export default function AnalyticsDashboardDark() {
     );
   }
 
-  if (error) {
+  if (errorState) {
     return (
       <div className="min-h-screen text-primary flex items-center justify-center">
         <div className="glassmorphic-card text-center">
-          <p className="text-red-400 mb-4">❌ {error}</p>
+          <p className="text-red-400 mb-4">❌ {errorState}</p>
           <button 
             onClick={fetchAnalyticsData}
             className="px-4 py-2 bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40 rounded-lg hover:bg-opacity-30 transition-colors"
