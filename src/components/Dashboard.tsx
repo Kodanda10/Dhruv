@@ -155,14 +155,14 @@ export default function Dashboard() {
         return tokens.some((q) =>
           tags.some((t) => matchTagFlexible(t, q)) ||
           matchTextFlexible(r.how, q) ||
-          r.what.some((w) => matchTextFlexible(w, q)) ||
-          r.where.some((w) => matchTextFlexible(w, q))
+          r.what.some((w: string) => matchTextFlexible(w, q)) ||
+          r.where.some((w: string) => matchTextFlexible(w, q))
         );
       });
     }
     if (actionFilter.trim()) {
       const q = actionFilter.trim();
-      rows = rows.filter((r) => r.what.some((w) => w.includes(q)));
+      rows = rows.filter((r) => r.what.some((w: string) => w.includes(q)));
     }
     const from = fromDate ? new Date(fromDate) : null;
     const to = toDate ? new Date(toDate) : null;
