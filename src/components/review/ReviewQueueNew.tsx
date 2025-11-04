@@ -22,6 +22,7 @@ import GeoHierarchyTree from './GeoHierarchyTree';
 import GeoHierarchyEditor from './GeoHierarchyEditor';
 import { GeoHierarchy } from '@/lib/geo-extraction/hierarchy-resolver';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
 
 // Empty array - will be populated from API
 const initialTweets: any[] = [];
@@ -52,43 +53,10 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ReviewQueueNew() {
-  console.log('ReviewQueueNew: Component mounting...');
+  logger.debug('ReviewQueueNew: Component mounting...');
   
-  // Temporarily use static data to get Review working
-  const staticTweets = [
-    {
-      id: 1,
-      tweet_id: "1979023456789012345",
-      event_type: "बैठक",
-      event_date: "2025-10-17T02:30:15.000Z",
-      locations: ["बिलासपुर"],
-      people_mentioned: [],
-      organizations: [],
-      schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-      overall_confidence: "0.85",
-      needs_review: true,
-      review_status: "pending",
-      parsed_at: "2025-10-17T02:30:15.000Z",
-      parsed_by: "system"
-    },
-    {
-      id: 2,
-      tweet_id: "1979023456789012346",
-      event_type: "रैली",
-      event_date: "2025-10-16T15:45:30.000Z",
-      locations: ["रायगढ़"],
-      people_mentioned: ["मुख्यमंत्री"],
-      organizations: ["भाजपा"],
-      schemes_mentioned: ["मुख्यमंत्री किसान योजना"],
-      overall_confidence: "0.90",
-      needs_review: true,
-      review_status: "pending",
-      parsed_at: "2025-10-16T15:45:30.000Z",
-      parsed_by: "system"
-    }
-  ];
-  
-  const [tweets, setTweets] = useState(staticTweets);
+  // Initialize with empty array - will be populated from API
+  const [tweets, setTweets] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
@@ -106,7 +74,9 @@ export default function ReviewQueueNew() {
   const [aiInput, setAiInput] = useState('');
   const [tags, setTags] = useState(['शहरी विकास', 'हरित अवसंरचना', 'स्थिरता', 'शहरी नियोजन']);
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
-  const [loading, setLoading] = useState(false); // Set to false since we're using static data
+  const [loading, setLoading] = useState(true); // Loading state for API fetch
+
+  const currentTweet = useMemo(() => tweets[currentIndex], [tweets, currentIndex]);
 
   // Add missing functions
   const handleAISend = async (message: string) => {
@@ -151,7 +121,7 @@ export default function ReviewQueueNew() {
         throw new Error(data.error || 'AI Assistant error');
       }
     } catch (error) {
-      console.error('AI Assistant error:', error);
+      logger.error('AI Assistant error:', error as Error);
       // Remove loading message
       setAiMessages(prev => prev.slice(0, -1));
       
@@ -165,10 +135,53 @@ export default function ReviewQueueNew() {
   };
 
   const handleSkip = () => {
-    setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1));
+    if (currentIndex < tweets.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
     setEditMode(false);
     setEditedData({});
     setCorrectionReason('');
+  };
+
+  const handleReject = async () => {
+    if (!currentTweet) return;
+    
+    try {
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          review_status: 'rejected',
+          needs_review: true,
+        })
+      });
+
+      if (response.ok) {
+        setTweets(prev => prev.map(tweet => 
+          tweet.id === currentTweet.id 
+            ? { ...tweet, review_status: 'rejected', needs_review: true }
+            : tweet
+        ));
+        
+        // Move to next tweet
+        handleSkip();
+      }
+    } catch (error) {
+      logger.error('Error rejecting tweet:', error as Error);
+    }
+  };
+
+  const handleSaveAndApprove = async () => {
+    if (!currentTweet || !correctionReason.trim()) {
+      alert('कृपया सुधार का कारण दर्ज करें');
+      return;
+    }
+    
+    await handleSave();
+    await handleApprove();
   };
 
   const handleApprove = async () => {
@@ -193,7 +206,7 @@ export default function ReviewQueueNew() {
 
         if (learningResponse.ok) {
           const learningResult = await learningResponse.json();
-          console.log('Learning from feedback:', learningResult);
+          logger.info('Learning from feedback:', learningResult);
         }
       }
 
@@ -222,10 +235,10 @@ export default function ReviewQueueNew() {
         // Move to next tweet
         handleSkip();
       } else {
-        console.error('Failed to approve tweet');
+        logger.error('Failed to approve tweet');
       }
     } catch (error) {
-      console.error('Error approving tweet:', error);
+      logger.error('Error approving tweet:', error as Error);
     }
   };
 
@@ -264,10 +277,10 @@ export default function ReviewQueueNew() {
       if (response.ok) {
         const suggestions = await response.json();
         setIntelligentSuggestions(suggestions);
-        console.log('Intelligent suggestions:', suggestions);
+        logger.debug('Intelligent suggestions:', suggestions);
       }
     } catch (error) {
-      console.error('Error fetching intelligent suggestions:', error);
+      logger.error('Error fetching intelligent suggestions:', error as Error);
     }
   };
 
@@ -287,7 +300,7 @@ export default function ReviewQueueNew() {
         }
       }
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      logger.error('Error fetching suggestions:', error as Error);
     }
   };
 
@@ -322,91 +335,175 @@ export default function ReviewQueueNew() {
         }
       }
     } catch (error) {
-      console.error('Error saving new value:', error);
+      logger.error('Error saving new value:', error as Error);
       alert('नया मान सहेजने में त्रुटि हुई');
     }
   };
 
-  // Fetch tweets from API on component mount
+  // Keyboard shortcuts handler
   useEffect(() => {
-    console.log('ReviewQueueNew: useEffect triggered');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        // Ctrl+S or Cmd+S to save while editing
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          if (editMode && correctionReason.trim()) {
+            handleSaveAndApprove();
+          }
+        }
+        return;
+      }
+
+      // Keyboard shortcuts (only when not in input fields)
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          if (!editMode) {
+            e.preventDefault();
+            handleApprove();
+          }
+          break;
+        case 'e':
+          if (!editMode) {
+            e.preventDefault();
+            setEditMode(true);
+            setEditedData({
+              event_type: currentTweet?.event_type || '',
+              locations: currentTweet?.locations || [],
+              people_mentioned: currentTweet?.people_mentioned || [],
+              organizations: currentTweet?.organizations || [],
+              schemes_mentioned: currentTweet?.schemes_mentioned || [],
+            });
+            fetchIntelligentSuggestions();
+          }
+          break;
+        case 'r':
+          if (!editMode) {
+            e.preventDefault();
+            handleReject();
+          }
+          break;
+        case 's':
+          if (!editMode) {
+            e.preventDefault();
+            handleSkip();
+          }
+          break;
+        case 'escape':
+          if (editMode) {
+            e.preventDefault();
+            setEditMode(false);
+            setEditedData({});
+            setCorrectionReason('');
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    editMode,
+    currentTweet,
+    correctionReason,
+    fetchIntelligentSuggestions,
+    handleApprove,
+    handleReject,
+    handleSaveAndApprove,
+    handleSkip
+  ]);
+
+  // Fetch tweets from API on component mount - only events that need review
+  useEffect(() => {
+    logger.debug('ReviewQueueNew: useEffect triggered - fetching tweets that need review');
     
     const fetchTweets = async () => {
       try {
-        console.log('ReviewQueueNew: Starting to fetch tweets...');
+        logger.debug('ReviewQueueNew: Starting to fetch tweets that need review...');
         setLoading(true);
-        const response = await fetch('/api/parsed-events?limit=200');
-        console.log('ReviewQueueNew: Response status:', response.status);
-        const result = await response.json();
-        console.log('ReviewQueueNew: API result:', result);
         
-        if (result.success && result.data) {
-          console.log('ReviewQueueNew: Setting tweets, count:', result.data.length);
-          setTweets(result.data);
-        } else {
-          console.error('Failed to fetch tweets:', result.error);
-          // Fallback to static data if API fails
-          const staticTweets = [
-            {
-              id: 1,
-              tweet_id: "1979023456789012345",
-              event_type: "बैठक",
-              event_date: "2025-10-17T02:30:15.000Z",
-              locations: ["बिलासपुर"],
-              people_mentioned: [],
-              organizations: [],
-              schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-              overall_confidence: "0.85",
-              needs_review: true,
-              review_status: "pending",
-              parsed_at: "2025-10-17T02:30:15.000Z",
-              parsed_by: "system"
+        // Fetch only events that need review
+        const response = await fetch('/api/parsed-events?needs_review=true&limit=200');
+        logger.debug('ReviewQueueNew: Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        logger.debug('ReviewQueueNew: API result:', { 
+          success: result.success, 
+          count: result.data?.length || result.events?.length,
+          error: result.error,
+          details: result.details,
+          source: result.source
+        });
+        
+        if (result.success) {
+          // Use data or events (backward compatibility)
+          const rawData = result.data || result.events || [];
+          
+          // Map to expected format
+          const reviewTweets = rawData.map((t: any) => ({
+            id: t.parsedEventId || t.id,
+            tweet_id: t.tweet_id || t.id,
+            event_type: t.event_type || 'other',
+            event_date: t.event_date || t.timestamp || t.created_at,
+            locations: Array.isArray(t.locations) 
+              ? t.locations.map((l: any) => typeof l === 'string' ? l : (l.name || l.location || l))
+              : [],
+            people_mentioned: Array.isArray(t.people_mentioned) ? t.people_mentioned : [],
+            organizations: Array.isArray(t.organizations) ? t.organizations : [],
+            schemes_mentioned: Array.isArray(t.schemes_mentioned) ? t.schemes_mentioned : [],
+            overall_confidence: String(t.overall_confidence || t.confidence || '0'),
+            needs_review: t.needs_review !== false, // Ensure it's true
+            review_status: t.review_status || 'pending',
+            parsed_at: t.parsed_at || t.timestamp || t.created_at,
+            parsed_by: t.parsed_by || 'system',
+            tweet_text: t.tweet_text || t.content || t.text || '',
+          }));
+          
+          // Sort by confidence (lowest first) or date
+          const sortedTweets = [...reviewTweets].sort((a, b) => {
+            if (sortBy === 'confidence') {
+              return parseFloat(a.overall_confidence) - parseFloat(b.overall_confidence);
             }
-          ];
-          setTweets(staticTweets);
+            return new Date(b.event_date || b.parsed_at).getTime() - new Date(a.event_date || a.parsed_at).getTime();
+          });
+          
+          logger.debug('ReviewQueueNew: Mapped and sorted tweets:', sortedTweets.length);
+          setTweets(sortedTweets);
+          
+          if (sortedTweets.length === 0) {
+            logger.info('ReviewQueueNew: No tweets need review');
+          }
+        } else {
+          logger.error('Failed to fetch tweets:', result.error);
+          setTweets([]); // Empty array - no static fallback
         }
       } catch (error) {
-        console.error('Error fetching tweets:', error);
-        // Fallback to static data if API fails
-        const staticTweets = [
-          {
-            id: 1,
-            tweet_id: "1979023456789012345",
-            event_type: "बैठक",
-            event_date: "2025-10-17T02:30:15.000Z",
-            locations: ["बिलासपुर"],
-            people_mentioned: [],
-            organizations: [],
-            schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-            overall_confidence: "0.85",
-            needs_review: true,
-            review_status: "pending",
-            parsed_at: "2025-10-17T02:30:15.000Z",
-            parsed_by: "system"
-          }
-        ];
-        setTweets(staticTweets);
+        logger.error('Error fetching tweets:', error as Error);
+        setTweets([]); // Empty array - no static fallback
       } finally {
-        console.log('ReviewQueueNew: Setting loading to false');
+        logger.debug('ReviewQueueNew: Setting loading to false');
         setLoading(false);
       }
     };
 
     fetchTweets();
-  }, []);
+  }, [sortBy]); // Re-fetch when sortBy changes
 
-  const currentTweet = tweets[currentIndex];
-  
-  console.log('ReviewQueueNew: tweets length:', tweets.length);
-  console.log('ReviewQueueNew: currentIndex:', currentIndex);
-  console.log('ReviewQueueNew: currentTweet:', currentTweet);
+  logger.debug('ReviewQueueNew: tweets length:', tweets.length);
+  logger.debug('ReviewQueueNew: currentIndex:', currentIndex);
+  logger.debug('ReviewQueueNew: currentTweet:', currentTweet);
   
   const stats = useMemo(() => {
     const pending = tweets.filter(t => t.review_status !== 'approved').length;
     const reviewed = tweets.filter(t => t.review_status === 'approved').length;
     const avgConfidence = tweets.reduce((sum, t) => sum + (parseFloat(t.overall_confidence) || 0), 0) / tweets.length;
     
-    console.log('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
+    logger.debug('ReviewQueueNew: stats calculated:', { pending, reviewed, avgConfidence });
     return { pending, reviewed, avgConfidence };
   }, [tweets]);
 
@@ -433,6 +530,55 @@ export default function ReviewQueueNew() {
       return;
     }
     
+    try {
+      // Save corrections to learning system
+      const learningResponse = await fetch('/api/learning', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'learn_from_feedback',
+          data: {
+            tweetId: currentTweet.tweet_id,
+            originalParsed: currentTweet,
+            humanCorrection: { ...currentTweet, ...editedData },
+            correctionReason: correctionReason,
+            reviewer: 'human'
+          }
+        })
+      });
+
+      if (learningResponse.ok) {
+        const learningResult = await learningResponse.json();
+        logger.info('Learning from feedback:', learningResult);
+      }
+      
+      // Update parsed event
+      const response = await fetch('/api/parsed-events', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentTweet.id,
+          ...editedData,
+          correction_reason: correctionReason,
+          review_status: 'corrected',
+        })
+      });
+
+      if (response.ok) {
+        setTweets(prev => prev.map(tweet => 
+          tweet.id === currentTweet.id 
+            ? { ...tweet, ...editedData, review_status: 'corrected' }
+            : tweet
+        ));
+      }
+    } catch (error) {
+      logger.error('Error saving corrections:', error as Error);
+    }
+    
     setEditMode(false);
     setCorrectionReason('');
   };
@@ -445,7 +591,7 @@ export default function ReviewQueueNew() {
       <div className="w-full flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">समीक्षा डेटा लोड हो रहा है...</p>
+          <p className="text-muted">समीक्षा डेटा लोड हो रहा है...</p>
         </div>
       </div>
     );
@@ -455,8 +601,8 @@ export default function ReviewQueueNew() {
     return (
       <div className="text-center py-12">
         <div className="max-w-md mx-auto">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-semibold text-primary mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
+          <p className="text-secondary mb-4">
             {tweets.length === 0 
               ? "अभी समीक्षा के लिए कोई ट्वीट उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
               : "सभी ट्वीट की समीक्षा पूर्ण हो गई है।"
@@ -476,22 +622,22 @@ export default function ReviewQueueNew() {
       <div className="flex w-full flex-1 flex-col items-center">
         {/* Stats Cards */}
         <div className="mb-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
-            <p className="text-sm font-medium text-gray-400">समीक्षा के लिए</p>
-            <p className="text-2xl font-bold text-white">{stats.pending}</p>
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
+            <p className="text-sm font-medium text-secondary">समीक्षा के लिए</p>
+            <p className="text-2xl font-bold text-primary">{stats.pending}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
-            <p className="text-sm font-medium text-gray-400">समीक्षित</p>
-            <p className="text-2xl font-bold text-white">{stats.reviewed}</p>
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
+            <p className="text-sm font-medium text-secondary">समीक्षित</p>
+            <p className="text-2xl font-bold text-primary">{stats.reviewed}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
-            <p className="text-sm font-medium text-gray-400">औसत विश्वास</p>
-            <p className="text-2xl font-bold text-white">{Math.round(stats.avgConfidence * 100)}%</p>
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
+            <p className="text-sm font-medium text-secondary">औसत विश्वास</p>
+            <p className="text-2xl font-bold text-primary">{Math.round(stats.avgConfidence * 100)}%</p>
           </div>
         </div>
 
         {/* Tweet Counter */}
-        <p className="mb-4 text-center text-sm font-normal leading-normal text-gray-400">
+        <p className="mb-4 text-center text-sm font-normal leading-normal text-muted">
           ट्वीट {currentIndex + 1} में से {tweets.length}
         </p>
 
@@ -550,9 +696,9 @@ export default function ReviewQueueNew() {
                   });
 
                   // Show success message (could add toast notification here)
-                  console.log('✓ Geo-hierarchy correction learned');
+                  logger.info('✓ Geo-hierarchy correction learned');
                 } catch (error) {
-                  console.error('Failed to save geo-hierarchy correction:', error);
+                  logger.error('Failed to save geo-hierarchy correction:', error as Error);
                 }
               }}
               onReject={() => {
@@ -568,48 +714,48 @@ export default function ReviewQueueNew() {
         })()}
 
         {/* Tweet Card */}
-        <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-[#0d1117] p-6 shadow-2xl sm:p-8">
+        <div className="w-full max-w-2xl glassmorphic-card rounded-2xl p-6 shadow-2xl sm:p-8">
           {/* Tweet Header */}
           <div className="flex items-center gap-4">
             <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNUkxYhQdfbK8RN72N4PUjwW9vbF4OPsUCu8LobAyWyBt0-Ty5BwoXr_Zp6AoaCFf1atiW5TAxUDhxgZR2zLoaElzlAQ_-V7fFo3dALshVsdy_OuJ8XzvwZG_InS1k30-fso8zRKyULYzJ1x84QjNc09mU1Yr2uqnFbOrUxpcZgztKSyRZ1HmTlJTfjSze8Wqs47Y9wUHzhVlxv1VpJvJn_0vM1jZe4kXyWcSxcsCUWpZaHwzIMCl3jx38C-zfTzwTLGUuQXAQeF13")'}}></div>
             <div className="flex flex-col justify-center">
-              <p className="text-lg font-medium leading-normal text-gray-100 line-clamp-1">Tweet #{currentTweet.id}</p>
-              <p className="text-sm font-normal leading-normal text-gray-400 line-clamp-2">{formatDate(currentTweet.event_date)}</p>
+              <p className="text-lg font-medium leading-normal text-primary line-clamp-1">Tweet #{currentTweet.id}</p>
+              <p className="text-sm font-normal leading-normal text-muted line-clamp-2">{formatDate(currentTweet.event_date)}</p>
             </div>
-            <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-green-900/50">
-              <Check className="w-4 h-4 text-green-400" />
-              <p className="text-base font-bold text-green-300">{Math.round(confidence * 100)}% विश्वास</p>
+            <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-mint-green bg-opacity-20 border border-mint-green border-opacity-40">
+              <Check className="w-4 h-4 text-mint-green" />
+              <p className="text-base font-bold text-mint-green">{Math.round(confidence * 100)}% विश्वास</p>
             </div>
           </div>
 
-          <hr className="my-6 border-gray-700" />
+          <hr className="my-6 border-white border-opacity-20" />
 
           {/* Tweet Content */}
-          <p className="text-lg font-normal leading-relaxed text-gray-200">
+          <p className="text-lg font-normal leading-relaxed text-secondary">
             {tweetText}
           </p>
 
           {/* Parsed Data */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">दौरा/कार्यक्रम</p>
-              <p className="font-semibold text-gray-200">{getEventTypeHindi(currentTweet.event_type) || '—'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">दौरा/कार्यक्रम</p>
+              <p className="font-semibold text-primary">{getEventTypeHindi(currentTweet.event_type) || '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">स्थान</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.locations || []).join(', ') || '—'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">स्थान</p>
+              <p className="font-semibold text-primary">{(currentTweet.locations || []).join(', ') || '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">लोग</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.people_mentioned || []).join(', ') || '—'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">लोग</p>
+              <p className="font-semibold text-primary">{(currentTweet.people_mentioned || []).join(', ') || '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">संगठन</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.organizations || []).join(', ') || '—'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">संगठन</p>
+              <p className="font-semibold text-primary">{(currentTweet.organizations || []).join(', ') || '—'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400 mb-1">योजनाएं</p>
-              <p className="font-semibold text-gray-200">{(currentTweet.schemes_mentioned || []).join(', ') || '—'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">योजनाएं</p>
+              <p className="font-semibold text-primary">{(currentTweet.schemes_mentioned || []).join(', ') || '—'}</p>
             </div>
           </div>
 
@@ -634,10 +780,10 @@ export default function ReviewQueueNew() {
             <div className="mt-6 flex flex-col space-y-4">
               {/* Event Type with Autocomplete */}
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-300 mb-2">दौरा/कार्यक्रम</label>
+                <label className="block text-sm font-medium text-secondary mb-2">दौरा/कार्यक्रम</label>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-gray-700 bg-[#0d1117] p-3 text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                  className="w-full rounded-lg border border-white border-opacity-20 bg-white bg-opacity-5 p-3 text-primary placeholder:text-muted focus:border-mint-green focus:ring-2 focus:ring-mint-green focus:ring-opacity-50"
                   placeholder="दौरा/कार्यक्रम खोजें..."
                   value={editedData.event_type || ''}
                   onChange={(e) => {
@@ -650,11 +796,11 @@ export default function ReviewQueueNew() {
                   onBlur={() => setTimeout(() => setShowEventSuggestions(false), 200)}
                 />
                 {showEventSuggestions && eventSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 glassmorphic-card rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {eventSuggestions.map((suggestion, index) => (
                       <div
                         key={index}
-                        className="p-3 hover:bg-gray-800 cursor-pointer text-gray-200 border-b border-gray-700 last:border-b-0"
+                        className="p-3 hover:bg-white hover:bg-opacity-10 cursor-pointer text-secondary border-b border-white border-opacity-10 last:border-b-0"
                         onClick={() => {
                           setEditedData({...editedData, event_type: suggestion.name_hi});
                           setShowEventSuggestions(false);
@@ -670,10 +816,10 @@ export default function ReviewQueueNew() {
 
               {/* Schemes with Autocomplete */}
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-300 mb-2">योजनाएं</label>
+                <label className="block text-sm font-medium text-secondary mb-2">योजनाएं</label>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-gray-700 bg-[#0d1117] p-3 text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+                  className="w-full rounded-lg border border-white border-opacity-20 bg-white bg-opacity-5 p-3 text-primary placeholder:text-muted focus:border-mint-green focus:ring-2 focus:ring-mint-green focus:ring-opacity-50"
                   placeholder="योजना खोजें..."
                   value={editedData.schemes || ''}
                   onChange={(e) => {
@@ -686,18 +832,18 @@ export default function ReviewQueueNew() {
                   onBlur={() => setTimeout(() => setShowSchemeSuggestions(false), 200)}
                 />
                 {showSchemeSuggestions && schemeSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-[#0d1117] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 glassmorphic-card rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {schemeSuggestions.map((suggestion, index) => (
                       <div
                         key={index}
-                        className="p-3 hover:bg-gray-800 cursor-pointer text-gray-200 border-b border-gray-700 last:border-b-0"
+                        className="p-3 hover:bg-white hover:bg-opacity-10 cursor-pointer text-secondary border-b border-white border-opacity-10 last:border-b-0"
                         onClick={() => {
                           setEditedData({...editedData, schemes: suggestion.name_hi});
                           setShowSchemeSuggestions(false);
                         }}
                       >
                         <div className="font-medium">{suggestion.name_hi}</div>
-                        <div className="text-sm text-gray-400">{suggestion.name_en} ({suggestion.category})</div>
+                        <div className="text-sm text-muted">{suggestion.name_en} ({suggestion.category})</div>
                       </div>
                     ))}
                   </div>
@@ -736,9 +882,9 @@ export default function ReviewQueueNew() {
 
               {/* Correction Reason */}
               <label className="flex flex-col">
-                <p className="pb-2 text-sm font-medium leading-normal text-gray-300">सुधार क्षेत्र</p>
+                <p className="pb-2 text-sm font-medium leading-normal text-secondary">सुधार क्षेत्र</p>
                 <textarea 
-                  className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl border border-gray-700 bg-[#0d1117] p-4 text-base font-normal leading-normal text-gray-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 min-h-36"
+                  className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl border border-white border-opacity-20 bg-white bg-opacity-5 p-4 text-base font-normal leading-normal text-primary placeholder:text-muted focus:border-mint-green focus:ring-2 focus:ring-mint-green focus:ring-opacity-50 min-h-36"
                   value={correctionReason}
                   onChange={(e) => setCorrectionReason(e.target.value)}
                   placeholder="सुधार का कारण दर्ज करें..."
@@ -752,20 +898,20 @@ export default function ReviewQueueNew() {
         <div className="mt-8 flex w-full max-w-2xl flex-wrap items-center justify-center gap-4">
           <button 
             onClick={handleSkip}
-            className="group flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-gray-700 bg-[#0d1117] text-gray-300 transition-all hover:scale-105 hover:bg-gray-800 hover:text-white"
+            className="group flex h-14 w-14 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white border-opacity-20 bg-white bg-opacity-5 text-secondary transition-all hover:scale-105 hover:bg-opacity-10 hover:text-primary"
           >
             <SkipForward className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setShowAIAssistant(true)}
-            className="group flex h-14 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105 bg-blue-600 hover:bg-blue-700"
+            className="group flex h-14 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-primary shadow-lg transition-all hover:scale-105 bg-mint-green bg-opacity-20 border border-mint-green border-opacity-40 hover:bg-opacity-30"
           >
             <Edit className="w-5 h-5" />
             <span>संपादित करें</span>
           </button>
           <button 
             onClick={handleApprove}
-            className="group flex h-14 flex-1 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-white shadow-lg transition-all hover:scale-105 bg-green-600 hover:bg-green-700"
+            className="group flex h-14 flex-1 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-base font-bold text-primary shadow-lg transition-all hover:scale-105 bg-status-approved bg-opacity-20 border border-status-approved border-opacity-40 hover:bg-opacity-30"
           >
             <Check className="w-5 h-5" />
             <span>अनुमोदन करें</span>
@@ -777,18 +923,18 @@ export default function ReviewQueueNew() {
           <button 
             onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
             disabled={currentIndex === 0}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-secondary bg-white bg-opacity-5 border border-white border-opacity-20 hover:bg-opacity-10 transition-colors disabled:opacity-50"
           >
             <ChevronLeft className="w-4 h-4" />
             Previous
           </button>
-          <h3 className="text-gray-200 text-lg font-bold leading-tight tracking-[-0.015em]">
+          <h3 className="text-primary text-lg font-bold leading-tight tracking-[-0.015em]">
             Tweet {currentIndex + 1} of {tweets.length}
           </h3>
           <button 
             onClick={() => setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1))}
             disabled={currentIndex === tweets.length - 1}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-secondary bg-white bg-opacity-5 border border-white border-opacity-20 hover:bg-opacity-10 transition-colors disabled:opacity-50"
           >
             Next
             <ChevronRight className="w-4 h-4" />
