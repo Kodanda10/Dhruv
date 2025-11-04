@@ -52,11 +52,11 @@ jobs:
         run: npm run typecheck
 
       - name: Run AI Assistant Tests
-        run: npm test -- tests/lib/ai-assistant/ --ci --reporters=default --reporters=jest-junit
+        run: npm test -- tests/lib/ai-assistant/ tests/app/api/ai-assistant/ --ci --reporters=default --reporters=jest-junit
 
       - name: Coverage Check
         run: |
-          npm test -- tests/lib/ai-assistant/ --coverage \
+          npm test -- tests/lib/ai-assistant/ tests/app/api/ai-assistant/ --coverage \
             --coveragePathIgnorePatterns="node_modules|tests|\.test\.|\.spec\." \
             --collectCoverageFrom="src/lib/ai-assistant/**/*.ts" \
             --collectCoverageFrom="src/app/api/ai-assistant/**/*.ts" \
