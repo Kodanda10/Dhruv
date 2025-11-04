@@ -1,6 +1,7 @@
 'use client';
 import { parsePost, formatHindiDate } from '@/utils/parse';
-import { isParseEnabled, isCanonicalEnabled, isHumanReviewEnabled } from '../../config/flags';
+// Feature flags - hardcoded for production
+const isParseEnabled = () => true;
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
