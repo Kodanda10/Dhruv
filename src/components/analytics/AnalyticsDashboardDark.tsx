@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import GeoHierarchyMindmap from './GeoHierarchyMindmap';
 import type { GeoAnalyticsFilters } from '@/types/geo-analytics';
+import { usePolling } from '@/hooks/usePolling';
 
 interface TweetData {
   id: string;
@@ -40,7 +41,7 @@ export default function AnalyticsDashboardDark() {
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -60,6 +61,14 @@ export default function AnalyticsDashboardDark() {
       
       const response = await fetch(`/api/analytics?${params.toString()}`);
       const result = await response.json();
+      
+      console.debug('AnalyticsDashboard: API response:', { 
+        success: result.success, 
+        hasAnalytics: !!result.analytics,
+        error: result.error,
+        details: result.details,
+        source: result.source
+      });
       
       if (result.success && result.analytics) {
         const { analytics, raw_data } = result;
@@ -87,12 +96,16 @@ export default function AnalyticsDashboardDark() {
         };
         
         setAnalyticsData(processedData);
+         // setErrorState(null);
       } else {
-        setError('विश्लेषण डेटा लोड करने में विफल');
+         const errorMsg = result.error || 'विश्लेषण डेटा लोड करने में विफल';
+         const details = result.details ? `: ${result.details}` : '';
+         // setErrorState(`${errorMsg}${details}`);
+        setAnalyticsData(null);
       }
     } catch (err) {
       console.error('Error fetching analytics data:', err);
-      setError('Failed to load analytics data');
+      // setErrorState('Failed to load analytics data');
     } finally {
       setLoading(false);
     }

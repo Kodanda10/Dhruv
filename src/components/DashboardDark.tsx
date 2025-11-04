@@ -31,8 +31,15 @@ export default function DashboardDark() {
       logger.debug('DashboardDark: Simple fetch starting...');
       setIsPolling(true);
       try {
-        const res = await api.get<{ success: boolean; data: any[]; error?: string }>(`/api/parsed-events?limit=200`);
-        logger.debug('DashboardDark: Simple fetch response:', { success: res.success, count: res.data?.length, source: (res as any).source });
+        const res = await api.get<{ success: boolean; data: any[]; error?: string; details?: string }>(`/api/parsed-events?limit=200`);
+        logger.debug('DashboardDark: Simple fetch response:', { 
+          success: res.success, 
+          count: res.data?.length, 
+          source: (res as any).source,
+          error: (res as any).error,
+          details: (res as any).details
+        });
+        
         if (res.success && res.data && Array.isArray(res.data) && res.data.length > 0) {
           setServerRows(res.data);
           setError(null);
@@ -42,16 +49,24 @@ export default function DashboardDark() {
           logger.warn('DashboardDark: No data received:', res);
           setServerRows([]);
           setDataSource((res as any).source || 'empty');
+          
+          // Provide detailed error message
           if ((res as any).error) {
-            setError((res as any).error);
+            const errorMsg = (res as any).error;
+            const details = (res as any).details;
+            setError(details ? `${errorMsg}: ${details}` : errorMsg);
+          } else if (!res.success) {
+            setError('API returned unsuccessful response');
           } else {
-            setError('No data available');
+            setError('No data available in database');
           }
         }
       } catch (error) {
         logger.error('DashboardDark: Simple fetch error:', error as Error);
         setServerRows([]);
-        setError(error instanceof Error ? error.message : 'Failed to fetch data');
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch data';
+        setError(errorMessage);
+        setDataSource('error');
       } finally {
         setIsPolling(false);
         setIsLoading(false);
