@@ -252,8 +252,7 @@ export default function HumanReviewDashboard() {
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-teal-100 mb-4">मानव समीक्षा डैशबोर्ड</h2>
 
-        {/* Review Status */}
-        <ReviewStatus />
+        {/* Review Status - Component not implemented yet */}
 
         {/* Review Statistics and Feedback */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
