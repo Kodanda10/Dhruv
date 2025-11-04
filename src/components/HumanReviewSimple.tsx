@@ -21,7 +21,7 @@ type ParsedTweet = {
 };
 
 export default function HumanReviewSimple() {
-  const [tweets, setTweets] = useState<ParsedTweet[]>(parsedTweets as ParsedTweet[]);
+  const [tweets, setTweets] = useState<ParsedTweet[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
 
