@@ -1,5 +1,4 @@
 "use client";
-import parsedTweets from '../../data/parsed_tweets.json';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { parsePost, formatHindiDate } from '@/utils/parse';
@@ -22,6 +21,7 @@ export default function DashboardDark() {
   const [isPolling, setIsPolling] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string>('loading'); // Track data source for debugging
 
   logger.debug('DashboardDark: About to call useEffect');
 
@@ -31,15 +31,45 @@ export default function DashboardDark() {
       logger.debug('DashboardDark: Simple fetch starting...');
       setIsPolling(true);
       try {
-        const res = await api.get<{ success: boolean; data: any[] }>(`/api/parsed-events?limit=200`);
-        logger.debug('DashboardDark: Simple fetch response:', res);
-        if (res.success) {
+        const res = await api.get<{ success: boolean; data: any[]; error?: string; details?: string }>(`/api/parsed-events?limit=200`);
+        logger.debug('DashboardDark: Simple fetch response:', { 
+          success: res.success, 
+          count: res.data?.length, 
+          source: (res as any).source,
+          error: (res as any).error,
+          details: (res as any).details
+        });
+        
+        if (res.success && res.data && Array.isArray(res.data) && res.data.length > 0) {
           setServerRows(res.data);
+          setError(null);
+          setDataSource((res as any).source || 'database');
+          logger.info(`DashboardDark: Loaded ${res.data.length} events from ${(res as any).source || 'database'}`);
+        } else {
+          logger.warn('DashboardDark: No data received:', res);
+          setServerRows([]);
+          setDataSource((res as any).source || 'empty');
+          
+          // Provide detailed error message
+          if ((res as any).error) {
+            const errorMsg = (res as any).error;
+            const details = (res as any).details;
+            setError(details ? `${errorMsg}: ${details}` : errorMsg);
+          } else if (!res.success) {
+            setError('API returned unsuccessful response');
+          } else {
+            setError('No data available in database');
+          }
         }
       } catch (error) {
         logger.error('DashboardDark: Simple fetch error:', error as Error);
+        setServerRows([]);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch data';
+        setError(errorMessage);
+        setDataSource('error');
       } finally {
         setIsPolling(false);
+        setIsLoading(false);
       }
     };
 
@@ -91,8 +121,8 @@ export default function DashboardDark() {
 
   const parsed = useMemo(() => {
     // Use real database data from serverRows, fallback to parsedTweets if empty
-    const source = serverRows.length > 0 ? serverRows : parsedTweets;
-    logger.debug('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
+    const source = serverRows.length > 0 ? serverRows : [];
+    logger.debug('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data from database)' : 'empty (no fallback)', 'length:', source.length);
     
     return source.map((p: any, index: number) => {
       // Handle both old parsed structure and new database structure
@@ -326,8 +356,67 @@ export default function DashboardDark() {
   const { sortedData, handleSort, getSortIcon } = useSortableTable(sanitizedData, getFieldValue);
 
   // Fix count discrepancy: Use actual data source count, not parsed length
-  const totalCount = serverRows.length > 0 ? serverRows.length : parsedTweets.length;
+  const totalCount = serverRows.length > 0 ? serverRows.length : 0;
   const shownCount = filtered.length;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <section>
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-mint-green mb-4"></div>
+          <p className="text-gray-400 text-lg">डेटा लोड हो रहा है...</p>
+          <p className="text-gray-500 text-sm mt-2">कृपया प्रतीक्षा करें</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section>
+        <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
+          <span className="material-symbols-outlined text-red-400 text-4xl mb-3 block">error</span>
+          <h3 className="text-red-300 text-lg font-semibold mb-2">डेटा लोड करने में त्रुटि</h3>
+          <p className="text-red-400 text-sm mb-4">{error}</p>
+          <p className="text-gray-400 text-xs mb-4">
+            डेटा स्रोत: {dataSource}
+          </p>
+          <button
+            onClick={() => {
+              setIsLoading(true);
+              setError(null);
+              // Trigger re-fetch
+              const event = new Event('refresh');
+              window.dispatchEvent(event);
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+          >
+            पुनः प्रयास करें
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // Show empty state
+  if (serverRows.length === 0 && !isLoading && !error) {
+    return (
+      <section>
+        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-6 text-center">
+          <span className="material-symbols-outlined text-yellow-400 text-4xl mb-3 block">info</span>
+          <h3 className="text-yellow-300 text-lg font-semibold mb-2">कोई डेटा उपलब्ध नहीं</h3>
+          <p className="text-yellow-400 text-sm mb-4">
+            डेटाबेस में अभी तक कोई पार्स किए गए इवेंट नहीं हैं।
+          </p>
+          <p className="text-gray-400 text-xs">
+            डेटा स्रोत: {dataSource}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -349,49 +438,49 @@ export default function DashboardDark() {
         </div>
       )}
 
-      <div className="mb-4 flex items-end gap-4 flex-wrap bg-[#192734] border border-gray-800 rounded-xl p-4 shadow-sm">
-        <label className="text-sm font-medium text-gray-300">
+      <div className="mb-4 flex items-end gap-4 flex-wrap glassmorphic-card glassmorphic-hover rounded-xl p-4">
+        <label className="text-sm font-medium text-secondary">
           स्थान फ़िल्टर
           <input
             aria-label="स्थान फ़िल्टर"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-primary placeholder:text-muted px-2 py-1 rounded-md w-40 focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             placeholder="जैसे: रायगढ़"
             value={locFilter}
             onChange={(e) => setLocFilter(e.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-secondary">
           टैग/मेंशन फ़िल्टर
           <input
             aria-label="टैग/मेंशन फ़िल्टर"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-primary placeholder:text-muted px-2 py-1 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             placeholder="#समारोह, @PMOIndia"
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-secondary">
           तिथि से
           <input
             aria-label="तिथि से"
             type="date"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-primary placeholder:text-muted px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
         </label>
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-secondary">
           तिथि तक
           <input
             aria-label="तिथि तक"
             type="date"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-primary placeholder:text-muted px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
         </label>
         <div className="ml-auto flex items-center gap-3">
-          <div className="text-gray-400 text-sm" aria-live="polite">
+          <div className="text-muted text-sm" aria-live="polite">
             {`दिखा रहे हैं: ${shownCount} / ${totalCount}`}
           </div>
           <button
@@ -410,7 +499,7 @@ export default function DashboardDark() {
               }
             }}
             disabled={isPolling}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-600 text-white border border-green-700 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40 hover:bg-opacity-30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <span className={`material-symbols-outlined text-base ${isPolling ? 'animate-spin' : ''}`}>
               {isPolling ? 'hourglass_empty' : 'refresh'}
@@ -427,14 +516,14 @@ export default function DashboardDark() {
               setActionFilter('');
               router.push('/');
             }}
-            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white bg-opacity-10 text-primary border border-white border-opacity-20 hover:bg-opacity-15 transition-colors"
           >
             फ़िल्टर साफ़ करें
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto bg-[#192734] border border-gray-800 rounded-xl p-2 shadow-sm">
-        <table aria-label="गतिविधि सारणी" className="min-w-full text-sm border-collapse table-fixed text-gray-100">
+      <div className="overflow-x-auto glassmorphic-card rounded-xl p-2">
+        <table aria-label="गतिविधि सारणी" className="min-w-full text-sm border-collapse table-fixed text-primary">
           <colgroup>
             <col className="w-[16%]" />
             <col className="w-[14%]" />
@@ -442,10 +531,10 @@ export default function DashboardDark() {
             <col className="w-[14%]" />
             <col className="w-[38%]" />
           </colgroup>
-          <thead className="bg-[#0d1117] text-gray-300">
+          <thead className="bg-white bg-opacity-5 text-secondary">
             <tr>
               <th 
-                className="text-center font-semibold p-2 border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                className="text-center font-semibold p-2 border-b border-white border-opacity-20 cursor-pointer hover:bg-white hover:bg-opacity-10 transition-colors"
                 onClick={() => handleSort('date')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -521,24 +610,24 @@ export default function DashboardDark() {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-[#192734]" data-testid="tbody">
+          <tbody className="bg-transparent" data-testid="tbody">
             {!sanitizedData || sortedData.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">
+                <td colSpan={5} className="p-8 text-center text-muted">
                   <div className="flex flex-col items-center gap-2">
-                    <span className="material-symbols-outlined text-4xl text-gray-600">inbox</span>
-                    <p className="text-lg font-medium">कोई डेटा नहीं मिला</p>
-                    <p className="text-sm">कृपया फ़िल्टर सेटिंग्स जांचें या बाद में पुनः प्रयास करें।</p>
+                    <span className="material-symbols-outlined text-4xl text-muted opacity-70">inbox</span>
+                    <p className="text-lg font-medium text-primary">कोई डेटा नहीं मिला</p>
+                    <p className="text-sm text-secondary">कृपया फ़िल्टर सेटिंग्स जांचें या बाद में पुनः प्रयास करें।</p>
                   </div>
                 </td>
               </tr>
             ) : (
               sortedData.map((row, index) => (
-              <tr key={row.id || index} className={`align-top hover:bg-gray-800`}>
-                <td className="p-2 border-b border-gray-700 whitespace-nowrap">
+              <tr key={row.id || index} className={`align-top hover:bg-white hover:bg-opacity-5 transition-colors`}>
+                <td className="p-2 border-b border-white border-opacity-10 whitespace-nowrap">
                   {typeof row.when === 'string' ? row.when : String(row.when || '')}
                 </td>
-                <td className="p-2 border-b border-l border-gray-700">
+                <td className="p-2 border-b border-l border-white border-opacity-10">
                   {(() => {
                     const locations = Array.isArray(row.where) 
                       ? row.where.map((w: any) => {
@@ -550,7 +639,7 @@ export default function DashboardDark() {
                     return locations.length > 0 ? locations.join(', ') : '—';
                   })()}
                 </td>
-                <td className="p-2 border-b border-l border-gray-700">
+                <td className="p-2 border-b border-l border-white border-opacity-10">
                   {(() => {
                     const events = Array.isArray(row.what) 
                       ? row.what.map((w: any) => {
@@ -593,8 +682,8 @@ export default function DashboardDark() {
                               }}
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
                                 isSelected 
-                                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
-                                  : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                                  ? 'bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40' 
+                                  : 'bg-white bg-opacity-10 text-secondary border border-white border-opacity-20 hover:bg-opacity-15'
                               }`}
                             >
                               {t}

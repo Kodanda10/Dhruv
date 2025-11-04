@@ -121,90 +121,17 @@ export async function GET(request: NextRequest) {
       });
       
     } catch (dbError) {
-      logger.error('Database query failed, falling back to static file:', dbError);
-      // Continue to fallback below
-    }
-    
-    // Fallback: Try to read from parsed_tweets.json
-    const dataPath = path.join(process.cwd(), 'data', 'parsed_tweets.json');
-    
-    if (fs.existsSync(dataPath)) {
-      const fileContent = fs.readFileSync(dataPath, 'utf8');
-      const tweets = JSON.parse(fileContent);
-      
-      logger.info(`Loaded ${tweets.length} tweets from parsed_tweets.json`);
-      
-      // Filter based on parameters
-      let filteredTweets = tweets;
-      
-      if (needsReview === 'true') {
-        filteredTweets = tweets.filter((t: any) => t.needs_review === true);
-      } else if (needsReview === 'false' || includeAnalytics) {
-        // For analytics, use all tweets; for regular requests, use all tweets too
-        filteredTweets = tweets;
-      }
-      
-      if (reviewStatus && !includeAnalytics) {
-        filteredTweets = filteredTweets.filter((t: any) => t.review_status === reviewStatus);
-      }
-      
-      // Limit the results
-      const limitedTweets = filteredTweets.slice(0, limit);
-      
-      if (includeAnalytics) {
-        const analytics = {
-          total_tweets: limitedTweets.length,
-          event_distribution: aggregateEventTypes(limitedTweets),
-          location_distribution: aggregateLocations(limitedTweets),
-          scheme_usage: aggregateSchemes(limitedTweets),
-          timeline: aggregateByDate(limitedTweets),
-          day_of_week: aggregateByDayOfWeek(limitedTweets)
-        };
-        
-        return NextResponse.json({
-          success: true,
-          analytics,
-          raw_data: limitedTweets,
-          source: 'static_file'
-        });
-      }
-      
-      // Map tweets to the format expected by the dashboard
-      const mappedTweets = limitedTweets.map((tweet: any) => ({
-        id: tweet.id,
-        tweet_id: tweet.id,
-        content: tweet.content,
-        text: tweet.content,
-        timestamp: tweet.timestamp,
-        created_at: tweet.timestamp,
-        event_type: tweet.parsed?.event_type || tweet.event_type,
-        locations: tweet.parsed?.locations || tweet.locations || [],
-        people_mentioned: tweet.parsed?.people || tweet.people_mentioned || [],
-        organizations: tweet.parsed?.organizations || tweet.organizations || [],
-        schemes_mentioned: tweet.parsed?.schemes || tweet.schemes_mentioned || [],
-        confidence: tweet.parsed?.confidence || tweet.confidence,
-        needs_review: tweet.needs_review || false,
-        review_status: tweet.review_status || 'approved',
-        parsed_at: tweet.timestamp,
-        parsed_by: 'system'
-      }));
-      
+      logger.error('Database query failed:', dbError);
+      // Return error response - no static data fallback
       return NextResponse.json({
-        success: true,
-        data: mappedTweets,
-        total: filteredTweets.length,
-        returned: limitedTweets.length,
-        source: 'static_file'
-      });
-    } else {
-      // Return empty array if file doesn't exist
-      return NextResponse.json({
-        success: true,
+        success: false,
+        error: 'Database connection failed',
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error',
         data: [],
         total: 0,
         returned: 0,
-        source: 'empty'
-      });
+        source: 'error'
+      }, { status: 500 });
     }
   } catch (error) {
     logger.error('Error fetching parsed events:', error);

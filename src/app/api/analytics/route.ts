@@ -76,144 +76,23 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (dbError) {
-      logger.warn('Database read failed, falling back to file:', dbError);
+      logger.error('Database read failed:', dbError);
+      return NextResponse.json({
+        success: false,
+        error: 'Database connection failed',
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error',
+        analytics: null,
+        source: 'error'
+      }, { status: 500 });
     }
     
-    // FALLBACK: Try to read from static data file
-    const dataPath = path.join(process.cwd(), 'data', 'parsed_tweets.json');
-    
-    if (fs.existsSync(dataPath)) {
-      const fileContent = fs.readFileSync(dataPath, 'utf8');
-      const tweets = JSON.parse(fileContent);
-      
-      // Exclude skipped items from analytics - they should not be part of analysis
-      const allTweets = tweets.filter((t: any) => 
-        !t.review_status || t.review_status !== 'skipped'
-      );
-      
-      logger.info(`Loaded ${allTweets.length} tweets from parsed_tweets.json (skipped items excluded, original: ${tweets.length})`);
-      
-      // Generate comprehensive analytics from real data
-      const analytics = {
-        total_tweets: allTweets.length,
-        event_distribution: aggregateEventTypes(allTweets),
-        location_distribution: aggregateLocations(allTweets),
-        scheme_usage: aggregateSchemes(allTweets),
-        timeline: aggregateByDate(allTweets),
-        day_of_week: aggregateByDayOfWeek(allTweets),
-        top_locations: getTopLocations(allTweets),
-        top_schemes: getTopSchemes(allTweets),
-        recent_activity: getRecentActivity(allTweets)
-      };
-      
-      logger.info('Analytics generated from file:', {
-        total_tweets: analytics.total_tweets,
-        event_types: Object.keys(analytics.event_distribution).length,
-        locations: Object.keys(analytics.location_distribution).length,
-        schemes: Object.keys(analytics.scheme_usage).length
-      });
-      
-      return NextResponse.json({ 
-        success: true, 
-        analytics, 
-        raw_data: allTweets.slice(0, 10), // Return first 10 for preview
-        source: 'parsed_tweets_file',
-        message: `Analytics data loaded successfully from ${allTweets.length} tweets`
-      });
-    }
-    
-    // Fallback: Generate sample analytics data
-    const sampleAnalytics = {
-      total_tweets: 55,
-      event_distribution: {
-        'बैठक': 15,
-        'कार्यक्रम': 12,
-        'यात्रा': 8,
-        'घोषणा': 10,
-        'उद्घाटन': 6,
-        'सम्मेलन': 7,
-        'other': 10
-      },
-      location_distribution: {
-        'रायपुर': 18,
-        'बिलासपुर': 12,
-        'रायगढ़': 8,
-        'दुर्ग': 6,
-        'कोरबा': 5,
-        'सरगुजा': 4,
-        'जशपुर': 3,
-        'कोरिया': 2,
-        'कांकेर': 2,
-        'बस्तर': 2,
-        'नारायणपुर': 1,
-        'बीजापुर': 1,
-        'सुकमा': 1,
-        'दंतेवाड़ा': 1,
-        'कोंडागांव': 1,
-        'राजनांदगांव': 1,
-        'महासमुंद': 1,
-        'गरियाबंद': 1,
-        'बलरामपुर': 1,
-        'सूरजपुर': 1,
-        'बलौदा बाजार': 1,
-        'मुंगेली': 1,
-        'कबीरधाम': 1,
-        'जांजगीर-चंपा': 1,
-        'बेमेतरा': 1,
-        'बलोदाबाजार': 1,
-        'गौरेला-पेंड्रा-मरवाही': 1
-      },
-      scheme_usage: {
-        'PM Kisan': 8,
-        'Ayushman Bharat': 6,
-        'Ujjwala': 5,
-        'Swachh Bharat': 4,
-        'Digital India': 3,
-        'PM मुद्रा': 2,
-        'PM आवास': 2,
-        'PM किसान': 2,
-        'आयुष्मान भारत': 2,
-        'उज्ज्वला': 2,
-        'स्वच्छ भारत': 2,
-        'डिजिटल इंडिया': 2,
-        'मुद्रा': 1,
-        'आवास': 1,
-        'किसान': 1
-      },
-      timeline: generateTimelineData(),
-      day_of_week: {
-        'Monday': 12,
-        'Tuesday': 10,
-        'Wednesday': 11,
-        'Thursday': 9,
-        'Friday': 8,
-        'Saturday': 10,
-        'Sunday': 8
-      },
-      top_locations: [
-        { name: 'रायपुर', count: 18, percentage: 26.5 },
-        { name: 'बिलासपुर', count: 12, percentage: 17.6 },
-        { name: 'रायगढ़', count: 8, percentage: 11.8 },
-        { name: 'दुर्ग', count: 6, percentage: 8.8 },
-        { name: 'कोरबा', count: 5, percentage: 7.4 }
-      ],
-      top_schemes: [
-        { name: 'PM Kisan', count: 8, percentage: 11.8 },
-        { name: 'Ayushman Bharat', count: 6, percentage: 8.8 },
-        { name: 'Ujjwala', count: 5, percentage: 7.4 },
-        { name: 'Swachh Bharat', count: 4, percentage: 5.9 },
-        { name: 'Digital India', count: 3, percentage: 4.4 }
-      ],
-      recent_activity: generateRecentActivity()
-    };
-    
+    // No static data fallback - return error if database fails
     return NextResponse.json({
-      success: true,
-      analytics: sampleAnalytics,
-      raw_data: [],
-      source: 'sample_data',
-      message: 'Sample analytics data loaded (68 tweets analyzed)'
-    });
+      success: false,
+      error: 'No data available from database',
+      analytics: null,
+      source: 'empty'
+    }, { status: 404 });
     
   } catch (error) {
     console.error('Error generating analytics:', error);

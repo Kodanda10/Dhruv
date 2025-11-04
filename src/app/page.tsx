@@ -12,28 +12,30 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'review' | 'analytics'>('home');
 
   return (
-    <main className={`${notoDevanagari.className} min-h-screen bg-[#101922] text-gray-200`}>
-      {/* Background Effects */}
+    <main className={`${notoDevanagari.className} min-h-screen bg-dark-gradient text-primary`}>
+      {/* Background Effects - Enhanced with Kusha theme and subtle overlay */}
       <div className="fixed inset-0 -z-10 h-full w-full">
-        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(44,0,95,0.7),rgba(255,255,255,0))]"></div>
-        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(0,75,79,0.6),rgba(255,255,255,0))]"></div>
+        {/* Subtle overlay gradient for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20"></div>
+        <div className="absolute bottom-[-10%] left-[-20%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(91,44,135,0.5),rgba(255,255,255,0))]"></div>
+        <div className="absolute right-[-20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(102,255,204,0.25),rgba(255,255,255,0))]"></div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className={`${titleFont.className} text-4xl md:text-5xl text-white font-bold mb-2`}>
+          <h1 className={`${titleFont.className} text-4xl md:text-5xl text-primary font-bold mb-2`}>
             सोशल मीडिया एनालिटिक्स डैशबोर्ड
           </h1>
         </header>
 
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-8 gap-2 bg-[#192734] rounded-lg p-1 shadow-sm max-w-2xl mx-auto border border-gray-800">
+        {/* Tab Navigation - Glassmorphic Style */}
+        <div className="flex justify-center mb-8 gap-2 glassmorphic-card rounded-lg p-1 max-w-2xl mx-auto">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'home'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-secondary hover:text-primary'
             }`}
           >
             🏠 होम
@@ -42,8 +44,8 @@ export default function Home() {
             onClick={() => setActiveTab('review')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'review'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-secondary hover:text-primary'
             }`}
           >
             📝 समीक्षा
@@ -52,19 +54,19 @@ export default function Home() {
             onClick={() => setActiveTab('analytics')}
             className={`flex-1 px-6 py-3 rounded-md font-semibold text-base transition-all ${
               activeTab === 'analytics'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                ? 'tab-glassmorphic active text-mint-green'
+                : 'tab-glassmorphic text-secondary hover:text-primary'
             }`}
           >
             📊 एनालिटिक्स
           </button>
         </div>
 
-        {/* Tab Content - Unified Layout */}
-        <div className="min-h-[600px] bg-[#192734] rounded-xl border border-gray-800 shadow-lg">
+        {/* Tab Content - Glassmorphic Card Layout */}
+        <div className="min-h-[600px] glassmorphic-card shadow-lg">
           {activeTab === 'home' && (
             <div className="p-6">
-              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Tweets...</div>}>
+              <Suspense fallback={<div className="text-center p-8 text-muted">Loading Tweets...</div>}>
                 <DashboardDark />
               </Suspense>
             </div>
@@ -72,7 +74,7 @@ export default function Home() {
 
           {activeTab === 'review' && (
             <div className="p-6">
-              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Review Interface...</div>}>
+              <Suspense fallback={<div className="text-center p-8 text-muted">Loading Review Interface...</div>}>
                 <ReviewQueueNew />
               </Suspense>
             </div>
@@ -80,7 +82,7 @@ export default function Home() {
 
           {activeTab === 'analytics' && (
             <div className="p-6">
-              <Suspense fallback={<div className="text-center p-8 text-gray-400">Loading Analytics...</div>}>
+              <Suspense fallback={<div className="text-center p-8 text-muted">Loading Analytics...</div>}>
                 <AnalyticsDashboardDark />
               </Suspense>
             </div>
