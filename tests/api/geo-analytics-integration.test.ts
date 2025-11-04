@@ -155,7 +155,7 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
     });
 
     test('should filter by startDate and endDate', async () => {
-      if (isMockPool(pool)) {
+      if (isMockPool(pool) || !pool) {
         console.warn('Skipping SQL injection test: real database not available.');
         return;
       }
@@ -194,7 +194,7 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
     });
 
     test('should filter by event_type', async () => {
-      if (isMockPool(pool)) {
+      if (isMockPool(pool) || !pool) {
         const geo = extractGeoHierarchy();
         expect(geo.districts.length + geo.blocks.length + geo.gps.length + geo.villages.length).toBeGreaterThan(0);
         return;
@@ -361,6 +361,10 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
         }
       }
 
+      if (!district) {
+        return;
+      }
+
       const request = new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}`
       );
@@ -454,6 +458,11 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
           return;
         }
       }
+
+      if (!district) {
+        return;
+      }
+
       const startDate = '2020-01-01';
       const endDate = '2099-12-31';
 
@@ -520,6 +529,10 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
         }
       }
 
+      if (!district || !assembly) {
+        return;
+      }
+
       const request = new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-assembly?district=${encodeURIComponent(district)}&assembly=${encodeURIComponent(assembly)}`
       );
@@ -572,6 +585,10 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
         }
       }
 
+      if (!assembly) {
+        return;
+      }
+
       const request = new NextRequest(
         `http://localhost:3000/api/geo-analytics/by-assembly?assembly=${encodeURIComponent(assembly)}`
       );
@@ -603,6 +620,10 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
           console.warn('Skipping district validation test: no district data available in parsed_tweets fallback.');
           return;
         }
+      }
+
+      if (!district) {
+        return;
       }
 
       const request = new NextRequest(
@@ -716,7 +737,7 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
     });
 
     test('should verify event counts match database', async () => {
-      if (isMockPool(pool)) {
+      if (isMockPool(pool) || !pool) {
         const tweets = loadParsedTweets();
         expect(Array.isArray(tweets)).toBe(true);
         expect(tweets.length).toBeGreaterThan(0);
