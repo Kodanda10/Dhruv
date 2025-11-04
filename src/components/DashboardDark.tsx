@@ -91,8 +91,8 @@ export default function DashboardDark() {
 
   const parsed = useMemo(() => {
     // Use real database data from serverRows, fallback to parsedTweets if empty
-    const source = serverRows.length > 0 ? serverRows : parsedTweets;
-    logger.debug('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data)' : 'parsedTweets (fallback)', 'length:', source.length);
+    const source = serverRows.length > 0 ? serverRows : [];
+    logger.debug('DashboardDark: Using data source:', serverRows.length > 0 ? 'serverRows (real data from database)' : 'empty (no fallback)', 'length:', source.length);
     
     return source.map((p: any, index: number) => {
       // Handle both old parsed structure and new database structure
@@ -349,12 +349,12 @@ export default function DashboardDark() {
         </div>
       )}
 
-      <div className="mb-4 flex items-end gap-4 flex-wrap bg-[#192734] border border-gray-800 rounded-xl p-4 shadow-sm">
+      <div className="mb-4 flex items-end gap-4 flex-wrap glassmorphic-card glassmorphic-hover rounded-xl p-4">
         <label className="text-sm font-medium text-gray-300">
           स्थान फ़िल्टर
           <input
             aria-label="स्थान फ़िल्टर"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-white placeholder:text-gray-400 px-2 py-1 rounded-md w-40 focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             placeholder="जैसे: रायगढ़"
             value={locFilter}
             onChange={(e) => setLocFilter(e.target.value)}
@@ -364,7 +364,7 @@ export default function DashboardDark() {
           टैग/मेंशन फ़िल्टर
           <input
             aria-label="टैग/मेंशन फ़िल्टर"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-white placeholder:text-gray-400 px-2 py-1 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             placeholder="#समारोह, @PMOIndia"
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
@@ -375,7 +375,7 @@ export default function DashboardDark() {
           <input
             aria-label="तिथि से"
             type="date"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-white placeholder:text-gray-400 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
@@ -385,7 +385,7 @@ export default function DashboardDark() {
           <input
             aria-label="तिथि तक"
             type="date"
-            className="ml-2 border border-gray-700 bg-[#0d1117] text-gray-100 placeholder:text-gray-500 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-2 border border-white border-opacity-20 bg-white bg-opacity-5 text-white placeholder:text-gray-400 px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-green focus:border-mint-green"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
@@ -410,7 +410,7 @@ export default function DashboardDark() {
               }
             }}
             disabled={isPolling}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-600 text-white border border-green-700 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40 hover:bg-opacity-30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <span className={`material-symbols-outlined text-base ${isPolling ? 'animate-spin' : ''}`}>
               {isPolling ? 'hourglass_empty' : 'refresh'}
@@ -427,14 +427,14 @@ export default function DashboardDark() {
               setActionFilter('');
               router.push('/');
             }}
-            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white bg-opacity-10 text-white border border-white border-opacity-20 hover:bg-opacity-15 transition-colors"
           >
             फ़िल्टर साफ़ करें
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto bg-[#192734] border border-gray-800 rounded-xl p-2 shadow-sm">
-        <table aria-label="गतिविधि सारणी" className="min-w-full text-sm border-collapse table-fixed text-gray-100">
+      <div className="overflow-x-auto glassmorphic-card rounded-xl p-2">
+        <table aria-label="गतिविधि सारणी" className="min-w-full text-sm border-collapse table-fixed text-white">
           <colgroup>
             <col className="w-[16%]" />
             <col className="w-[14%]" />
@@ -442,10 +442,10 @@ export default function DashboardDark() {
             <col className="w-[14%]" />
             <col className="w-[38%]" />
           </colgroup>
-          <thead className="bg-[#0d1117] text-gray-300">
+          <thead className="bg-white bg-opacity-5 text-gray-300">
             <tr>
               <th 
-                className="text-center font-semibold p-2 border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                className="text-center font-semibold p-2 border-b border-white border-opacity-20 cursor-pointer hover:bg-white hover:bg-opacity-10 transition-colors"
                 onClick={() => handleSort('date')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -521,7 +521,7 @@ export default function DashboardDark() {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-[#192734]" data-testid="tbody">
+          <tbody className="bg-transparent" data-testid="tbody">
             {!sanitizedData || sortedData.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-gray-400">
@@ -534,11 +534,11 @@ export default function DashboardDark() {
               </tr>
             ) : (
               sortedData.map((row, index) => (
-              <tr key={row.id || index} className={`align-top hover:bg-gray-800`}>
-                <td className="p-2 border-b border-gray-700 whitespace-nowrap">
+              <tr key={row.id || index} className={`align-top hover:bg-white hover:bg-opacity-5 transition-colors`}>
+                <td className="p-2 border-b border-white border-opacity-10 whitespace-nowrap">
                   {typeof row.when === 'string' ? row.when : String(row.when || '')}
                 </td>
-                <td className="p-2 border-b border-l border-gray-700">
+                <td className="p-2 border-b border-l border-white border-opacity-10">
                   {(() => {
                     const locations = Array.isArray(row.where) 
                       ? row.where.map((w: any) => {
@@ -550,7 +550,7 @@ export default function DashboardDark() {
                     return locations.length > 0 ? locations.join(', ') : '—';
                   })()}
                 </td>
-                <td className="p-2 border-b border-l border-gray-700">
+                <td className="p-2 border-b border-l border-white border-opacity-10">
                   {(() => {
                     const events = Array.isArray(row.what) 
                       ? row.what.map((w: any) => {
@@ -593,8 +593,8 @@ export default function DashboardDark() {
                               }}
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
                                 isSelected 
-                                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
-                                  : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                                  ? 'bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40' 
+                                  : 'bg-white bg-opacity-10 text-gray-300 border border-white border-opacity-20 hover:bg-opacity-15'
                               }`}
                             >
                               {t}

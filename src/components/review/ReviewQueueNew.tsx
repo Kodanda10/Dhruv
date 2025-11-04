@@ -55,41 +55,8 @@ const formatDate = (dateStr: string) => {
 export default function ReviewQueueNew() {
   logger.debug('ReviewQueueNew: Component mounting...');
   
-  // Temporarily use static data to get Review working
-  const staticTweets = [
-    {
-      id: 1,
-      tweet_id: "1979023456789012345",
-      event_type: "बैठक",
-      event_date: "2025-10-17T02:30:15.000Z",
-      locations: ["बिलासपुर"],
-      people_mentioned: [],
-      organizations: [],
-      schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-      overall_confidence: "0.85",
-      needs_review: true,
-      review_status: "pending",
-      parsed_at: "2025-10-17T02:30:15.000Z",
-      parsed_by: "system"
-    },
-    {
-      id: 2,
-      tweet_id: "1979023456789012346",
-      event_type: "रैली",
-      event_date: "2025-10-16T15:45:30.000Z",
-      locations: ["रायगढ़"],
-      people_mentioned: ["मुख्यमंत्री"],
-      organizations: ["भाजपा"],
-      schemes_mentioned: ["मुख्यमंत्री किसान योजना"],
-      overall_confidence: "0.90",
-      needs_review: true,
-      review_status: "pending",
-      parsed_at: "2025-10-16T15:45:30.000Z",
-      parsed_by: "system"
-    }
-  ];
-  
-  const [tweets, setTweets] = useState(staticTweets);
+  // Initialize with empty array - will be populated from API
+  const [tweets, setTweets] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>({});
@@ -107,7 +74,7 @@ export default function ReviewQueueNew() {
   const [aiInput, setAiInput] = useState('');
   const [tags, setTags] = useState(['शहरी विकास', 'हरित अवसंरचना', 'स्थिरता', 'शहरी नियोजन']);
   const [availableTags, setAvailableTags] = useState(['सार्वजनिक स्थान', 'सामुदायिक जुड़ाव']);
-  const [loading, setLoading] = useState(false); // Set to false since we're using static data
+  const [loading, setLoading] = useState(true); // Loading state for API fetch
 
   const currentTweet = useMemo(() => tweets[currentIndex], [tweets, currentIndex]);
 
@@ -447,65 +414,71 @@ export default function ReviewQueueNew() {
     handleSkip
   ]);
 
-  // Fetch tweets from API on component mount
+  // Fetch tweets from API on component mount - only events that need review
   useEffect(() => {
-    logger.debug('ReviewQueueNew: useEffect triggered');
+    logger.debug('ReviewQueueNew: useEffect triggered - fetching tweets that need review');
     
     const fetchTweets = async () => {
       try {
-        logger.debug('ReviewQueueNew: Starting to fetch tweets...');
+        logger.debug('ReviewQueueNew: Starting to fetch tweets that need review...');
         setLoading(true);
-        const response = await fetch('/api/parsed-events?limit=200');
-        logger.debug('ReviewQueueNew: Response status:', response.status);
-        const result = await response.json();
-        logger.debug('ReviewQueueNew: API result:', result);
         
-        if (result.success && result.data) {
-          logger.debug('ReviewQueueNew: Setting tweets, count:', result.data.length);
-          setTweets(result.data);
+        // Fetch only events that need review
+        const response = await fetch('/api/parsed-events?needs_review=true&limit=200');
+        logger.debug('ReviewQueueNew: Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        logger.debug('ReviewQueueNew: API result:', { success: result.success, count: result.data?.length || result.events?.length });
+        
+        if (result.success) {
+          // Use data or events (backward compatibility)
+          const rawData = result.data || result.events || [];
+          
+          // Map to expected format
+          const reviewTweets = rawData.map((t: any) => ({
+            id: t.parsedEventId || t.id,
+            tweet_id: t.tweet_id || t.id,
+            event_type: t.event_type || 'other',
+            event_date: t.event_date || t.timestamp || t.created_at,
+            locations: Array.isArray(t.locations) 
+              ? t.locations.map((l: any) => typeof l === 'string' ? l : (l.name || l.location || l))
+              : [],
+            people_mentioned: Array.isArray(t.people_mentioned) ? t.people_mentioned : [],
+            organizations: Array.isArray(t.organizations) ? t.organizations : [],
+            schemes_mentioned: Array.isArray(t.schemes_mentioned) ? t.schemes_mentioned : [],
+            overall_confidence: String(t.overall_confidence || t.confidence || '0'),
+            needs_review: t.needs_review !== false, // Ensure it's true
+            review_status: t.review_status || 'pending',
+            parsed_at: t.parsed_at || t.timestamp || t.created_at,
+            parsed_by: t.parsed_by || 'system',
+            tweet_text: t.tweet_text || t.content || t.text || '',
+          }));
+          
+          // Sort by confidence (lowest first) or date
+          const sortedTweets = [...reviewTweets].sort((a, b) => {
+            if (sortBy === 'confidence') {
+              return parseFloat(a.overall_confidence) - parseFloat(b.overall_confidence);
+            }
+            return new Date(b.event_date || b.parsed_at).getTime() - new Date(a.event_date || a.parsed_at).getTime();
+          });
+          
+          logger.debug('ReviewQueueNew: Mapped and sorted tweets:', sortedTweets.length);
+          setTweets(sortedTweets);
+          
+          if (sortedTweets.length === 0) {
+            logger.info('ReviewQueueNew: No tweets need review');
+          }
         } else {
           logger.error('Failed to fetch tweets:', result.error);
-          // Fallback to static data if API fails
-          const staticTweets = [
-            {
-              id: 1,
-              tweet_id: "1979023456789012345",
-              event_type: "बैठक",
-              event_date: "2025-10-17T02:30:15.000Z",
-              locations: ["बिलासपुर"],
-              people_mentioned: [],
-              organizations: [],
-              schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-              overall_confidence: "0.85",
-              needs_review: true,
-              review_status: "pending",
-              parsed_at: "2025-10-17T02:30:15.000Z",
-              parsed_by: "system"
-            }
-          ];
-          setTweets(staticTweets);
+          setTweets([]); // Empty array - no static fallback
         }
       } catch (error) {
         logger.error('Error fetching tweets:', error as Error);
-        // Fallback to static data if API fails
-        const staticTweets = [
-          {
-            id: 1,
-            tweet_id: "1979023456789012345",
-            event_type: "बैठक",
-            event_date: "2025-10-17T02:30:15.000Z",
-            locations: ["बिलासपुर"],
-            people_mentioned: [],
-            organizations: [],
-            schemes_mentioned: ["युवा उद्यमिता कार्यक्रम"],
-            overall_confidence: "0.85",
-            needs_review: true,
-            review_status: "pending",
-            parsed_at: "2025-10-17T02:30:15.000Z",
-            parsed_by: "system"
-          }
-        ];
-        setTweets(staticTweets);
+        setTweets([]); // Empty array - no static fallback
       } finally {
         logger.debug('ReviewQueueNew: Setting loading to false');
         setLoading(false);
@@ -513,7 +486,7 @@ export default function ReviewQueueNew() {
     };
 
     fetchTweets();
-  }, []);
+  }, [sortBy]); // Re-fetch when sortBy changes
 
   logger.debug('ReviewQueueNew: tweets length:', tweets.length);
   logger.debug('ReviewQueueNew: currentIndex:', currentIndex);
@@ -643,15 +616,15 @@ export default function ReviewQueueNew() {
       <div className="flex w-full flex-1 flex-col items-center">
         {/* Stats Cards */}
         <div className="mb-8 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
             <p className="text-sm font-medium text-gray-400">समीक्षा के लिए</p>
             <p className="text-2xl font-bold text-white">{stats.pending}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
             <p className="text-sm font-medium text-gray-400">समीक्षित</p>
             <p className="text-2xl font-bold text-white">{stats.reviewed}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-[#0d1117] p-4">
+          <div className="glassmorphic-card glassmorphic-hover rounded-xl p-4">
             <p className="text-sm font-medium text-gray-400">औसत विश्वास</p>
             <p className="text-2xl font-bold text-white">{Math.round(stats.avgConfidence * 100)}%</p>
           </div>
@@ -735,7 +708,7 @@ export default function ReviewQueueNew() {
         })()}
 
         {/* Tweet Card */}
-        <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-[#0d1117] p-6 shadow-2xl sm:p-8">
+        <div className="w-full max-w-2xl glassmorphic-card rounded-2xl p-6 shadow-2xl sm:p-8">
           {/* Tweet Header */}
           <div className="flex items-center gap-4">
             <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNUkxYhQdfbK8RN72N4PUjwW9vbF4OPsUCu8LobAyWyBt0-Ty5BwoXr_Zp6AoaCFf1atiW5TAxUDhxgZR2zLoaElzlAQ_-V7fFo3dALshVsdy_OuJ8XzvwZG_InS1k30-fso8zRKyULYzJ1x84QjNc09mU1Yr2uqnFbOrUxpcZgztKSyRZ1HmTlJTfjSze8Wqs47Y9wUHzhVlxv1VpJvJn_0vM1jZe4kXyWcSxcsCUWpZaHwzIMCl3jx38C-zfTzwTLGUuQXAQeF13")'}}></div>
@@ -743,13 +716,13 @@ export default function ReviewQueueNew() {
               <p className="text-lg font-medium leading-normal text-gray-100 line-clamp-1">Tweet #{currentTweet.id}</p>
               <p className="text-sm font-normal leading-normal text-gray-400 line-clamp-2">{formatDate(currentTweet.event_date)}</p>
             </div>
-            <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-green-900/50">
-              <Check className="w-4 h-4 text-green-400" />
-              <p className="text-base font-bold text-green-300">{Math.round(confidence * 100)}% विश्वास</p>
+            <div className="ml-auto flex items-center gap-2 p-2 rounded-lg bg-mint-green bg-opacity-20 border border-mint-green border-opacity-40">
+              <Check className="w-4 h-4 text-mint-green" />
+              <p className="text-base font-bold text-mint-green">{Math.round(confidence * 100)}% विश्वास</p>
             </div>
           </div>
 
-          <hr className="my-6 border-gray-700" />
+          <hr className="my-6 border-white border-opacity-20" />
 
           {/* Tweet Content */}
           <p className="text-lg font-normal leading-relaxed text-gray-200">
