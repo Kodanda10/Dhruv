@@ -143,7 +143,7 @@ export default function Dashboard() {
     let rows = parsed.filter((r: any) => r.review_status !== 'skipped');
     if (locFilter.trim()) {
       const q = locFilter.trim();
-      rows = rows.filter((r) => r.where.some((w) => matchTextFlexible(w, q)));
+      rows = rows.filter((r) => r.where.some((w: string) => matchTextFlexible(w, q)));
     }
     if (tagFilter.trim()) {
       const tokens = tagFilter
