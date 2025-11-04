@@ -281,7 +281,7 @@ export default function HumanReviewDashboard() {
             </div>
           </div>
           <div className="lg:col-span-1">
-            <FeedbackSummary />
+            {/* FeedbackSummary component - Not implemented yet */}
           </div>
         </div>
 
