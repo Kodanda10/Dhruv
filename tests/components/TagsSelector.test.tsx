@@ -6,6 +6,7 @@ describe('TagsSelector', () => {
   beforeEach(() => {
     // mock fetch
     global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({ success: true, tags: [ { id: 1, label_hi: 'जल जीवन मिशन' }, { id: 2, label_hi: 'स्वच्छ भारत मिशन' } ] }),
     } as any);
   });
@@ -36,7 +37,7 @@ describe('TagsSelector', () => {
         persistMock();
         return Promise.resolve({ json: async () => ({ success: true }) });
       }
-      return Promise.resolve({ json: async () => ({ success: true, tags: [] }) });
+      return Promise.resolve({ ok: true, json: async () => ({ success: true, tags: [] }) });
     });
 
     render(<TagsSelector tweetId="123" />);

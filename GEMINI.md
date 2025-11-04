@@ -415,3 +415,12 @@ These commands make AI calls and may take up to a minute:
 ---
 
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
+
+---
+# Loaded Gemini CLI Extensions
+---
+@/Users/abhijita/.gemini/extensions/code-review/GEMINI.md
+@/Users/abhijita/.gemini/extensions/gemini-cli-jules/GEMINI.md
+@/Users/abhijita/.gemini/extensions/gemini-cli-prompt-library/GEMINI.md
+@/Users/abhijita/.gemini/extensions/gemini-cli-security/GEMINI.md
+@/Users/abhijita/.gemini/extensions/genkit/GENKIT.md
