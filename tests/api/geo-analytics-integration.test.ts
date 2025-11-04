@@ -366,7 +366,7 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
       }
 
       const request = new NextRequest(
-        `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district)}`
+        `http://localhost:3000/api/geo-analytics/by-district?district=${encodeURIComponent(district || '')}`
       );
 
       const response = await getByDistrict(request);
@@ -590,7 +590,7 @@ describeOrSkip('Geo Analytics API - Real Database Integration', () => {
       }
 
       const request = new NextRequest(
-        `http://localhost:3000/api/geo-analytics/by-assembly?assembly=${encodeURIComponent(assembly)}`
+        `http://localhost:3000/api/geo-analytics/by-assembly?assembly=${encodeURIComponent(assembly || '')}`
       );
 
       const response = await getByAssembly(request);
