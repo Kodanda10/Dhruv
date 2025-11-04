@@ -839,3 +839,7 @@ export const EVENT_TYPE_HINDI: Record<string, string> = {
 12. ✅ **Security**: No secrets, no high/critical CVEs (enforced by CI)
 13. ✅ **Observability**: Structured logs, trace IDs, `/health` endpoints
 14. ✅ **All CI Gates Green**: lint-type, unit-tests, coverage-gate, security, licenses-sbom, web-a11y-perf, perf-k6, e2e-smoke
+
+### To-dos
+
+- [ ] Here are my recommendations only — phase-wise, concise, and focused on strengthening your plan (without repeating any part of it):

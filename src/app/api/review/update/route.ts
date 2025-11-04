@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { getEventTypeInHindi } from '@/lib/i18n/event-types-hi';
-import { DynamicLearningSystem, LearningContext } from '@/lib/dynamic-learning';
+// Dynamic learning import moved inside the function to avoid client-side issues
 
 // Database configuration - lazy initialization
 let pool: Pool | null = null;
@@ -197,6 +197,7 @@ async function updateTweetReview(data: ReviewUpdateRequest): Promise<void> {
  */
 async function triggerDynamicLearning(data: ReviewUpdateRequest, originalData: any): Promise<void> {
   try {
+    const { DynamicLearningSystem } = await import('@/lib/dynamic-learning');
     const learningSystem = new DynamicLearningSystem();
 
     // Get AI suggestions that were originally made (if any)

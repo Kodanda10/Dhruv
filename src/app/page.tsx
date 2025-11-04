@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import DashboardDark from '@/components/DashboardDark';
+import Dashboard from '@/components/Dashboard';
 import ReviewQueueNew from '@/components/review/ReviewQueueNew';
 import AdminLoginButton from '@/components/auth/AdminLoginButton';
 import { Suspense, useState, useEffect } from 'react';
@@ -91,7 +91,7 @@ export default function Home() {
           {activeTab === 'home' && isAuthenticated && (
             <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-muted">Loading Tweets...</div>}>
-                <DashboardDark />
+                <Dashboard />
               </Suspense>
             </div>
           )}

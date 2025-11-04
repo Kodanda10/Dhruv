@@ -10,20 +10,8 @@
  * Stores learning data in database for persistence and analysis
  */
 
-import { Pool } from 'pg';
-
-// Database configuration
-let pool: Pool | null = null;
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    });
-  }
-  return pool;
-}
+// NOTE: Dynamic learning is disabled for initial production deployment
+// Will be re-enabled after successful deployment
 
 export interface LearningContext {
   originalTweet: {
@@ -78,7 +66,7 @@ export interface LearningSuggestion {
  * Initialize learning tables if they don't exist
  */
 async function initializeLearningTables(): Promise<void> {
-  const pool = getPool();
+  const pool = await getPool();
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS learning_feedback (
@@ -113,127 +101,30 @@ async function initializeLearningTables(): Promise<void> {
 }
 
 export class DynamicLearningSystem {
-  private initialized = false;
-
   constructor() {
-    this.initialize();
-  }
-
-  private async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    try {
-      await initializeLearningTables();
-      this.initialized = true;
-      console.log('Dynamic Learning System initialized');
-    } catch (error) {
-      console.error('Failed to initialize learning system:', error);
-    }
+    // Dynamic learning disabled for production deployment
+    console.log('Dynamic Learning System disabled for production deployment');
   }
 
   /**
    * Learn from human feedback and corrections
    */
   async learnFromHumanFeedback(context: LearningContext): Promise<LearningResult> {
-    await this.initialize();
-
-    const pool = getPool();
-    const learnedEntities: string[] = [];
-
-    try {
-      // Identify what was learned
-      const corrections = context.humanCorrections;
-
-      if (corrections.event_type && corrections.event_type !== context.originalTweet.original_event_type) {
-        learnedEntities.push(`event_type:${corrections.event_type}`);
-      }
-
-      if (corrections.locations) {
-        corrections.locations.forEach(location => {
-          if (!context.originalTweet.original_locations?.includes(location)) {
-            learnedEntities.push(`location:${location}`);
-          }
-        });
-      }
-
-      if (corrections.people) {
-        corrections.people.forEach(person => {
-          if (!context.originalTweet.original_people?.includes(person)) {
-            learnedEntities.push(`person:${person}`);
-          }
-        });
-      }
-
-      if (corrections.organizations) {
-        corrections.organizations.forEach(org => {
-          if (!context.originalTweet.original_organizations?.includes(org)) {
-            learnedEntities.push(`organization:${org}`);
-          }
-        });
-      }
-
-      if (corrections.schemes) {
-        corrections.schemes.forEach(scheme => {
-          if (!context.originalTweet.original_schemes?.includes(scheme)) {
-            learnedEntities.push(`scheme:${scheme}`);
-          }
-        });
-      }
-
-      // Calculate learning confidence based on AI suggestion accuracy
-      let confidence = 0.5; // Base confidence
-      if (context.aiSuggestions.event_type === corrections.event_type) {
-        confidence += 0.2; // AI was right about event type
-      }
-      if (JSON.stringify(context.aiSuggestions.locations?.sort()) === JSON.stringify(corrections.locations?.sort())) {
-        confidence += 0.2; // AI was right about locations
-      }
-
-      // Store feedback in database
-      const result = await pool.query(`
-        INSERT INTO learning_feedback
-        (tweet_id, session_id, reviewer_id, original_data, ai_suggestions, human_corrections, learned_entities, confidence_score)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id
-      `, [
-        context.originalTweet.tweet_id,
-        context.session_id,
-        context.reviewer_id,
-        JSON.stringify(context.originalTweet),
-        JSON.stringify(context.aiSuggestions),
-        JSON.stringify(corrections),
-        learnedEntities,
-        confidence
-      ]);
-
-      // Update learning patterns
-      const patternsUpdated = await this.updateLearningPatterns(learnedEntities, corrections);
-
-      console.log(`Dynamic learning: Recorded ${learnedEntities.length} corrections, updated ${patternsUpdated} patterns`);
-
-      return {
-        success: true,
-        learnedEntities,
-        confidence: Math.min(confidence, 1.0),
-        patternsUpdated
-      };
-
-    } catch (error) {
-      console.error('Error in dynamic learning:', error);
-      return {
-        success: false,
-        learnedEntities: [],
-        confidence: 0,
-        patternsUpdated: 0
-      };
-    }
+    // Dynamic learning disabled for production deployment
+    console.log('Dynamic learning: Feedback recorded (disabled for deployment)', context.originalTweet.tweet_id);
+    return {
+      success: true,
+      learnedEntities: [],
+      confidence: 0.5,
+      patternsUpdated: 0
+    };
   }
 
   /**
    * Update learning patterns based on corrections
    */
   private async updateLearningPatterns(learnedEntities: string[], corrections: any): Promise<number> {
-    const pool = getPool();
+    const pool = await getPool();
     let patternsUpdated = 0;
 
     for (const entity of learnedEntities) {
@@ -287,122 +178,9 @@ export class DynamicLearningSystem {
     current_organizations?: string[];
     current_schemes?: string[];
   }): Promise<LearningSuggestion[]> {
-    await this.initialize();
-
-    const suggestions: LearningSuggestion[] = [];
-    const pool = getPool();
-
-    try {
-      // Find similar tweets from learning feedback
-      const similarTweets = await pool.query(`
-        SELECT original_data, human_corrections, confidence_score
-        FROM learning_feedback
-        WHERE original_data->>'text' ILIKE $1
-        ORDER BY confidence_score DESC
-        LIMIT 5
-      `, [`%${tweet.text.substring(0, 50)}%`]);
-
-      if (similarTweets.rows.length > 0) {
-        // Generate suggestions based on similar tweet corrections
-        const corrections = similarTweets.rows[0].human_corrections;
-
-        if (corrections.event_type && corrections.event_type !== tweet.current_event_type) {
-          suggestions.push({
-            event_type: corrections.event_type,
-            confidence: parseFloat(similarTweets.rows[0].confidence_score) * 0.8,
-            reasoning: 'Similar tweet was corrected to this event type',
-            source: 'similar_tweets'
-          });
-        }
-
-        // Add location suggestions
-        if (corrections.locations && corrections.locations.length > 0) {
-          const newLocations = corrections.locations.filter(loc =>
-            !tweet.current_locations?.includes(loc)
-          );
-          if (newLocations.length > 0) {
-            suggestions.push({
-              locations: newLocations,
-              confidence: parseFloat(similarTweets.rows[0].confidence_score) * 0.7,
-              reasoning: 'Similar tweet had these locations added',
-              source: 'similar_tweets'
-            });
-          }
-        }
-      }
-
-      // Get high-confidence patterns for common entities
-      const patterns = await pool.query(`
-        SELECT pattern_type, pattern_key, pattern_value, confidence
-        FROM learning_patterns
-        WHERE confidence > 0.7
-        ORDER BY confidence DESC, usage_count DESC
-        LIMIT 10
-      `);
-
-      if (patterns.rows.length > 0) {
-        // Generate suggestions based on learned patterns found in tweet text
-        const tweetText = tweet.text.toLowerCase();
-
-        patterns.rows.forEach(pattern => {
-          if (tweetText.includes(pattern.pattern_key.toLowerCase())) {
-            switch (pattern.pattern_type) {
-              case 'location':
-                if (!tweet.current_locations?.includes(pattern.pattern_value)) {
-                  suggestions.push({
-                    locations: [pattern.pattern_value],
-                    confidence: parseFloat(pattern.confidence),
-                    reasoning: `Learned pattern: ${pattern.pattern_key} indicates location`,
-                    source: 'learned_patterns'
-                  });
-                }
-                break;
-              case 'person':
-                if (!tweet.current_people?.includes(pattern.pattern_value)) {
-                  suggestions.push({
-                    people: [pattern.pattern_value],
-                    confidence: parseFloat(pattern.confidence),
-                    reasoning: `Learned pattern: ${pattern.pattern_key} indicates person`,
-                    source: 'learned_patterns'
-                  });
-                }
-                break;
-              case 'organization':
-                if (!tweet.current_organizations?.includes(pattern.pattern_value)) {
-                  suggestions.push({
-                    organizations: [pattern.pattern_value],
-                    confidence: parseFloat(pattern.confidence),
-                    reasoning: `Learned pattern: ${pattern.pattern_key} indicates organization`,
-                    source: 'learned_patterns'
-                  });
-                }
-                break;
-              case 'scheme':
-                if (!tweet.current_schemes?.includes(pattern.pattern_value)) {
-                  suggestions.push({
-                    schemes: [pattern.pattern_value],
-                    confidence: parseFloat(pattern.confidence),
-                    reasoning: `Learned pattern: ${pattern.pattern_key} indicates scheme`,
-                    source: 'learned_patterns'
-                  });
-                }
-                break;
-            }
-          }
-        });
-      }
-
-      // Remove duplicate suggestions and sort by confidence
-      const uniqueSuggestions = suggestions.filter((suggestion, index, self) =>
-        index === self.findIndex(s => JSON.stringify(s) === JSON.stringify(suggestion))
-      ).sort((a, b) => b.confidence - a.confidence);
-
-      return uniqueSuggestions;
-
-    } catch (error) {
-      console.error('Error getting intelligent suggestions:', error);
-      return [];
-    }
+    // Dynamic learning disabled for production deployment
+    console.log('Dynamic learning: Suggestions requested (disabled for deployment)', tweet.tweet_id);
+    return [];
   }
 
   /**
@@ -414,50 +192,12 @@ export class DynamicLearningSystem {
     avgConfidence: number;
     topLearnedEntities: { entity: string; count: number }[];
   }> {
-    await this.initialize();
-
-    const pool = getPool();
-
-    try {
-      const feedbackStats = await pool.query(`
-        SELECT
-          COUNT(*) as total_feedback,
-          AVG(confidence_score) as avg_confidence
-        FROM learning_feedback
-      `);
-
-      const patternStats = await pool.query(`
-        SELECT COUNT(*) as total_patterns FROM learning_patterns
-      `);
-
-      const topEntities = await pool.query(`
-        SELECT
-          unnest(learned_entities) as entity,
-          COUNT(*) as count
-        FROM learning_feedback
-        GROUP BY unnest(learned_entities)
-        ORDER BY count DESC
-        LIMIT 10
-      `);
-
-      return {
-        totalFeedback: parseInt(feedbackStats.rows[0].total_feedback),
-        totalPatterns: parseInt(patternStats.rows[0].total_patterns),
-        avgConfidence: parseFloat(feedbackStats.rows[0].avg_confidence) || 0,
-        topLearnedEntities: topEntities.rows.map(row => ({
-          entity: row.entity,
-          count: parseInt(row.count)
-        }))
-      };
-
-    } catch (error) {
-      console.error('Error getting learning stats:', error);
-      return {
-        totalFeedback: 0,
-        totalPatterns: 0,
-        avgConfidence: 0,
-        topLearnedEntities: []
-      };
-    }
+    // Dynamic learning disabled for production deployment
+    return {
+      totalFeedback: 0,
+      totalPatterns: 0,
+      avgConfidence: 0,
+      topLearnedEntities: []
+    };
   }
 }

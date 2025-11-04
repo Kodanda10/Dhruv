@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AIReviewAssistant from './AIReviewAssistant';
 import ReviewEditForm from './ReviewEditForm';
-import { formatHindiDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 interface ParsedTweet {
   id: string;
@@ -285,6 +285,9 @@ export default function ReviewQueueNew() {
         <h2 className="text-2xl font-bold text-primary mb-2">ट्वीट समीक्षा कतार</h2>
         <p className="text-muted">
           ट्वीट {currentIndex + 1} / {tweets.length} • ID: {currentTweet.id}
+        </p>
+        <p className="text-sm text-muted">
+          {formatDate(currentTweet.timestamp, 'hi')}
         </p>
       </div>
 

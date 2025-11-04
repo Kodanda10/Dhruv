@@ -13,7 +13,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { DynamicLearningSystem } from '@/lib/dynamic-learning';
+// DynamicLearningSystem imported dynamically to avoid client-side issues
 import { randomBytes } from 'crypto';
 
 // Secure random string generation utility
@@ -85,15 +85,15 @@ const sessionStore = new Map<string, AIAssistantState>();
 // AI Assistant Core Class
 export class LangGraphAIAssistant {
   private gemini: GoogleGenerativeAI;
-  private learningSystem: DynamicLearningSystem;
+  private learningSystem: any;
   private state: AIAssistantState;
   private ollamaEndpoint: string;
   private currentSessionId: string;
 
-  constructor(sessionId?: string, learningSystem?: DynamicLearningSystem) {
+  constructor(sessionId?: string, learningSystem?: any) {
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    // Reuse shared learning system to prevent pool leaks
-    this.learningSystem = learningSystem || new DynamicLearningSystem();
+    // Dynamic import to avoid client-side issues - will be initialized when needed
+    this.learningSystem = learningSystem;
     this.ollamaEndpoint = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     this.currentSessionId = sessionId || '';
     
@@ -625,8 +625,14 @@ export class LangGraphAIAssistant {
     if (!this.state.currentTweet) {
       return { locations: [], eventTypes: [], schemes: [], hashtags: [] };
     }
-    
+
     try {
+      // Initialize learning system if not already done
+      if (!this.learningSystem) {
+        const { DynamicLearningSystem } = await import('@/lib/dynamic-learning');
+        this.learningSystem = new DynamicLearningSystem();
+      }
+
       // Call dynamic learning system with proper LearningContext
       const suggestions = await this.learningSystem.getIntelligentSuggestions({
         tweetText: this.state.currentTweet.text,
@@ -807,6 +813,12 @@ export class LangGraphAIAssistant {
     reviewer: string = 'system'
   ): Promise<boolean> {
     try {
+      // Initialize learning system if not already done
+      if (!this.learningSystem) {
+        const { DynamicLearningSystem } = await import('@/lib/dynamic-learning');
+        this.learningSystem = new DynamicLearningSystem();
+      }
+
       const feedback = {
         tweetId: originalParsed.tweet_id,
         originalParsed,

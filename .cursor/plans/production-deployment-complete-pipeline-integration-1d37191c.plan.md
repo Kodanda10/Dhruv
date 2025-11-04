@@ -1,4 +1,4 @@
-<!-- 1d37191c-5315-40f8-b1d1-13b6bde944fe 2030ba0e-7fdd-4a16-87b6-1769d90d2502 -->
+<!-- 1d37191c-5315-40f8-b1d1-13b6bde944fe 01a0122f-0515-4fea-af99-aa5dd533c5b1 -->
 # Production Deployment - Complete Pipeline Integration
 
 ## TDD & DevOps Policy Compliance: Ironclad v2.1
@@ -910,6 +910,607 @@
 **Files:**
 
 - `tests/e2e/post-deployment-verification.test.ts` (new)
+
+---
+
+## Phase 7: CommandView Control Panel & CMS - TDD First
+
+### 7.1 System Health Overview Dashboard (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.1: System health summary cards display API chain health (Fetch → Parse → Review → AI → Analytics)
+- [ ] AC7.2: Database connection status shown for PostgreSQL/Firestore/Supabase
+- [ ] AC7.3: Frontend build health (Vercel/CI status) displayed
+- [ ] AC7.4: Backend service uptime shown
+- [ ] AC7.5: Each card clickable → opens detail view (logs, uptime %, latency)
+- [ ] AC7.6: Performance: Health cards render <200ms
+- [ ] AC7.7: Accessibility: WCAG 2.1 AA (keyboard nav, ARIA labels, contrast ≥4.5:1)
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/SystemHealthCards.test.tsx`
+   ```typescript
+   describe('System Health Overview', () => {
+     it('should display API chain health status', async () => {
+       // Failing test
+     });
+     it('should show database connection status', async () => {
+       // Failing test
+     });
+     it('should be keyboard navigable', async () => {
+       // Accessibility test
+     });
+     it('should render within performance budget', async () => {
+       // Performance test
+     });
+   });
+   ```
+
+2. **Green**: Implement health cards component with polling
+3. **Refactor**: Optimize rendering, improve accessibility
+
+**Files to create:**
+
+- `src/components/admin/SystemHealthCards.tsx` (new)
+- `src/hooks/useSystemHealth.ts` (new)
+- `src/app/api/system/health/route.ts` (new)
+- `tests/components/admin/SystemHealthCards.test.tsx` (new)
+- `tests/hooks/useSystemHealth.test.ts` (new)
+- `tests/api/system/health.test.ts` (new)
+
+### 7.2 Dynamic Title & Header Editor (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.8: Inline editable fields for all titles, subtitles, section headers
+- [ ] AC7.9: Updates sync instantly across all dashboard screens via CMS config
+- [ ] AC7.10: Supports Hindi + English text entries
+- [ ] AC7.11: Stores metadata in `config/titles.json`
+- [ ] AC7.12: Input validation prevents XSS/injection attacks
+- [ ] AC7.13: Accessibility: Keyboard navigation, screen reader support
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/TitleEditor.test.tsx`
+   ```typescript
+   describe('Dynamic Title Editor', () => {
+     it('should allow inline editing of titles', async () => {
+       // Failing test
+     });
+     it('should sync changes to CMS config', async () => {
+       // Failing test
+     });
+     it('should support Hindi and English text', async () => {
+       // Failing test
+     });
+     it('should prevent XSS attacks', async () => {
+       // Security test
+     });
+   });
+   ```
+
+2. **Green**: Implement title editor with CMS sync
+3. **Refactor**: Add validation, improve UX
+
+**Files to create:**
+
+- `src/components/admin/TitleEditor.tsx` (new)
+- `src/hooks/useEditableTitles.ts` (new)
+- `src/app/api/cms/config/route.ts` (new)
+- `src/types/cms.ts` (new)
+- `src/config/defaultConfig.json` (new)
+- `tests/components/admin/TitleEditor.test.tsx` (new)
+- `tests/hooks/useEditableTitles.test.ts` (new)
+- `tests/api/cms/config.test.ts` (new)
+
+### 7.3 Analytics Module Toggle System (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.14: Toggle system for all 9 analytics modules (Event Type, Geo-Mapping, Tour Coverage, Development Works, Community Outreach, Schemes, Beneficiary Groups, Thematic, Raigarh)
+- [ ] AC7.15: Real-time apply: toggled OFF = module hidden instantly from UI
+- [ ] AC7.16: State stored in `config/modules.json`
+- [ ] AC7.17: Toggle changes persist to database
+- [ ] AC7.18: Accessibility: Toggle switches keyboard navigable, proper labels
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/ModuleToggle.test.tsx`
+   ```typescript
+   describe('Analytics Module Toggle', () => {
+     it('should toggle module visibility', async () => {
+       // Failing test
+     });
+     it('should hide module instantly when toggled OFF', async () => {
+       // Failing test
+     });
+     it('should persist state to database', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement toggle system with real-time updates
+3. **Refactor**: Optimize state management, improve performance
+
+**Files to create:**
+
+- `src/components/admin/ModuleToggle.tsx` (new)
+- `src/hooks/useAnalyticsModules.ts` (new)
+- `tests/components/admin/ModuleToggle.test.tsx` (new)
+- `tests/hooks/useAnalyticsModules.test.ts` (new)
+
+### 7.4 Telemetry & Logs Dashboard (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.19: Unified view for API latency (p50, p95, p99)
+- [ ] AC7.20: Error rates by endpoint displayed
+- [ ] AC7.21: Memory & CPU metrics for backend shown
+- [ ] AC7.22: Web vitals: LCP, FID, CLS displayed
+- [ ] AC7.23: Mini sparkline graphs for each metric
+- [ ] AC7.24: Integration with BetterStack/Grafana if available
+- [ ] AC7.25: Performance: Dashboard updates every 10s without lag
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/TelemetryDashboard.test.tsx`
+   ```typescript
+   describe('Telemetry Dashboard', () => {
+     it('should display API latency metrics', async () => {
+       // Failing test
+     });
+     it('should show error rates by endpoint', async () => {
+       // Failing test
+     });
+     it('should render sparkline graphs', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement telemetry dashboard with polling
+3. **Refactor**: Optimize rendering, add caching
+
+**Files to create:**
+
+- `src/components/admin/TelemetryDashboard.tsx` (new)
+- `src/app/api/system/telemetry/route.ts` (new)
+- `tests/components/admin/TelemetryDashboard.test.tsx` (new)
+- `tests/api/system/telemetry.test.ts` (new)
+
+### 7.5 Database & Pipeline Monitor (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.26: Connection status, last sync timestamps, record counts displayed
+- [ ] AC7.27: Health flow chart shows: [Fetch] → [Parse] → [Review] → [AI] → [Analytics]
+- [ ] AC7.28: Each node shows ✅ or ⚠️ based on last execution
+- [ ] AC7.29: Click node → see last log excerpt or error message
+- [ ] AC7.30: Accessibility: Flow chart keyboard navigable, screen reader friendly
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/PipelineMonitor.test.tsx`
+   ```typescript
+   describe('Pipeline Monitor', () => {
+     it('should display pipeline health flow chart', async () => {
+       // Failing test
+     });
+     it('should show node status based on last execution', async () => {
+       // Failing test
+     });
+     it('should display log excerpt on node click', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement pipeline monitor with interactive nodes
+3. **Refactor**: Improve visualization, add error handling
+
+**Files to create:**
+
+- `src/components/admin/PipelineMonitor.tsx` (new)
+- `src/app/api/system/pipeline/route.ts` (new)
+- `tests/components/admin/PipelineMonitor.test.tsx` (new)
+- `tests/api/system/pipeline.test.ts` (new)
+
+### 7.6 Admin Access & Permissions (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.31: Panel accessible only to admin users (role === 'admin')
+- [ ] AC7.32: Auth integrated with existing `/api/auth/status`
+- [ ] AC7.33: Non-admins cannot see or edit any config
+- [ ] AC7.34: CSRF protection on all write operations
+- [ ] AC7.35: CORS configured for admin routes only
+- [ ] AC7.36: CommandView tab visible only in admin navigation (never in public)
+- [ ] AC7.37: Visiting /admin/commandview without admin auth → redirect to /analytics
+- [ ] AC7.38: All admin routes protected at frontend (React) and backend (API)
+- [ ] AC7.39: No CommandView references in public bundle (code splitting)
+- [ ] AC7.40: Shield icon (🛡️) shown beside CommandView in admin nav for clarity
+
+**Admin-Only Access Rules (Critical):**
+
+- **Visibility Policy**: CommandView is Admin-exclusive tab, grouped alongside Home and Review inside internal admin navigation
+- **Never Visible To**: Client-side users, public users, non-authenticated users
+- **Routing Protection**: 
+  - Frontend: `if (!admin) return <Navigate to="/analytics" />`
+  - Backend: `app.use('/api/admin', verifyAdminToken)`
+- **Bundle Safety**: No references, links, or preload hints for CommandView in public builds
+- **Role Check**: `role === 'admin'` must gate rendering at both frontend and backend
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/api/admin/auth-protection.test.ts`
+   ```typescript
+   describe('Admin Access Protection', () => {
+     it('should reject non-admin users', async () => {
+       // Failing test
+     });
+     it('should require CSRF token for write operations', async () => {
+       // Security test
+     });
+     it('should redirect non-admin from /admin/commandview to /analytics', async () => {
+       // Failing test
+     });
+     it('should not include CommandView in public bundle', async () => {
+       // Security test - verify bundle analysis
+     });
+     it('should require role === "admin" at both frontend and backend', async () => {
+       // Security test
+     });
+   });
+   ```
+
+2. **Green**: Implement admin-only middleware and route protection with bundle safety
+3. **Refactor**: Add better error messages, improve security, verify code splitting
+
+**Files to create:**
+
+- `src/middleware/adminAuth.ts` (new)
+- `src/middleware/csrf.ts` (new)
+- `src/middleware/adminRouteGuard.tsx` (new, for CommandView route)
+- `tests/middleware/adminAuth.test.ts` (new)
+- `tests/middleware/csrf.test.ts` (new)
+- `tests/security/admin-bundle-safety.test.ts` (new, verify no admin routes in public bundle)
+
+### 7.7 Config Export/Import (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.36: "Export All Config" button downloads merged JSON of current CMS state
+- [ ] AC7.37: "Import Config" button uploads and overrides config safely
+- [ ] AC7.38: Import validates JSON schema before applying
+- [ ] AC7.39: Import creates backup before overwriting
+- [ ] AC7.40: Export/Import logs audit trail
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/admin/ConfigManagement.test.tsx`
+   ```typescript
+   describe('Config Export/Import', () => {
+     it('should export all config as JSON', async () => {
+       // Failing test
+     });
+     it('should import and validate config', async () => {
+       // Failing test
+     });
+     it('should create backup before import', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement export/import with validation
+3. **Refactor**: Add error handling, improve UX
+
+**Files to create:**
+
+- `src/components/admin/ConfigManagement.tsx` (new)
+- `src/app/api/cms/export/route.ts` (new)
+- `src/app/api/cms/import/route.ts` (new)
+- `src/lib/cms/config-validator.ts` (new)
+- `tests/components/admin/ConfigManagement.test.tsx` (new)
+- `tests/api/cms/export.test.ts` (new)
+- `tests/api/cms/import.test.ts` (new)
+
+### 7.8 CommandView Main UI Integration (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC7.41: Main CommandView page integrates all components
+- [ ] AC7.42: Layout matches ASCII design specification
+- [ ] AC7.43: Responsive design works on mobile/tablet
+- [ ] AC7.44: Full Hindi UI support with Noto Sans Devanagari font
+- [ ] AC7.45: Accessibility: WCAG 2.1 AA throughout
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/pages/admin/CommandView.test.tsx`
+   ```typescript
+   describe('CommandView Page', () => {
+     it('should render all dashboard sections', async () => {
+       // Failing test
+     });
+     it('should be responsive on mobile', async () => {
+       // Failing test
+     });
+     it('should meet accessibility standards', async () => {
+       // Accessibility test with jest-axe
+     });
+   });
+   ```
+
+2. **Green**: Implement main CommandView page
+3. **Refactor**: Optimize layout, improve accessibility
+
+**Files to create:**
+
+- `src/pages/admin/CommandView.tsx` (new)
+- `src/app/admin/commandview/page.tsx` (new)
+- `tests/pages/admin/CommandView.test.tsx` (new)
+- `tests/e2e/commandview.test.ts` (new)
+
+---
+
+## Phase 8: CommandView Telemetry & Tracing Extension - TDD First
+
+### 8.1 Trace ID System Implementation (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.1: Every API request generates trace_id (UUID v4)
+- [ ] AC8.2: Each subsystem logs trace_id, timestamp, latency_ms, status_code, component, error_message
+- [ ] AC8.3: All traces streamed to `/api/system/traces` endpoint
+- [ ] AC8.4: CommandView aggregates last 100 traces per pipeline
+- [ ] AC8.5: Trace middleware logs all requests with trace IDs
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/middleware/traceLogger.test.ts`
+   ```typescript
+   describe('Trace ID System', () => {
+     it('should generate UUID v4 trace_id for each request', async () => {
+       // Failing test
+     });
+     it('should log trace with all required fields', async () => {
+       // Failing test
+     });
+     it('should stream traces to API endpoint', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement trace middleware and logging
+3. **Refactor**: Optimize logging performance, add batching
+
+**Files to create:**
+
+- `src/middleware/traceLogger.ts` (new)
+- `src/lib/observability/trace-collector.ts` (new)
+- `src/app/api/system/traces/route.ts` (new)
+- `tests/middleware/traceLogger.test.ts` (new)
+- `tests/lib/observability/trace-collector.test.ts` (new)
+- `tests/api/system/traces.test.ts` (new)
+
+### 8.2 API Latency Visualization (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.6: Live updating latency bars/sparklines for each API node
+- [ ] AC8.7: Metrics shown: p50, p95, max latency, success vs error rate
+- [ ] AC8.8: Color-coded status (🟢 normal / 🟠 slow / 🔴 failing)
+- [ ] AC8.9: Data refreshed every 10s via WebSocket or setInterval
+- [ ] AC8.10: Performance: Visualization renders <100ms
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/telemetry/LatencyVisualization.test.tsx`
+   ```typescript
+   describe('Latency Visualization', () => {
+     it('should display p50, p95, max latency', async () => {
+       // Failing test
+     });
+     it('should color-code by status', async () => {
+       // Failing test
+     });
+     it('should update every 10 seconds', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement latency visualization with live updates
+3. **Refactor**: Optimize rendering, add WebSocket support
+
+**Files to create:**
+
+- `src/components/telemetry/LatencyVisualization.tsx` (new)
+- `src/hooks/useTraces.ts` (new)
+- `tests/components/telemetry/LatencyVisualization.test.tsx` (new)
+- `tests/hooks/useTraces.test.ts` (new)
+
+### 8.3 Trace Timeline Inspector (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.11: Click any API node opens "Trace Explorer" modal
+- [ ] AC8.12: Timeline shows: Fetch → Parse → Review → AI → Analytics with latencies
+- [ ] AC8.13: Hover to view raw JSON trace payload
+- [ ] AC8.14: "View Logs" button opens `/logs/<trace_id>`
+- [ ] AC8.15: Accessibility: Modal keyboard navigable, screen reader friendly
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/telemetry/TraceExplorerModal.test.tsx`
+   ```typescript
+   describe('Trace Explorer', () => {
+     it('should display trace timeline', async () => {
+       // Failing test
+     });
+     it('should show raw JSON on hover', async () => {
+       // Failing test
+     });
+     it('should open logs view', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement trace explorer modal
+3. **Refactor**: Improve UX, add error handling
+
+**Files to create:**
+
+- `src/components/telemetry/TraceExplorerModal.tsx` (new)
+- `src/app/api/system/trace/[id]/route.ts` (new)
+- `tests/components/telemetry/TraceExplorerModal.test.tsx` (new)
+- `tests/api/system/trace/[id].test.ts` (new)
+
+### 8.4 Error Snapshot Panel (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.16: Table of most recent 10 errors with timestamp, component, trace_id, error_message
+- [ ] AC8.17: Color highlight by severity
+- [ ] AC8.18: Filters: by component or last n minutes
+- [ ] AC8.19: Clickable trace_id opens Trace Explorer
+- [ ] AC8.20: Accessibility: Table keyboard navigable, proper ARIA labels
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/telemetry/ErrorTable.test.tsx`
+   ```typescript
+   describe('Error Snapshot Panel', () => {
+     it('should display recent errors', async () => {
+       // Failing test
+     });
+     it('should filter by component', async () => {
+       // Failing test
+     });
+     it('should highlight by severity', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement error table with filtering
+3. **Refactor**: Improve performance, add pagination
+
+**Files to create:**
+
+- `src/components/telemetry/ErrorTable.tsx` (new)
+- `src/app/api/system/errors/route.ts` (new)
+- `tests/components/telemetry/ErrorTable.test.tsx` (new)
+- `tests/api/system/errors.test.ts` (new)
+
+### 8.5 Latency Heatmap (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.21: Grid visual showing p95 latency for each API node
+- [ ] AC8.22: Legend: Green <250ms, Orange 250-350ms, Red >350ms
+- [ ] AC8.23: Visual bars scale proportionally to latency
+- [ ] AC8.24: Accessibility: Heatmap keyboard navigable, color-blind friendly
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/telemetry/TraceHeatmap.test.tsx`
+   ```typescript
+   describe('Latency Heatmap', () => {
+     it('should display p95 latency for each node', async () => {
+       // Failing test
+     });
+     it('should color-code by latency thresholds', async () => {
+       // Failing test
+     });
+     it('should be accessible (keyboard nav, color-blind friendly)', async () => {
+       // Accessibility test
+     });
+   });
+   ```
+
+2. **Green**: Implement heatmap visualization
+3. **Refactor**: Improve visual design, add tooltips
+
+**Files to create:**
+
+- `src/components/telemetry/TraceHeatmap.tsx` (new)
+- `src/app/api/system/metrics/route.ts` (new)
+- `tests/components/telemetry/TraceHeatmap.test.tsx` (new)
+- `tests/api/system/metrics.test.ts` (new)
+
+### 8.6 Recent Trace Stream (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.25: Live list (auto-scroll) showing trace_id, pipeline path, total latency, status
+- [ ] AC8.26: Clicking row opens Trace Explorer modal
+- [ ] AC8.27: Auto-scroll pauses on hover
+- [ ] AC8.28: Performance: Stream updates without lag
+
+**TDD Steps:**
+
+1. **Red**: Create `tests/components/telemetry/TraceStream.test.tsx`
+   ```typescript
+   describe('Trace Stream', () => {
+     it('should display live trace list', async () => {
+       // Failing test
+     });
+     it('should auto-scroll with pause on hover', async () => {
+       // Failing test
+     });
+     it('should open Trace Explorer on click', async () => {
+       // Failing test
+     });
+   });
+   ```
+
+2. **Green**: Implement trace stream component
+3. **Refactor**: Optimize rendering, improve UX
+
+**Files to create:**
+
+- `src/components/telemetry/TraceStream.tsx` (new)
+- `tests/components/telemetry/TraceStream.test.tsx` (new)
+
+### 8.7 CommandView Telemetry Integration (TDD)
+
+**Acceptance Criteria:**
+
+- [ ] AC8.29: All telemetry components integrated into CommandView
+- [ ] AC8.30: Layout matches ASCII design specification
+- [ ] AC8.31: Real-time updates work without performance degradation
+- [ ] AC8.32: Full accessibility compliance (WCAG 2.1 AA)
+
+**TDD Steps:**
+
+1. **Red**: Create E2E test for full telemetry dashboard
+   ```typescript
+   describe('CommandView Telemetry Integration', () => {
+     it('should display all telemetry components', async () => {
+       // Failing test
+     });
+     it('should update in real-time without lag', async () => {
+       // Performance test
+     });
+   });
+   ```
+
+2. **Green**: Integrate all telemetry components
+3. **Refactor**: Optimize bundle size, improve performance
+
+**Files to modify:**
+
+- `src/pages/admin/CommandView.tsx` (add telemetry section)
+
+**Files to create:**
+
+- `tests/e2e/commandview-telemetry.test.ts` (new)
 
 ---
 

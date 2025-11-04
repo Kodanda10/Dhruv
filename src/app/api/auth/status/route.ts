@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSessionToken } from '../login/route';
+import { validateSessionToken } from '@/lib/auth/session';
 
 interface StatusResponse {
   authenticated: boolean;
