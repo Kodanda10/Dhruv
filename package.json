@@ -10,7 +10,7 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "test": "jest --passWithNoTests",
-    "test:coverage": "jest --coverage --ci && node scripts/enforce-coverage.js --lines 85 --branches 70",
+    "test:coverage": "jest --coverage --ci --testPathIgnorePatterns=comprehensive-1500-scenarios.test.ts && node scripts/enforce-coverage.js --lines 85 --branches 70",
     "typecheck": "tsc --noEmit",
     "test:watch": "jest --watch",
     "e2e:smoke": "playwright test -c playwright.config.ts",

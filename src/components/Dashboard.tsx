@@ -6,7 +6,7 @@ import { isParseEnabled } from '../../config/flags';
 import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getEventTypeHindi } from '@/lib/eventTypes';
+import { getEventTypeInHindi } from '@/lib/i18n/event-types-hi';
 import type { Route } from 'next';
 import Card from './Card';
 import SoftButton from './SoftButton';
@@ -88,6 +88,9 @@ export default function Dashboard() {
         overlay = raw ? JSON.parse(raw) : null;
       } catch {}
       const eventType = overlay?.event_type || p.parsed.event_type;
+      const eventTypeDisplay = overlay?.event_type
+        ? getEventTypeInHindi(overlay.event_type)
+        : (p.parsed.event_type_hi || getEventTypeInHindi(p.parsed.event_type));
       const ovLocations = overlay?.locations || [];
       const ovPeople = overlay?.people_mentioned || [];
       const ovOrgs = overlay?.organizations || [];
@@ -102,7 +105,7 @@ export default function Dashboard() {
         ts: p.timestamp,
         when: formatHindiDate(p.timestamp),
         where: locations,
-        what: [eventType],
+        what: [eventTypeDisplay],
         which: {
           mentions: people,
           hashtags: [...orgs, ...schemesEff],
@@ -227,7 +230,7 @@ export default function Dashboard() {
                   return acc;
                 }, {})
               ).sort((a, b) => b[1] - a[1]).slice(0, 3);
-              return top.length ? top.map(([k, v]) => `${getEventTypeHindi(k)} (${v})`).join(', ') : '—';
+              return top.length ? top.map(([k, v]) => `${getEventTypeInHindi(k)} (${v})`).join(', ') : '—';
             })()}
           </div>
         </div>
@@ -315,7 +318,7 @@ export default function Dashboard() {
               <tr key={row.id} className={`align-top hover:bg-gray-50`}>
                 <td className="p-2 border-b border-gray-200 whitespace-nowrap">{row.when}</td>
                 <td className="p-2 border-b border-l border-gray-200">{row.where.join(', ') || '—'}</td>
-                <td className="p-2 border-b border-l border-gray-200">{row.what.length ? row.what.map((w:any) => getEventTypeHindi(w)).join(', ') : '—'}</td>
+                <td className="p-2 border-b border-l border-gray-200">{row.what.length ? row.what.map((w:any) => getEventTypeInHindi(w)).join(', ') : '—'}</td>
                 <td className="p-2 border-b border-l border-gray-200 align-top w-[14%]" aria-label="कौन/टैग">
                   {(() => {
                     const tags = [...row.which.mentions, ...row.which.hashtags];

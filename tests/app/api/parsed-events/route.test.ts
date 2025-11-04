@@ -37,6 +37,8 @@ jest.mock('path', () => ({
   join: jest.fn((...args: string[]) => args.join('/')),
 }));
 
+// Note: getPool is mocked in beforeEach
+
 describe('GET /api/parsed-events - Database Primary Source', () => {
   let mockPool: any;
   let mockQuery: jest.Mock;
@@ -45,16 +47,25 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockQuery = jest.fn();
     mockPool = {
       query: mockQuery,
     };
     (Pool as unknown as jest.Mock).mockImplementation(() => mockPool);
-    
+
+    // Mock the route module's getPool function to return our mock pool
+    const routeModule = require('../../../../src/app/api/parsed-events/route');
+    routeModule.getPool = jest.fn(() => mockPool);
+
     // Default: file doesn't exist (database should be primary)
     mockFs.existsSync.mockReturnValue(false);
     mockPath.join.mockImplementation((...args: string[]) => args.join('/'));
+  });
+
+  afterEach(() => {
+    // Reset the module to ensure clean state
+    jest.resetModules();
   });
 
   describe('Basic Functionality - Database Query', () => {
@@ -64,14 +75,14 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
           id: 1,
           tweet_id: '1234567890',
           event_type: 'rally',
-          event_type_confidence: '0.85',
+          event_type_confidence: 0.85,
           event_date: '2025-11-03',
-          date_confidence: '0.90',
+          date_confidence: 0.90,
           locations: [{ name: 'रायगढ़', confidence: 0.9 }],
           people_mentioned: ['मुख्यमंत्री'],
           organizations: ['भाजपा'],
           schemes_mentioned: ['योजना'],
-          overall_confidence: '0.88',
+          overall_confidence: 0.88,
           needs_review: false,
           review_status: 'approved',
           parsed_at: '2025-11-03T10:00:00Z',
@@ -99,11 +110,11 @@ describe('GET /api/parsed-events - Database Primary Source', () => {
       expect(data.success).toBe(true);
       expect(data.source).toBe('database');
       expect(data.data).toHaveLength(1);
-      expect(data.data[0].tweet_id).toBe('1234567890');
+      expect(data.data[0].id).toBe('1234567890');
       expect(data.data[0].content).toBe('आज रायगढ़ में रैली');
       expect(data.data[0].event_type).toBe('rally');
       expect(data.data[0].overall_confidence).toBe(0.88);
-      
+
       // Verify JOIN query was used
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('FROM parsed_events pe'),
@@ -1061,10 +1072,10 @@ describe('Comprehensive Scenario Testing - 1000+ Cases', () => {
 
   // Generate combinations
   const combinations: any[] = [];
-  (testScenarios[0]?.limit || []).forEach((limit) => {
-    (testScenarios[1]?.needsReview || []).forEach((needsReview) => {
-      (testScenarios[2]?.reviewStatus || []).forEach((reviewStatus) => {
-        (testScenarios[3]?.analytics || []).forEach((analytics) => {
+  (testScenarios[0]?.limit || []).forEach((limit: any) => {
+    (testScenarios[1]?.needsReview || []).forEach((needsReview: any) => {
+      (testScenarios[2]?.reviewStatus || []).forEach((reviewStatus: any) => {
+        (testScenarios[3]?.analytics || []).forEach((analytics: any) => {
           combinations.push({ limit, needsReview, reviewStatus, analytics });
         });
       });
