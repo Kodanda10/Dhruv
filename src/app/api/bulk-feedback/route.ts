@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 type BulkPost = {
   id: string | number;
@@ -12,7 +13,7 @@ type BulkFeedbackPayload = {
 };
 
 function makeTraceId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return generateSecureTraceId();
 }
 
 export async function POST(request: Request) {

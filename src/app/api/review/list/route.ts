@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 type ReviewStatus = 'pending' | 'reviewed' | 'rejected';
 
@@ -24,7 +25,7 @@ type PaginatedResponse<T> = {
 };
 
 function makeTraceId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return generateSecureTraceId();
 }
 
 function toIntOr<T extends number>(

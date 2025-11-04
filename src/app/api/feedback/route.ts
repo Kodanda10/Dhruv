@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 export async function GET(request: Request) {
   try {
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       post_id,
       corrections,
       timestamp: Date.now(),
-      traceId: Math.random().toString(36).substring(7),
+      traceId: generateSecureTraceId(),
     });
     fs.writeFileSync(feedbackPath, JSON.stringify(feedbackData, null, 2));
     return NextResponse.json({ submitted: true });

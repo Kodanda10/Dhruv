@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { generateSecureTraceId } from '@/lib/utils/security';
 
 type ReviewStatus = 'pending' | 'reviewed' | 'rejected';
 
@@ -8,7 +9,7 @@ type StatusRecord = {
 };
 
 function makeTraceId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return generateSecureTraceId();
 }
 
 // Minimal placeholder store to satisfy API contract during CI/build.
