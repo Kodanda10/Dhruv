@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm ci",
+  "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": ".next",
   "env": {
     "FLAG_PARSE": "on",
