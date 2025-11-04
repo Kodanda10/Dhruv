@@ -1,5 +1,8 @@
 name: Vercel Post-Deploy Audits
 
+permissions:
+  contents: read
+
 on:
   deployment_status:
     types: [success]

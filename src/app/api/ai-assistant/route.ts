@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAIAssistant } from '@/lib/ai-assistant/langgraph-assistant';
 import { contextManager } from '@/lib/ai-assistant/context-manager';
 import { modelOrchestrator } from '@/lib/ai-assistant/model-manager';
+import { randomBytes } from 'crypto';
 // Initialize graceful shutdown handlers
 import '@/lib/shutdown';
+
+// Secure random string generation utility
+function generateSecureRandomString(length: number = 9): string {
+  return randomBytes(length).toString('base64').replace(/[+/=]/g, '').substring(0, length);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate session ID if not provided
-    const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const currentSessionId = sessionId || `session_${Date.now()}_${generateSecureRandomString(9)}`;
 
     // Get or create conversation context
     const context = contextManager.getOrCreateContext(currentSessionId, tweetData?.tweet_id);
@@ -126,7 +132,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const currentSessionId = sessionId || `session_${Date.now()}_${generateSecureRandomString(9)}`;
 
     // Generate auto-suggestions
     const aiResponse = await getAIAssistant(currentSessionId).processMessage(
@@ -179,7 +185,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const currentSessionId = sessionId || `session_${Date.now()}_${generateSecureRandomString(9)}`;
 
     // Validate data consistency
     const aiResponse = await getAIAssistant(currentSessionId).processMessage(

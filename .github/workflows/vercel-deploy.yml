@@ -1,5 +1,8 @@
 name: Vercel Deploy
 
+permissions:
+  contents: read
+
 on:
   push:
     # Trigger on any branch; jobs handle main vs others

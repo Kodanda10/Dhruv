@@ -14,6 +14,12 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { DynamicLearningSystem } from '@/lib/dynamic-learning';
+import { randomBytes } from 'crypto';
+
+// Secure random string generation utility
+function generateSecureRandomString(length: number = 9): string {
+  return randomBytes(length).toString('base64').replace(/[+/=]/g, '').substring(0, length);
+}
 
 // State Schema for AI Assistant
 export interface AIAssistantState {
@@ -140,7 +146,7 @@ export class LangGraphAIAssistant {
   ): Promise<AIResponse & { sessionId: string; modelUsed: string; context: ConversationContext }> {
     try {
       // Generate or restore session ID
-      const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const currentSessionId = sessionId || `session_${Date.now()}_${generateSecureRandomString(9)}`;
       
       // Restore state if this is an existing session
       if (sessionId && this.currentSessionId !== sessionId) {
