@@ -41,13 +41,13 @@ export default function ReviewPage() {
             <a href="/api/review/list?status=reviewed&limit=10" target="_blank" rel="noopener noreferrer">Reviewed items (API)</a>
           </li>
           <li>
-            <Link href="/api/review/status">Review status summary (API)</Link>
+            <a href="/api/review/status" target="_blank" rel="noopener noreferrer">Review status summary (API)</a>
           </li>
           <li>
-            <Link href="/api/reviewed-posts?limit=10">Recently reviewed posts (API)</Link>
+            <a href="/api/reviewed-posts?limit=10" target="_blank" rel="noopener noreferrer">Recently reviewed posts (API)</a>
           </li>
           <li>
-            <Link href="/api/processed-posts?limit=10">Processed posts (API)</Link>
+            <a href="/api/processed-posts?limit=10" target="_blank" rel="noopener noreferrer">Processed posts (API)</a>
           </li>
         </ul>
       </section>
