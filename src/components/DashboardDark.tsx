@@ -1,5 +1,4 @@
 "use client";
-import parsedTweets from '../../data/parsed_tweets.json';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { parsePost, formatHindiDate } from '@/utils/parse';
