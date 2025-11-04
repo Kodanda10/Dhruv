@@ -107,7 +107,7 @@ export default function GeoHierarchyMindmap({
     } else {
       // Navigate to specific level (could be enhanced for deeper navigation)
       const district = newPath[0];
-      const assemblies = mockAssemblyData[district] || [];
+      const assemblies = mockAssemblyData[district as keyof typeof mockAssemblyData] || [];
       setDrilldown({
         level: 'assembly',
         selectedPath: newPath,
