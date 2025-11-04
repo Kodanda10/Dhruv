@@ -1,3 +1,7 @@
+// TODO: Fix memory leak - JavaScript heap out of memory error during test execution
+// Issue: Test suite runs out of memory, likely due to component rendering or missing cleanup
+// Follow-up PR needed to investigate and fix memory leaks in test setup
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import TagsSelector from '@/components/review/TagsSelector';
