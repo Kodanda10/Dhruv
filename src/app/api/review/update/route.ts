@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { getEventTypeInHindi } from '@/lib/i18n/event-types-hi';
+import { LearningContext } from '@/lib/dynamic-learning';
 // Dynamic learning import moved inside the function to avoid client-side issues
 
 // Database configuration - lazy initialization
@@ -217,10 +218,10 @@ async function triggerDynamicLearning(data: ReviewUpdateRequest, originalData: a
       aiSuggestions,
       humanCorrections: {
         event_type: data.event_type,
-        locations: data.locations,
-        people: data.people_mentioned,
-        organizations: data.organizations,
-        schemes: data.schemes_mentioned,
+        locations: Array.isArray(data.locations) ? data.locations : [],
+        people: Array.isArray(data.people_mentioned) ? data.people_mentioned : [],
+        organizations: Array.isArray(data.organizations) ? data.organizations : [],
+        schemes: Array.isArray(data.schemes_mentioned) ? data.schemes_mentioned : [],
         review_notes: data.review_notes
       },
       reviewer_id: 'admin', // In production, get from session

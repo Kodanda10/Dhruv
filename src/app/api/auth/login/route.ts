@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { generateSessionToken } from '@/lib/auth/session';
 
 // Security: No secrets in code - credentials from environment variables
+const SESSION_EXPIRY_HOURS = 24;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ||
   crypto.createHash('sha256').update('admin123').digest('hex'); // Default for development

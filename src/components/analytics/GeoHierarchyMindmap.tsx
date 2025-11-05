@@ -119,7 +119,7 @@ export default function GeoHierarchyMindmap({
   const renderCell = (entry: any) => {
     const { x, y, width: w, height: h, payload } = entry;
     const node = payload;
-    const hasChildren = node.level === 'district' && mockAssemblyData[node.district]?.length > 0;
+    const hasChildren = node.level === 'district' && mockAssemblyData[node.district as keyof typeof mockAssemblyData]?.length > 0;
     const isSelected = selectedNode?.name === node.name;
 
     return (

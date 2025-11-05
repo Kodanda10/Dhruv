@@ -105,9 +105,7 @@ async function checkAPIHealth(apiName: string, url?: string, apiKey?: string): P
       case 'ollama_api':
         // Check Ollama endpoint connectivity
         try {
-          const ollamaResponse = await fetch(process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api/tags', {
-            timeout: 5000 // 5 second timeout
-          });
+          const ollamaResponse = await fetch(process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api/tags');
 
           if (!ollamaResponse.ok) {
             status = 'degraded';

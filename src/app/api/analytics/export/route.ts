@@ -211,7 +211,7 @@ async function generateExcel(filters: ExportFilters): Promise<Buffer> {
 
   // Generate buffer
   const buffer = await workbook.xlsx.writeBuffer();
-  return buffer as Buffer;
+  return Buffer.from(buffer as unknown as Uint8Array);
 }
 
 /**
@@ -294,7 +294,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     console.log(`Generating ${format} export:`, filters);
 
-    let content: string | Buffer;
+    let content: string | Buffer | Uint8Array;
     let contentType: string;
     let extension: string;
 
@@ -323,7 +323,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     console.log(`${format} export completed, size: ${content.length} bytes`);
 
-    return new NextResponse(content, {
+    return new NextResponse(content as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': contentType,

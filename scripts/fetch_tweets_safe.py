@@ -122,7 +122,7 @@ def insert_tweets(conn, tweets: list, author_handle: str):
     return inserted_count
 
 
-def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
+def fetch_all_tweets_safe(author_handle: str, max_batches: int = None, start_date: str = None, end_date: str = None):
     """
     Safely fetch ALL tweets from a user with rate limit monitoring.
     
@@ -146,17 +146,20 @@ def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
     # Initialize rate limit monitor
     rate_monitor = RateLimitMonitor()
     
-    # Get user ID
-    logger.info(f'Looking up user @{author_handle}...')
-    user = client.get_user(username=author_handle)
-    if not user.data:
-        raise ValueError(f'User @{author_handle} not found')
+    # No longer need to get user ID first
+    # logger.info(f'Looking up user @{author_handle}...')
+    # user = client.get_user(username=author_handle)
+    # if not user.data:
+    #     raise ValueError(f'User @{author_handle} not found')
     
-    user_id = user.data.id
-    logger.info(f'✓ User found: @{user.data.username} (ID: {user_id})')
-    logger.info(f'  Name: {user.data.name}')
-    logger.info('')
-    
+    # user_id = user.data.id
+    # logger.info(f'✓ User found: @{user.data.username} (ID: {user_id})')
+    # logger.info(f'  Name: {user.data.name}')
+    # logger.info('')
+
+    # Construct the query for the search_all_tweets function
+    query = f"from:{author_handle}"
+
     # Connect to database
     conn = get_db_connection()
     logger.info('✓ Connected to database')
@@ -179,20 +182,22 @@ def fetch_all_tweets_safe(author_handle: str, max_batches: int = None):
                 logger.info(f'Reached maximum batch limit ({max_batches})')
                 break
             
-            logger.info(f'📥 Batch #{batch_num}: Fetching up to 100 tweets...')
+            logger.info(f'📥 Batch #{batch_num}: Fetching up to 500 tweets...')
             
             try:
-                # Fetch tweets with pagination
-                # Tweepy's wait_on_rate_limit=True will automatically:
-                # - Monitor rate limit headers
-                # - Sleep when limit is reached
-                # - Resume when limit resets
-                response = client.get_users_tweets(
-                    id=user_id,
-                    max_results=100,  # API maximum
-                    pagination_token=pagination_token,
-                    exclude=['retweets'],  # Exclude retweets only (keep original + replies)
+                # Fetch tweets with pagination using search_all_tweets
+                start_time = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) if start_date else None
+                end_time = datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) if end_date else None
+
+                logger.info(f"Fetching with start_time: {start_time} and end_time: {end_time}")
+
+                response = client.search_all_tweets(
+                    query=query,
+                    max_results=500,  # API maximum for full archive search
+                    next_token=pagination_token, # Use next_token for pagination
                     tweet_fields=['created_at', 'public_metrics', 'entities', 'author_id'],
+                    start_time=start_time,
+                    end_time=end_time,
                 )
                 
                 if not response.data:
@@ -292,6 +297,8 @@ def main():
     )
     parser.add_argument('--handle', required=True, help='Twitter username (without @)')
     parser.add_argument('--max-batches', type=int, help='Maximum number of batches to fetch (for testing)')
+    parser.add_argument('--start-date', help='Start date for fetching tweets (YYYY-MM-DD)')
+    parser.add_argument('--end-date', help='End date for fetching tweets (YYYY-MM-DD)')
     
     args = parser.parse_args()
     
@@ -310,6 +317,8 @@ def main():
         total = fetch_all_tweets_safe(
             author_handle=args.handle,
             max_batches=args.max_batches,
+            start_date=args.start_date,
+            end_date=args.end_date,
         )
         
         logger.info('✅ SUCCESS!')

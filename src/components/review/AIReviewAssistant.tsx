@@ -24,12 +24,12 @@ interface ParsedTweet {
 }
 
 interface AISuggestion {
-  event_type: string;
-  event_type_confidence: number;
-  locations: string[];
-  people_mentioned: string[];
-  organizations: string[];
-  schemes_mentioned: string[];
+  event_type?: string;
+  event_type_confidence?: number;
+  locations?: string[];
+  people_mentioned?: string[];
+  organizations?: string[];
+  schemes_mentioned?: string[];
   reasoning?: string;
 }
 
@@ -64,7 +64,19 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
       const { getAIAssistant } = await import('@/lib/ai-assistant/langgraph-assistant');
 
       const assistant = getAIAssistant();
-      const aiSuggestion = await assistant.generateSuggestions(tweet);
+
+      // Convert ParsedTweet to TweetData format
+      const tweetData = {
+        tweet_id: tweet.id,
+        text: tweet.content,
+        event_type: tweet.event_type,
+        locations: tweet.locations,
+        people_mentioned: tweet.people_mentioned,
+        organizations: tweet.organizations,
+        schemes_mentioned: tweet.schemes_mentioned,
+      };
+
+      const aiSuggestion = await assistant.generateSuggestions(tweetData);
 
       if (!aiSuggestion || typeof aiSuggestion !== 'object') {
         throw new Error('अमान्य AI प्रतिक्रिया प्राप्त हुई');
@@ -154,7 +166,7 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
             <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
               💡 AI सुझाव
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                आत्मविश्वास: {Math.round(suggestion.event_type_confidence * 100)}%
+                आत्मविश्वास: {Math.round((suggestion.event_type_confidence || 0) * 100)}%
               </span>
             </h4>
 
@@ -164,28 +176,28 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
                 <span className="ml-2 text-blue-700 font-medium">{suggestion.event_type}</span>
               </div>
 
-              {suggestion.locations.length > 0 && (
+              {suggestion.locations && suggestion.locations.length > 0 && (
                 <div>
                   <span className="font-medium text-gray-700">स्थान:</span>
                   <span className="ml-2 text-blue-700">{suggestion.locations.join(', ')}</span>
                 </div>
               )}
 
-              {suggestion.people_mentioned.length > 0 && (
+              {suggestion.people_mentioned && suggestion.people_mentioned.length > 0 && (
                 <div>
                   <span className="font-medium text-gray-700">उल्लिखित व्यक्ति:</span>
                   <span className="ml-2 text-blue-700">{suggestion.people_mentioned.join(', ')}</span>
                 </div>
               )}
 
-              {suggestion.organizations.length > 0 && (
+              {suggestion.organizations && suggestion.organizations.length > 0 && (
                 <div>
                   <span className="font-medium text-gray-700">संगठन:</span>
                   <span className="ml-2 text-blue-700">{suggestion.organizations.join(', ')}</span>
                 </div>
               )}
 
-              {suggestion.schemes_mentioned.length > 0 && (
+              {suggestion.schemes_mentioned && suggestion.schemes_mentioned.length > 0 && (
                 <div>
                   <span className="font-medium text-gray-700">योजनाएं:</span>
                   <span className="ml-2 text-blue-700">{suggestion.schemes_mentioned.join(', ')}</span>
