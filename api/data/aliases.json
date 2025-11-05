@@ -20,6 +20,7 @@
     "बेंगलुरु": {"variants": ["bengaluru", "bangalore"], "confidence": 0.9, "source": "seed"},
     "वाराणसी": {"variants": ["varanasi", "banaras", "benaras"], "confidence": 0.9, "source": "seed"},
     "प्रयागराज": {"variants": ["prayagraj", "allahabad"], "confidence": 0.9, "source": "seed"}
-  }
+  },
+  "schemes": {},
+  "events": {}
 }
-
