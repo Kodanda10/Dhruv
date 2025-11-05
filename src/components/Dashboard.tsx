@@ -25,6 +25,7 @@ export default function Dashboard() {
 
   // Sync from URL params
   useEffect(() => {
+    if (!searchParams) return;
     const loc = searchParams.get('loc') ?? '';
     const tag = searchParams.get('tag') ?? '';
     const from = searchParams.get('from') ?? '';
