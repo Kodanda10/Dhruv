@@ -45,6 +45,7 @@
     "node_modules",
     "scripts",
     "test-results",
-    "src/components/analytics"
+    "src/components/analytics",
+    "src/components/review"
   ]
 }
