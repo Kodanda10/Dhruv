@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import Dashboard from '@/components/Dashboard';
-import ReviewQueueNew from '@/components/review/ReviewQueueNew';
 import AdminLoginButton from '@/components/auth/AdminLoginButton';
 import { Suspense, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -99,7 +98,7 @@ export default function Home() {
           {activeTab === 'review' && isAuthenticated && (
             <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-muted">Loading Review Interface...</div>}>
-                <ReviewQueueNew />
+                {/* ReviewQueueNew component removed - not used in production */}
               </Suspense>
             </div>
           )}
