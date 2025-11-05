@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getEventTypeInHindi } from '@/lib/i18n/event-types-hi';
 import type { Route } from 'next';
-import Card from './Card';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
 

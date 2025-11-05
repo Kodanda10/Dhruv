@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { titleFont, notoDevanagari } from './fonts';
 
 // Lazy load AnalyticsDashboard to avoid D3 import issues in tests
-const AnalyticsDashboardDark = React.lazy(() => import('@/components/analytics/AnalyticsDashboardDark'));
+const AnalyticsDashboard = React.lazy(() => import('@/components/analytics/AnalyticsDashboard'));
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -106,7 +106,7 @@ export default function Home() {
           {activeTab === 'analytics' && (
             <div className="p-6">
               <Suspense fallback={<div className="text-center p-8 text-muted">Loading Analytics...</div>}>
-                <AnalyticsDashboardDark />
+                <AnalyticsDashboard />
               </Suspense>
             </div>
           )}
