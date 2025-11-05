@@ -1,0 +1,57 @@
+name: Automated Tweet Pipeline
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  fetch-and-parse:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch new tweets
+        run: |
+          echo "Fetching new tweets..."
+          node scripts/fetch_new_tweets_incremental.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+
+      - name: Parse fetched tweets
+        run: |
+          echo "Parsing tweets with three-layer consensus engine..."
+          node scripts/parse_tweets_with_three_layer.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+
+      - name: Health check
+        run: |
+          echo "Running health checks..."
+          curl -f https://project-dhruv-dashboard-lt6p53ygt-kodandas-projects-f0e4f5a1.vercel.app/api/health || echo "Health check failed"
+
+      - name: Notification on failure
+        if: failure()
+        run: |
+          echo "Pipeline failed - check logs and retry"
+          # Could add Slack/Discord notification here
