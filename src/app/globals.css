@@ -18,13 +18,22 @@
 }
 
 :root {
-  /* Professional Green/White theme */
-  --background: #F9FAFB; /* Clean light gray */
-  --foreground: #1F2937; /* Dark gray text */
-  --primary-green: #10B981; /* Fresh green */
-  --primary-dark: #1E293B; /* Dark slate */
-  
-  /* Kusha Theme Colors */
+  /* Official Dashboard Theme - VERBATIM REQUIRED */
+  --gradient-bg: linear-gradient(135deg, #5D3FD3 0%, #8B1A8B 100%);
+  --card-bg: rgba(177, 156, 217, 0.7);
+  --nav-bg: #D8BFD8;
+  --text-primary: #FFFFFF;
+  --approved: #32CD32;
+  --pending: #FFD700;
+  --rejected: #FF4500;
+  --warning: #FF4500;
+  --active-tab: #4169E1;
+
+  /* Legacy properties for backward compatibility */
+  --background: #F9FAFB;
+  --foreground: #1F2937;
+  --primary-green: #10B981;
+  --primary-dark: #1E293B;
   --mint-green: #66FFCC;
   --dark-purple: #5B2C87;
   --darker-purple: #3A1A5C;
@@ -35,8 +44,8 @@ html, body {
 }
 
 body {
-  color: #FFFFFF; /* Pure white for WCAG AA contrast */
-  background: var(--background);
+  color: var(--text-primary); /* Using official theme variable */
+  background: var(--gradient-bg); /* Official gradient background - VERBATIM */
   font-family: 'Noto Sans Devanagari', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -124,7 +133,7 @@ textarea::placeholder {
 
 /* Glassmorphic Card - Improved contrast */
 .glassmorphic-card {
-  background: rgba(60, 30, 100, 0.7);
+  background: var(--card-bg); /* Official card background - VERBATIM */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -229,15 +238,15 @@ textarea::placeholder {
 
 /* Status Colors */
 .status-approved {
-  color: #10B981; /* Emerald for स्वीकृत */
+  color: var(--approved); /* Official theme color - VERBATIM */
 }
 
 .status-pending {
-  color: #F59E0B; /* Amber for लंबित */
+  color: var(--pending); /* Official theme color - VERBATIM */
 }
 
 .status-rejected {
-  color: #EF4444; /* Red for निराकृत */
+  color: var(--rejected); /* Official theme color - VERBATIM */
 }
 
 .heading-amita {

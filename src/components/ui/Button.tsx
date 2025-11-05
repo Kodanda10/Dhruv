@@ -12,12 +12,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
     const baseStyles = 'inline-flex items-center justify-center rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
     
-    // Use purple/mint theme - consistent with dashboard design
+    // Use official theme colors - VERBATIM REQUIRED
     const variantStyles = {
-      primary: 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-600',
-      secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-gray-300',
-      success: 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-600',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-600',
+      primary: 'bg-[#5D3FD3] text-white hover:bg-[#8B1A8B] focus:ring-[#5D3FD3]',
+      secondary: 'bg-[var(--nav-bg)] text-gray-800 hover:bg-[color-mix(in_srgb,var(--nav-bg),black_10%)] focus:ring-gray-300',
+      success: 'bg-[var(--approved)] text-white hover:bg-[color-mix(in_srgb,var(--approved),black_10%)] focus:ring-[var(--approved)]',
+      danger: 'bg-[var(--rejected)] text-white hover:bg-[color-mix(in_srgb,var(--rejected),black_10%)] focus:ring-[var(--rejected)]',
       ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
     } as const;
     

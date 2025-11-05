@@ -58,7 +58,7 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
     return (
       <button
         onClick={handleLogout}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${className}`}
+        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[var(--rejected)] hover:bg-[color-mix(in_srgb,var(--rejected),black_10%)] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--rejected)] focus:ring-offset-2 ${className}`}
         aria-label="Admin logout"
         disabled={loading}
       >
@@ -72,7 +72,7 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
     <>
       <button
         onClick={() => setShowModal(true)}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${className}`}
+        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#5D3FD3] hover:bg-[#8B1A8B] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#5D3FD3] focus:ring-offset-2 ${className}`}
         aria-label="Admin login"
         disabled={loading}
       >
@@ -138,14 +138,14 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 bg-[var(--nav-bg)] hover:bg-[color-mix(in_srgb,var(--nav-bg),black_10%)] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                   disabled={loginLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#5D3FD3] hover:bg-[#8B1A8B] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#5D3FD3] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loginLoading}
                 >
                   {loginLoading ? 'Logging in...' : 'Login'}

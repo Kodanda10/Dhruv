@@ -11,9 +11,20 @@ const config: Config = {
       colors: {
         'mint-green': '#66FFCC',
         'teal-950': '#042f2e',
+        /* Official Theme Colors - VERBATIM */
+        'official-purple': '#5D3FD3',
+        'official-dark-purple': '#8B1A8B',
+        'official-card-bg': 'rgba(177, 156, 217, 0.7)',
+        'official-nav-bg': '#D8BFD8',
+        'official-text-primary': '#FFFFFF',
+        'official-approved': '#32CD32',
+        'official-pending': '#FFD700',
+        'official-rejected': '#FF4500',
+        'official-warning': '#FF4500',
+        'official-active-tab': '#4169E1',
       },
       backgroundImage: {
-        'dark-gradient': 'linear-gradient(180deg, rgba(91, 44, 135, 0.9), rgba(58, 26, 92, 0.8))',
+        'dark-gradient': 'linear-gradient(135deg, #5D3FD3 0%, #8B1A8B 100%)', /* Official theme gradient - VERBATIM */
       },
     },
   },
@@ -30,7 +41,7 @@ const config: Config = {
           borderColor: '#66FFCC',
         },
         '.glassmorphic-card': {
-          background: 'rgba(60, 30, 100, 0.7)',
+          background: 'var(--card-bg)', /* Official theme card background - VERBATIM */
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -46,8 +57,8 @@ const config: Config = {
           transition: 'all 0.3s ease',
         },
         '.tab-glassmorphic.active': {
-          background: 'rgba(102, 255, 204, 0.2)',
-          borderColor: 'rgba(102, 255, 204, 0.4)',
+          background: 'rgba(65, 105, 225, 0.2)', /* official-active-tab with opacity */
+          borderColor: 'var(--active-tab)', /* Official active tab color - VERBATIM */
         },
       })
     },
