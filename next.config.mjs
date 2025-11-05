@@ -4,12 +4,6 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
-  // Ensure API routes are properly built
-  output: 'standalone',
-  // Explicitly include API routes in build
-  transpilePackages: [],
-  // Ensure server components work properly
-  serverComponentsExternalPackages: [],
 };
 
 export default nextConfig;

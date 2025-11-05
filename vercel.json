@@ -5,13 +5,5 @@
   "env": {
     "FLAG_PARSE": "on",
     "NEXT_PUBLIC_FLAG_PARSE": "on"
-  },
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "runtime": "@vercel/node@18",
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
-  "regions": ["iad1"]
+  }
 }
