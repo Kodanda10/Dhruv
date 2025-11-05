@@ -854,7 +854,7 @@ export class LangGraphAIAssistant {
   }> {
     try {
       // Generate suggestions based on tweet content
-      const suggestions = await this.processMessage(tweet.content, 'suggestion');
+      const suggestions = await this.processMessage(tweet.text, 'suggestion');
 
       // Record health metrics (optional)
       try {
