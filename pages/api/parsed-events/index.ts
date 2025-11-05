@@ -105,8 +105,8 @@ export default async function handler(
       SELECT
         pe.id,
         pe.tweet_id,
-        rt.content as text,
-        rt.content,
+        rt.text as text,
+        rt.text as content,
         rt.created_at as timestamp,
         pe.event_type,
         COALESCE(pe.event_type_hi, '') as event_type_hi,
