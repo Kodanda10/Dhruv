@@ -5,14 +5,5 @@
   "env": {
     "FLAG_PARSE": "on",
     "NEXT_PUBLIC_FLAG_PARSE": "on"
-  },
-  "functions": {
-    "pages/api/**/*.ts": {}
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ]
+  }
 }
