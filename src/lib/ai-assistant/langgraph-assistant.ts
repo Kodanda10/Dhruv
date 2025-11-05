@@ -856,6 +856,14 @@ export class LangGraphAIAssistant {
       // Generate suggestions based on tweet content
       const suggestions = await this.processMessage(tweet.content, 'suggestion');
 
+      // Record health metrics (optional)
+      try {
+        const { recordOllamaCall } = await import('@/lib/health-metrics');
+        recordOllamaCall('gemini', 100, 500); // Dummy values for now
+      } catch {
+        // Health metrics not available
+      }
+
       return {
         event_type: suggestions.event_type,
         event_type_confidence: suggestions.event_type_confidence,
