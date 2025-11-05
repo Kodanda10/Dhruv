@@ -2,13 +2,14 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
+  "outputDirectory": ".next",
   "env": {
     "FLAG_PARSE": "on",
     "NEXT_PUBLIC_FLAG_PARSE": "on"
   },
   "functions": {
     "src/app/api/**/*.ts": {
-      "runtime": "@vercel/node",
+      "runtime": "nodejs18.x",
       "maxDuration": 30
     }
   }
