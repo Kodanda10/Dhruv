@@ -1,0 +1,9 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "env": {
+    "FLAG_PARSE": "on",
+    "NEXT_PUBLIC_FLAG_PARSE": "on"
+  }
+}
