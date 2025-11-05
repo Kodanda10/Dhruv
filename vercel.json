@@ -8,6 +8,17 @@
     "FLAG_PARSE": "on",
     "NEXT_PUBLIC_FLAG_PARSE": "on"
   },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "x-vercel-protection-bypass",
+          "value": "true"
+        }
+      ]
+    }
+  ],
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
