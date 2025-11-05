@@ -6,7 +6,6 @@ e2e
 tests
 .github
 .lighthouseci
-api/
 *.py
 *.pyc
 __pycache__/
