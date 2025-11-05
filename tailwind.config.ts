@@ -13,7 +13,7 @@ const config: Config = {
         'teal-950': '#042f2e',
       },
       backgroundImage: {
-        'dark-gradient': 'linear-gradient(180deg, rgba(4, 47, 46, 0.9), rgba(4, 47, 46, 0.8))',
+        'dark-gradient': 'linear-gradient(180deg, rgba(91, 44, 135, 0.9), rgba(58, 26, 92, 0.8))',
       },
     },
   },
