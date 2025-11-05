@@ -335,7 +335,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Simple auth check for write operations
+function requireAuth(request: NextRequest): boolean {
+  // For now, allow all requests (public read access for dashboard)
+  // In production, you might want to implement proper API keys
+  return true;
+}
+
 export async function PUT(request: NextRequest) {
+  // Require authentication for write operations (though currently allowing all)
+  if (!requireAuth(request)) {
+    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, updates } = body;

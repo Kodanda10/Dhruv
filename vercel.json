@@ -2,10 +2,15 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]; then echo 'skip: non-main/PR build'; exit 0; fi; echo 'proceed: main branch'; exit 1",
-    "installCommand": "npm install",
+  "installCommand": "npm install",
   "outputDirectory": ".next",
   "env": {
     "FLAG_PARSE": "on",
     "NEXT_PUBLIC_FLAG_PARSE": "on"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
   }
 }
