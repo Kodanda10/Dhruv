@@ -567,7 +567,7 @@ export class LangGraphAIAssistant {
           // Update validation queue size for monitoring
           try {
             const { updateValidationQueue } = await import('@/lib/health-metrics');
-            updateValidationQueue(this.state.pendingChanges.filter(c => c.source === 'validation').length);
+            updateValidationQueue();
           } catch {
             // Health endpoint not available
           }
