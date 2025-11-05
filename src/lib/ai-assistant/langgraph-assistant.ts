@@ -429,7 +429,7 @@ export class LangGraphAIAssistant {
     // Record Ollama call for monitoring
     try {
       const { recordOllamaCall } = await import('@/lib/health-metrics');
-      recordOllamaCall();
+      recordOllamaCall('ollama', 100, 300); // Dummy values for now
     } catch {
       // Health metrics not available in test environment
     }
