@@ -843,6 +843,34 @@ export class LangGraphAIAssistant {
   /**
    * Validate data consistency
    */
+  async generateSuggestions(tweet: TweetData): Promise<{
+    event_type?: string;
+    event_type_confidence?: number;
+    locations?: string[];
+    people_mentioned?: string[];
+    organizations?: string[];
+    schemes_mentioned?: string[];
+    reasoning?: string;
+  }> {
+    try {
+      // Generate suggestions based on tweet content
+      const suggestions = await this.processMessage(tweet.content, 'suggestion');
+
+      return {
+        event_type: suggestions.event_type,
+        event_type_confidence: suggestions.event_type_confidence,
+        locations: suggestions.locations,
+        people_mentioned: suggestions.people_mentioned,
+        organizations: suggestions.organizations,
+        schemes_mentioned: suggestions.schemes_mentioned,
+        reasoning: suggestions.reasoning
+      };
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      return {};
+    }
+  }
+
   async validateConsistency(parsedData?: TweetData): Promise<ValidationResult> {
     const issues: string[] = [];
     let isValid = true;

@@ -61,9 +61,10 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
       console.log('AI सहायक से सुझाव प्राप्त किए जा रहे हैं...', { tweetId: tweet.id });
 
       // Import LangGraph assistant dynamically to avoid SSR issues
-      const { generateSuggestions } = await import('@/lib/ai-assistant/langgraph-assistant');
+      const { getAIAssistant } = await import('@/lib/ai-assistant/langgraph-assistant');
 
-      const aiSuggestion = await generateSuggestions(tweet);
+      const assistant = getAIAssistant();
+      const aiSuggestion = await assistant.generateSuggestions(tweet);
 
       if (!aiSuggestion || typeof aiSuggestion !== 'object') {
         throw new Error('अमान्य AI प्रतिक्रिया प्राप्त हुई');
