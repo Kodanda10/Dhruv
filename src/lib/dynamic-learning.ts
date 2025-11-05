@@ -10,6 +10,20 @@
  * Stores learning data in database for persistence and analysis
  */
 
+// Database configuration - lazy initialization
+let pool: any = null;
+
+function getPool() {
+  if (!pool) {
+    const { Pool } = require('pg');
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    });
+  }
+  return pool;
+}
+
 // NOTE: Dynamic learning is disabled for initial production deployment
 // Will be re-enabled after successful deployment
 
