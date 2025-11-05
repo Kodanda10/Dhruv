@@ -1,6 +1,4 @@
 const config = {
-  // Use 'node' environment for integration tests, 'jsdom' for component tests
-  testEnvironment: 'node',
   projects: [
     {
       displayName: 'integration',
