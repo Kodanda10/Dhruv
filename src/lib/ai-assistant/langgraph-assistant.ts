@@ -843,7 +843,7 @@ export class LangGraphAIAssistant {
   /**
    * Validate data consistency
    */
-  async generateSuggestions(tweet: TweetData): Promise<{
+  public async generateSuggestions(tweet: TweetData): Promise<{
     event_type?: string;
     event_type_confidence?: number;
     locations?: string[];
