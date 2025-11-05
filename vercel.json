@@ -8,7 +8,7 @@
   },
   "functions": {
     "src/app/api/**/*.ts": {
-      "runtime": "nodejs18.x",
+      "runtime": "@vercel/node@18",
       "maxDuration": 30,
       "memory": 1024
     }
