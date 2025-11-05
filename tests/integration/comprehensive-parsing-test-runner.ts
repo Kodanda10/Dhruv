@@ -115,15 +115,23 @@ export class ComprehensiveParsingTestRunner {
   async loadTestCases(): Promise<TestCase[]> {
     const testCases: TestCase[] = [];
 
-    // Load from database
+    // Load from database (primary source)
     if (this.dbPool) {
       const dbTweets = await this.loadTweetsFromDatabase();
       testCases.push(...dbTweets);
-    }
 
-    // Load from RTF file
-    const rtfTweets = await this.loadTweetsFromRTFFile();
-    testCases.push(...rtfTweets);
+      // Only use RTF as fallback if database has very few tweets
+      if (dbTweets.length < 50) {
+        console.log(`⚠️  Database has only ${dbTweets.length} tweets, supplementing with RTF file`);
+        const rtfTweets = await this.loadTweetsFromRTFFile();
+        testCases.push(...rtfTweets);
+      }
+    } else {
+      // Database not available, use RTF file
+      console.log('⚠️  Database not available, using RTF file as fallback');
+      const rtfTweets = await this.loadTweetsFromRTFFile();
+      testCases.push(...rtfTweets);
+    }
 
     // Categorize and enrich test cases
     return this.categorizeTestCases(testCases);
@@ -169,20 +177,27 @@ export class ComprehensiveParsingTestRunner {
       const tweets: TestCase[] = [];
       const tweetBlocks = rtfContent.split('================================================================================');
 
-      for (let i = 0; i < Math.min(tweetBlocks.length, 500); i++) {
+      // Skip the first 3 blocks (header blocks) and process actual tweets
+      for (let i = 3; i < Math.min(tweetBlocks.length, 500 + 3); i++) {
         const block = tweetBlocks[i];
-        const tweetMatch = block.match(/Text:\s*\n(.*?)(?:\n\n|\nMetrics:)/s);
 
-        if (tweetMatch) {
-          const text = tweetMatch[1]
-            .replace(/\\uc0\\u\d+ /g, '') // Remove Unicode escapes
+        // Look for text between "Text:" and "Metrics:"
+        const textStart = block.indexOf('Text:');
+        const metricsStart = block.indexOf('Metrics:');
+
+        if (textStart !== -1 && metricsStart !== -1 && metricsStart > textStart) {
+          let text = block.substring(textStart + 5, metricsStart)
+            .replace(/\\\\uc0\\\\u\d+ /g, '') // Remove Unicode escapes (properly escaped)
+            .replace(/^\\s*$/gm, '') // Remove empty RTF lines
+            .replace(/^\s*\\\s*$/gm, '') // Remove lines that are just backslashes
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
 
+          // If text is empty or too short, skip
           if (text.length > 20 && text.length < 500) {
             tweets.push({
-              id: `rtf_${i}`,
-              tweetId: `rtf_tweet_${i}`,
+              id: `rtf_${i - 2}`, // Adjust index for actual tweet number
+              tweetId: `rtf_tweet_${i - 2}`,
               text,
               category: 'entity_extraction' as const,
               difficulty: 'hard' as const

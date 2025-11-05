@@ -451,7 +451,7 @@ export class LangGraphAIAssistant {
         message: data.response || 'मैं आपकी सहायता करने के लिए यहाँ हूँ।',
         action: intent.actions[0] || 'generateSuggestions',
         confidence: 0.6,
-        suggestions: await this.generateSuggestions(),
+        suggestions: await this.generateAISuggestions(),
         pendingChanges: []
       };
     } catch (error) {
@@ -479,7 +479,7 @@ export class LangGraphAIAssistant {
     
     // Always return 'both' as modelUsed regardless of which succeeded
     let combinedMessage = '';
-    const suggestions = await this.generateSuggestions();
+    const suggestions = await this.generateAISuggestions();
     
     if (geminiResponse.status === 'fulfilled') {
       combinedMessage += `Gemini: ${geminiResponse.value.message}\n\n`;
@@ -505,7 +505,7 @@ export class LangGraphAIAssistant {
    * CRITICAL: Ensures all actions are executed and pendingChanges created for incomplete tweets
    */
   private async executeTools(intent: ParsedIntent): Promise<AIResponse> {
-    const suggestions = await this.generateSuggestions();
+    const suggestions = await this.generateAISuggestions();
     const pendingChanges: PendingChange[] = [];
     
     // Execute actions based on intent - CRITICAL: All actions must be executed
@@ -621,7 +621,7 @@ export class LangGraphAIAssistant {
   /**
    * Generate intelligent suggestions based on current tweet and learned data
    */
-  private async generateSuggestions(): Promise<AISuggestions> {
+  private async generateAISuggestions(): Promise<AISuggestions> {
     if (!this.state.currentTweet) {
       return { locations: [], eventTypes: [], schemes: [], hashtags: [] };
     }

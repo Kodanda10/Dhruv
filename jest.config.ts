@@ -13,6 +13,7 @@ const config = {
       transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
       },
+      testTimeout: 3600000, // 1 hour for comprehensive tests
     },
     {
       displayName: 'unit',

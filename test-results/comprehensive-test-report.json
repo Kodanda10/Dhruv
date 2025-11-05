@@ -11,7 +11,7 @@
   },
   "performance": {
     "averageDuration": null,
-    "totalDuration": 7
+    "totalDuration": 5
   },
   "rateLimiting": {
     "geminiRequests": 0,

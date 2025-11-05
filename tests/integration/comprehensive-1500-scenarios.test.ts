@@ -11,8 +11,6 @@ describe('Three-Layer Consensus Parsing - Comprehensive Validation (1500+ Scenar
 
   beforeAll(async () => {
     testRunner = new ComprehensiveParsingTestRunner();
-    // Increase Jest timeout for comprehensive testing
-    jest.setTimeout(3600000); // 1 hour timeout for comprehensive tests
   });
 
   describe('Full Test Suite Execution', () => {
