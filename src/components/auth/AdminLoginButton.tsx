@@ -30,12 +30,19 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
     setLoginError(null);
 
     try {
+      console.log('Attempting login with credentials:', { username: credentials.username, password: '***' });
       const success = await loginUser(credentials);
+      console.log('Login result:', success);
       if (success) {
+        console.log('Login successful, closing modal');
         setShowModal(false);
         setCredentials({ username: '', password: '' });
+      } else {
+        console.log('Login failed');
+        setLoginError('Invalid credentials. Please try again.');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setLoginError('Login failed. Please try again.');
     } finally {
       setLoginLoading(false);

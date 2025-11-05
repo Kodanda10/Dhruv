@@ -27,10 +27,12 @@ export function useAuth(): UseAuthReturn {
    * Refresh authentication status
    */
   const refreshAuth = useCallback(async () => {
+    console.log('Refreshing authentication status...');
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       const status = await checkAuthStatus();
+      console.log('Auth status result:', status);
       setAuthState(status);
     } catch (error) {
       console.error('Failed to refresh auth:', error);
