@@ -853,8 +853,11 @@ export class LangGraphAIAssistant {
     reasoning?: string;
   }> {
     try {
+      // Set the current tweet in state for suggestions generation
+      this.state.currentTweet = tweet;
+
       // Generate suggestions based on tweet content
-      const suggestions = await this.processMessage(tweet.text, 'suggestion');
+      const suggestions = await this.generateAISuggestions();
 
       // Record health metrics (optional)
       try {
