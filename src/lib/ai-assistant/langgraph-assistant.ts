@@ -868,13 +868,13 @@ export class LangGraphAIAssistant {
       }
 
       return {
-        event_type: suggestions.event_type,
-        event_type_confidence: suggestions.event_type_confidence,
+        event_type: suggestions.eventTypes[0] || undefined,
+        event_type_confidence: 0.8, // Default confidence for suggestions
         locations: suggestions.locations,
-        people_mentioned: suggestions.people_mentioned,
-        organizations: suggestions.organizations,
-        schemes_mentioned: suggestions.schemes_mentioned,
-        reasoning: suggestions.reasoning
+        people_mentioned: [], // AISuggestions doesn't have this
+        organizations: [], // AISuggestions doesn't have this
+        schemes_mentioned: suggestions.schemes,
+        reasoning: `AI suggestions generated for tweet: ${tweet.text.substring(0, 100)}...`
       };
     } catch (error) {
       console.error('Error generating suggestions:', error);
