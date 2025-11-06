@@ -161,6 +161,7 @@ export default function AnalyticsDashboard() {
         <button
           onClick={fetchAnalyticsData}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200"
+          tabIndex={0}
         >
           पुनः प्रयास करें
         </button>
@@ -252,6 +253,7 @@ export default function AnalyticsDashboard() {
           <button
             onClick={clearFilters}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200"
+            tabIndex={0}
           >
             फ़िल्टर साफ करें
           </button>
@@ -262,14 +264,19 @@ export default function AnalyticsDashboard() {
       <div className="space-y-8">
         {/* A. इवेंट प्रकार विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🧩 A. इवेंट प्रकार विश्लेषण (Event Type Analysis)</h3>
+          <h2 className="text-xl font-semibold mb-4">🧩 A. इवेंट प्रकार विश्लेषण (Event Type Analysis)</h2>
           <p className="text-sm text-gray-600 mb-4">
             बैठक / समीक्षा / दौरा / लोकार्पण / शोक आदि
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Donut Chart Placeholder */}
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+            <div 
+              className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
+              role="img"
+              aria-label="इवेंट प्रकार विश्लेषण चार्ट - बैठक, दौरा, लोकार्पण आदि के वितरण को दिखाता है"
+              tabIndex={0}
+            >
               <div className="text-center">
                 <div className="text-4xl mb-2">📊</div>
                 <p className="text-sm text-gray-600">चार्ट: डोनट + टाइमलाइन</p>
@@ -292,12 +299,17 @@ export default function AnalyticsDashboard() {
 
         {/* B. भू-मानचित्रण और माइंडमैप */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🗺️ B. भू-मानचित्रण और माइंडमैप (Geo-Mapping & Mindmap)</h3>
+          <h2 className="text-xl font-semibold mb-4">🗺️ B. भू-मानचित्रण और माइंडमैप (Geo-Mapping & Mindmap)</h2>
           <p className="text-sm text-gray-600 mb-4">
             छत्तीसगढ़ → जिला → ब्लॉक → ग्राम पंचायत / वार्ड
           </p>
 
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div 
+            className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
+            role="img"
+            aria-label="भौगोलिक मानचित्रण - छत्तीसगढ़ के जिलों, ब्लॉकों और ग्राम पंचायतों का नक्शा"
+            tabIndex={0}
+          >
             <div className="text-center">
               <div className="text-4xl mb-2">🗺️</div>
               <p className="text-sm text-gray-600">हाइलाइट: दौरा की संख्या, स्थानों की कनेक्टिविटी</p>
@@ -307,7 +319,7 @@ export default function AnalyticsDashboard() {
 
         {/* C. टूर कवरेज विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🧭 C. टूर कवरेज विश्लेषण (Tour Coverage Analysis)</h3>
+          <h2 className="text-xl font-semibold mb-4">🧭 C. टूर कवरेज विश्लेषण (Tour Coverage Analysis)</h2>
           <p className="text-sm text-gray-600 mb-4">
             कुल जिलों / ग्रामों का कवरेज %
           </p>
@@ -321,7 +333,12 @@ export default function AnalyticsDashboard() {
                 <p className="text-sm text-gray-600">रायगढ़ जिला कवरेज</p>
               </div>
 
-              <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div 
+                className="h-32 bg-gray-50 rounded-lg flex items-center justify-center"
+                role="img"
+                aria-label="हीटमैप और टाइमलाइन स्लाइडर - दौरा कवरेज का विज़ुअल एनालिसिस"
+                tabIndex={0}
+              >
                 <p className="text-sm text-gray-600">हीटमैप + टाइमलाइन स्लाइडर</p>
               </div>
             </div>
@@ -340,12 +357,17 @@ export default function AnalyticsDashboard() {
 
         {/* D. विकास कार्य और लोकार्पण विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🏗️ D. विकास कार्य और लोकार्पण विश्लेषण</h3>
+          <h2 className="text-xl font-semibold mb-4">🏗️ D. विकास कार्य और लोकार्पण विश्लेषण</h2>
           <p className="text-sm text-gray-600 mb-4">
             कार्य प्रकार / स्थान / योजना नाम
           </p>
 
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div 
+            className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
+            role="img"
+            aria-label="विकास कार्य विश्लेषण चार्ट - जिलानुसार कार्य वितरण दिखाता है"
+            tabIndex={0}
+          >
             <div className="text-center">
               <div className="text-4xl mb-2">🏗️</div>
               <p className="text-sm text-gray-600">ग्राफ: जिलानुसार वितरण</p>
@@ -355,7 +377,7 @@ export default function AnalyticsDashboard() {
 
         {/* E. समाज आधारित पहुँच */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🫱 E. समाज आधारित पहुँच (Caste Equation / Community Outreach)</h3>
+          <h2 className="text-xl font-semibold mb-4">🫱 E. समाज आधारित पहुँच (Caste Equation / Community Outreach)</h2>
           <p className="text-sm text-gray-600 mb-4">
             साहू / तेली / मुस्लिम / यादव / अन्य समाज
           </p>
@@ -378,7 +400,7 @@ export default function AnalyticsDashboard() {
 
         {/* F. योजनाएँ / स्कीम विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🪔 F. योजनाएँ / स्कीम विश्लेषण (Scheme / Yojana)</h3>
+          <h2 className="text-xl font-semibold mb-4">🪔 F. योजनाएँ / स्कीम विश्लेषण (Scheme / Yojana)</h2>
           <p className="text-sm text-gray-600 mb-4">
             पीएमएवाई / जल जीवन मिशन / युवा स्वरोजगार आदि
           </p>
@@ -397,7 +419,7 @@ export default function AnalyticsDashboard() {
 
         {/* G. वर्ग-आधारित विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🧠 G. वर्ग-आधारित विश्लेषण (Varg-wise)</h3>
+          <h2 className="text-xl font-semibold mb-4">🧠 G. वर्ग-आधारित विश्लेषण (Varg-wise)</h2>
           <p className="text-sm text-gray-600 mb-4">
             महिला / युवा / किसान / वरिष्ठ नागरिक
           </p>
@@ -411,14 +433,19 @@ export default function AnalyticsDashboard() {
             ))}
           </div>
 
-          <div className="mt-4 h-32 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div 
+            className="mt-4 h-32 bg-gray-50 rounded-lg flex items-center justify-center"
+            role="img"
+            aria-label="वर्ग विश्लेषण चार्ट - महिला, युवा, किसान आदि वर्गों के इवेंट प्रकारों का विश्लेषण"
+            tabIndex={0}
+          >
             <p className="text-sm text-gray-600">चार्ट: वर्ग बनाम इवेंट प्रकार</p>
           </div>
         </div>
 
         {/* H. विषयगत विश्लेषण */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">📊 H. विषयगत विश्लेषण (Subject / Thematic Analysis)</h3>
+          <h2 className="text-xl font-semibold mb-4">📊 H. विषयगत विश्लेषण (Subject / Thematic Analysis)</h2>
           <p className="text-sm text-gray-600 mb-4">
             रोज़गार / शिक्षा / स्वास्थ्य / आधारभूत संरचना
           </p>
@@ -436,10 +463,20 @@ export default function AnalyticsDashboard() {
             </div>
 
             <div className="space-y-4">
-              <div className="h-24 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div 
+                className="h-24 bg-gray-50 rounded-lg flex items-center justify-center"
+                role="img"
+                aria-label="वर्डक्लाउड - विषयगत विश्लेषण के लिए प्रमुख शब्द दिखाता है"
+                tabIndex={0}
+              >
                 <p className="text-sm text-gray-600">वर्डक्लाउड</p>
               </div>
-              <div className="h-24 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div 
+                className="h-24 bg-gray-50 rounded-lg flex items-center justify-center"
+                role="img"
+                aria-label="सहसंबंध ग्राफ - विषयों के बीच संबंध दिखाता है"
+                tabIndex={0}
+              >
                 <p className="text-sm text-gray-600">सहसंबंध ग्राफ</p>
               </div>
             </div>
@@ -448,13 +485,18 @@ export default function AnalyticsDashboard() {
 
         {/* I. रायगढ़ विधानसभा अनुभाग */}
         <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold mb-4">🏛️ I. रायगढ़ विधानसभा अनुभाग (Dedicated Raigarh Section)</h3>
+          <h2 className="text-xl font-semibold mb-4">🏛️ I. रायगढ़ विधानसभा अनुभाग (Dedicated Raigarh Section)</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Micro-map */}
             <div>
               <h4 className="font-medium mb-3">🌍 माइक्रो-मैप: रायगढ़ जिला → ब्लॉक → वार्ड/ग्राम</h4>
-              <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div 
+                className="h-48 bg-gray-50 rounded-lg flex items-center justify-center"
+                role="img"
+                aria-label="रायगढ़ जिला माइक्रो-मैप - ब्लॉकों और वार्डों का विस्तृत नक्शा"
+                tabIndex={0}
+              >
                 <div className="text-center">
                   <div className="text-3xl mb-2">🗺️</div>
                   <p className="text-sm text-gray-600">रायगढ़ जिला का माइक्रो-मैप</p>
@@ -546,18 +588,21 @@ export default function AnalyticsDashboard() {
           <button
             onClick={() => handleExport('pdf')}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium"
+            tabIndex={0}
           >
             [ PDF ]
           </button>
           <button
             onClick={() => handleExport('excel')}
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 font-medium"
+            tabIndex={0}
           >
             [ Excel ]
           </button>
           <button
             onClick={() => handleExport('csv')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium"
+            tabIndex={0}
           >
             [ CSV ]
           </button>
