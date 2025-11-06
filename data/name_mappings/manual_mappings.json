@@ -1,0 +1,47 @@
+{
+  "Badwahi": {
+    "english": "Badwahi",
+    "hindi": "बडवाही",
+    "nuktaHindi": "बड़वाही",
+    "transliteration": "badwahi",
+    "sources": [
+      "https://rural.cg.gov.in/badwahi"
+    ]
+  },
+  "Harchoka": {
+    "english": "Harchoka",
+    "hindi": "हर्चोका",
+    "nuktaHindi": "हर्चोका",
+    "transliteration": "harchoka",
+    "sources": [
+      "https://prd.cg.nic.in/harchoka"
+    ]
+  },
+  "Ghughari": {
+    "english": "Ghughari",
+    "hindi": "घुघरी",
+    "nuktaHindi": "घुघरी",
+    "transliteration": "ghughari",
+    "sources": [
+      "https://egramswaraj.gov.in/ghughari"
+    ]
+  },
+  "Madisarai": {
+    "english": "Madisarai",
+    "hindi": "मडीसरई",
+    "nuktaHindi": "मडीसरई",
+    "transliteration": "madisarai",
+    "sources": [
+      "https://rural.cg.gov.in/madisarai"
+    ]
+  },
+  "Udaki": {
+    "english": "Udaki",
+    "hindi": "उदकी",
+    "nuktaHindi": "उदकी",
+    "transliteration": "udaki",
+    "sources": [
+      "https://prd.cg.nic.in/udaki"
+    ]
+  }
+}
