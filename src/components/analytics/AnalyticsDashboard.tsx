@@ -253,7 +253,6 @@ export default function AnalyticsDashboard() {
           <button
             onClick={clearFilters}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200"
-            tabIndex={0}
           >
             फ़िल्टर साफ करें
           </button>
@@ -273,9 +272,7 @@ export default function AnalyticsDashboard() {
             {/* Donut Chart Placeholder */}
             <div 
               className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
-              role="img"
               aria-label="इवेंट प्रकार विश्लेषण चार्ट - बैठक, दौरा, लोकार्पण आदि के वितरण को दिखाता है"
-              tabIndex={0}
             >
               <div className="text-center">
                 <div className="text-4xl mb-2">📊</div>
@@ -306,9 +303,7 @@ export default function AnalyticsDashboard() {
 
           <div 
             className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
-            role="img"
             aria-label="भौगोलिक मानचित्रण - छत्तीसगढ़ के जिलों, ब्लॉकों और ग्राम पंचायतों का नक्शा"
-            tabIndex={0}
           >
             <div className="text-center">
               <div className="text-4xl mb-2">🗺️</div>
@@ -335,9 +330,7 @@ export default function AnalyticsDashboard() {
 
               <div 
                 className="h-32 bg-gray-50 rounded-lg flex items-center justify-center"
-                role="img"
                 aria-label="हीटमैप और टाइमलाइन स्लाइडर - दौरा कवरेज का विज़ुअल एनालिसिस"
-                tabIndex={0}
               >
                 <p className="text-sm text-gray-600">हीटमैप + टाइमलाइन स्लाइडर</p>
               </div>
@@ -364,9 +357,7 @@ export default function AnalyticsDashboard() {
 
           <div 
             className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
-            role="img"
             aria-label="विकास कार्य विश्लेषण चार्ट - जिलानुसार कार्य वितरण दिखाता है"
-            tabIndex={0}
           >
             <div className="text-center">
               <div className="text-4xl mb-2">🏗️</div>
@@ -435,9 +426,7 @@ export default function AnalyticsDashboard() {
 
           <div 
             className="mt-4 h-32 bg-gray-50 rounded-lg flex items-center justify-center"
-            role="img"
             aria-label="वर्ग विश्लेषण चार्ट - महिला, युवा, किसान आदि वर्गों के इवेंट प्रकारों का विश्लेषण"
-            tabIndex={0}
           >
             <p className="text-sm text-gray-600">चार्ट: वर्ग बनाम इवेंट प्रकार</p>
           </div>
@@ -465,17 +454,13 @@ export default function AnalyticsDashboard() {
             <div className="space-y-4">
               <div 
                 className="h-24 bg-gray-50 rounded-lg flex items-center justify-center"
-                role="img"
                 aria-label="वर्डक्लाउड - विषयगत विश्लेषण के लिए प्रमुख शब्द दिखाता है"
-                tabIndex={0}
               >
                 <p className="text-sm text-gray-600">वर्डक्लाउड</p>
               </div>
               <div 
                 className="h-24 bg-gray-50 rounded-lg flex items-center justify-center"
-                role="img"
                 aria-label="सहसंबंध ग्राफ - विषयों के बीच संबंध दिखाता है"
-                tabIndex={0}
               >
                 <p className="text-sm text-gray-600">सहसंबंध ग्राफ</p>
               </div>
@@ -493,9 +478,7 @@ export default function AnalyticsDashboard() {
               <h4 className="font-medium mb-3">🌍 माइक्रो-मैप: रायगढ़ जिला → ब्लॉक → वार्ड/ग्राम</h4>
               <div 
                 className="h-48 bg-gray-50 rounded-lg flex items-center justify-center"
-                role="img"
                 aria-label="रायगढ़ जिला माइक्रो-मैप - ब्लॉकों और वार्डों का विस्तृत नक्शा"
-                tabIndex={0}
               >
                 <div className="text-center">
                   <div className="text-3xl mb-2">🗺️</div>
@@ -588,21 +571,18 @@ export default function AnalyticsDashboard() {
           <button
             onClick={() => handleExport('pdf')}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium"
-            tabIndex={0}
           >
             [ PDF ]
           </button>
           <button
             onClick={() => handleExport('excel')}
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 font-medium"
-            tabIndex={0}
           >
             [ Excel ]
           </button>
           <button
             onClick={() => handleExport('csv')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium"
-            tabIndex={0}
           >
             [ CSV ]
           </button>

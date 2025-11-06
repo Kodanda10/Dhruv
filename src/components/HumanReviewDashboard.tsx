@@ -5,7 +5,7 @@ import { matchTagFlexible, matchTextFlexible } from '@/utils/tag-search';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Route } from 'next';
-import Card from './Card';
+import Card from '@/components/ui/Card';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
 
@@ -49,6 +49,7 @@ export default function HumanReviewDashboard() {
 
   // Sync from URL params
   useEffect(() => {
+    if (!searchParams) return;
     const loc = searchParams.get('loc') ?? '';
     const tag = searchParams.get('tag') ?? '';
     const from = searchParams.get('from') ?? '';

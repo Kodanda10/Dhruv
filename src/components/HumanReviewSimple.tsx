@@ -1,7 +1,7 @@
 "use client";
 import parsedTweets from '../../data/parsed_tweets.json';
 import { useState } from 'react';
-import Card from './Card';
+import Card from '@/components/ui/Card';
 import SoftButton from './SoftButton';
 
 type ParsedTweet = {
@@ -21,7 +21,7 @@ type ParsedTweet = {
 };
 
 export default function HumanReviewSimple() {
-  const [tweets, setTweets] = useState<ParsedTweet[]>(parsedTweets as ParsedTweet[]);
+  const [tweets, setTweets] = useState<ParsedTweet[]>(parsedTweets as unknown as ParsedTweet[]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
 

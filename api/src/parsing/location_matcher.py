@@ -15,16 +15,25 @@ from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 from .normalization import fold_nukta, translit_basic, expand_hinglish_variants
 
+# Optional semantic enhancement
+try:
+    from .semantic_location_linker import SemanticLocationLinker
+    SEMANTIC_AVAILABLE = True
+except ImportError:
+    SEMANTIC_AVAILABLE = False
+    SemanticLocationLinker = None
+
 
 class LocationMatcher:
     """Matches location mentions against geography datasets"""
     
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Optional[Path] = None, enable_semantic: bool = True):
         """
         Initialize location matcher with geography data.
         
         Args:
             data_dir: Path to data directory (defaults to project data/)
+            enable_semantic: Whether to enable semantic search enhancement
         """
         if data_dir is None:
             data_dir = Path(__file__).parent.parent.parent.parent / 'data'
@@ -38,6 +47,17 @@ class LocationMatcher:
         
         # Build location index for fast matching
         self.location_index = self._build_location_index()
+        
+        # Initialize semantic linker if available and enabled
+        self.semantic_linker = None
+        if enable_semantic and SEMANTIC_AVAILABLE:
+            try:
+                self.semantic_linker = SemanticLocationLinker()
+                print("✅ Semantic location search enabled")
+            except Exception as e:
+                print(f"⚠️  Semantic search unavailable: {e}")
+        elif enable_semantic and not SEMANTIC_AVAILABLE:
+            print("⚠️  Semantic search libraries not available")
     
     def _load_cg_geography(self) -> List[Dict]:
         """Load Chhattisgarh geography dataset."""
@@ -206,6 +226,31 @@ class LocationMatcher:
         if not text or not text.strip():
             return []
         
+        # Get deterministic matches
+        deterministic_matches = self._extract_locations_deterministic(text, min_confidence)
+        
+        # Enhance with semantic search if available
+        if self.semantic_linker:
+            enhanced_matches = self.semantic_linker.enhance_location_matches(
+                text, deterministic_matches
+            )
+            # Filter by confidence again after enhancement
+            final_matches = [m for m in enhanced_matches if m.get('confidence', 0) >= min_confidence]
+            return final_matches
+        
+        return deterministic_matches
+    
+    def _extract_locations_deterministic(self, text: str, min_confidence: float = 0.5) -> List[Dict]:
+        """
+        Extract locations using deterministic matching only.
+        
+        Args:
+            text: Input text
+            min_confidence: Minimum confidence threshold
+        
+        Returns:
+            List of matched locations
+        """
         # Tokenize text (simple word-based)
         words = re.findall(r'[\w\u0900-\u097F]+', text)
         
