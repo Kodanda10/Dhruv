@@ -168,6 +168,38 @@ All scripts are designed to be run stepwise. Always validate that four variants 
    - Generates 20k synthetic entries for dev/UI testing only.
    - Not an official data source.
 
+6) Multilingual Semantic Location Linker Testing (CLI Tool)
+   Module: api/src/parsing/semantic_location_linker_test.py
+   Description:
+   - CLI test harness for testing the multilingual semantic location linker.
+   - Supports Hindi, English, and transliterated queries with configurable backends.
+   - Features: auto-detection, transliteration support, Hindi synonym expansion, FAISS/Milvus backends.
+
+   Usage examples:
+   - Basic Hindi query:
+     - python -m api.src.parsing.semantic_location_linker_test "रायगढ़ कलेक्टरेट"
+   - English query with FAISS backend:
+     - python -m api.src.parsing.semantic_location_linker_test --backend faiss "bilaspur district"
+   - Multiple matches with custom threshold:
+     - python -m api.src.parsing.semantic_location_linker_test --limit 5 --min-score 0.8 "कोरबा शहर"
+   - Disable transliteration:
+     - python -m api.src.parsing.semantic_location_linker_test --no-transliteration "रायगढ़"
+   - Disable synonym expansion:
+     - python -m api.src.parsing.semantic_location_linker_test --no-synonyms "बिलासपुर जिला"
+   - Verbose output:
+     - python -m api.src.parsing.semantic_location_linker_test --verbose "कोरबा शहर"
+
+   Options:
+   - --backend {auto,milvus,faiss}: Backend selection (default: auto)
+   - --limit LIMIT: Max matches to return (default: 3)
+   - --min-score MIN_SCORE: Minimum similarity threshold (default: 0.7)
+   - --no-transliteration: Disable transliteration support
+   - --no-synonyms: Disable Hindi synonym expansion
+   - --milvus-uri MILVUS_URI: Override Milvus URI
+   - --verbose, -v: Enable detailed output
+
+   Output: Formatted results showing matched locations with similarity scores, supporting both Hindi and English queries.
+
 --------------------------------------------------------------------------------
 MapmyIndia Geocoding (rate limits & safety)
 --------------------------------------------------------------------------------
