@@ -1,0 +1,39 @@
+name: Parser Watchdog
+
+on:
+  schedule:
+    # Run every 2 hours to check for failed rows
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  RETRY_DELAY_HOURS: 4
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run parser watchdog
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RETRY_DELAY_HOURS: 4
+        run: |
+          node scripts/ops/parser-watchdog.js
+

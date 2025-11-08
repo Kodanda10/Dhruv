@@ -1,0 +1,48 @@
+name: Fetch Tweets Hourly
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+
+jobs:
+  fetch-tweets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20 # Allow time for rate limit pauses
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+          pip install python-dotenv
+      
+      - name: Fetch tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+        run: |
+          python scripts/fetch_tweets.py --handle opchoudhary --resume
+      
+      - name: Log fetch metrics
+        if: always()
+        run: |
+          echo "Fetch job completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # Metrics will be logged by the script itself
+
