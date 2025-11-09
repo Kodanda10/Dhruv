@@ -6,6 +6,27 @@
 
 ---
 
+## 🔁 2025-11-08 Pipeline Drill Update (WIP)
+
+- **Objective:** Validate the production pipeline end-to-end (Neon DB + parsing engine + review + analytics).
+- **Fetch:** ✅ `python3 scripts/fetch_tweets.py --handle opchoudhary --resume`
+  - Added the missing `media_urls`, `urls`, engagement counters, and `processed_at` columns so inserts succeed.
+  - Script now imports `time` so the rate-limit cooldown works.
+- **Parse:** ✅ `node scripts/parse_tweets_with_three_layer.js` (with `PARSE_BATCH_LIMIT=5`)
+  - Added `scripts/tsconfig.scripts.json` + `ts-node` register so the TS engine loads.
+  - Writes to `parsed_events` (unique index on `tweet_id`) using regex fallback while Gemini/Ollama are rate-limited.
+- **Review:** ✅ Three additional tweets approved via `/api/review/update` using the admin session (no SQL!); reviewer metadata (`reviewed_by='admin'`, notes) now flows into CommandView + analytics.
+- **Analytics:** ✅ `/api/analytics` reflects **5** approved rows and exports match the live data.
+- **Analytics:** ✅ `/api/analytics` reflects the approved rows (`total_tweets = 2`) and exports match the live data.
+- **CommandView metrics:** ✅ `npm run ops:commandview` summarizes the queue + recent decisions for Slack alerts.
+
+📌 **Next Steps:**
+1. Capture screenshots of the `/analytics` dashboard + export artifacts with the 5-tweet dataset for the go-live appendix.
+2. Expand approvals via the UI queue (e.g., daily Ops triage) to keep analytics real-time.
+3. Wire `npm run ops:commandview` into Slack/BetterStack (severity `alert` exits with code 1) and proceed with the legacy archive plan once the drill is fully green.
+
+---
+
 ## 🎊 **EVERYTHING IS WORKING!**
 
 ### **Live Dashboard**
@@ -327,4 +348,3 @@ python check_tweets.py
 
 *Last Updated: October 17, 2025 13:40 UTC*  
 *Status: ✅ SUCCESS - System Fully Operational*
-

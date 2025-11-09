@@ -45,11 +45,6 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
   const [error, setError] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
 
-  // Only show for authenticated admin users
-  if (!isAuthenticated) {
-    return null;
-  }
-
   const fetchAISuggestions = useCallback(async () => {
     if (isLoading) return;
 
@@ -106,6 +101,10 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
     setHasInteracted(true);
     setSuggestion(null);
   }, []);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
@@ -263,7 +262,7 @@ export default function AIReviewAssistant({ tweet, onSuggestionAccept }: AIRevie
         <div className="text-center py-8 text-blue-700">
           <div className="text-4xl mb-3">🤖</div>
           <p className="text-sm">
-            AI सहायक से सटीक वर्गीकरण सुझाव प्राप्त करने के लिए "पुनः प्राप्त करें" बटन पर क्लिक करें
+            AI सहायक से सटीक वर्गीकरण सुझाव प्राप्त करने के लिए &quot;पुनः प्राप्त करें&quot; बटन पर क्लिक करें
           </p>
         </div>
       )}

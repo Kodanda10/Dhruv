@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 const SESSION_EXPIRY_HOURS = 24;
 const TOKEN_SECRET = process.env.SESSION_SECRET || 'default-session-secret-change-in-production';

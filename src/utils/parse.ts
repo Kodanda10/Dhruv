@@ -60,14 +60,15 @@ const NOUN_TAG_KEYWORDS = [
 ];
 
 export function parsePost(post: Post) {
+  const content = post.content || '';
   const when = formatHindiDate(post.timestamp);
   const whereSet = new Set<string>();
   // Direct matches from known list
-  const matchWhere = post.content.match(PLACE_REGEX) || [];
+  const matchWhere = content.match(PLACE_REGEX) || [];
   matchWhere.forEach((w) => whereSet.add(w));
   // Heuristic: tokens before 'में' (e.g., 'रायगढ़ में' -> 'रायगढ़')
   // Replace unsupported \p{L} (Python-style) with explicit Unicode ranges + ASCII letters
-  const inMatches = Array.from(post.content.matchAll(/([\u0900-\u097F\u0600-\u06FFA-Za-z ]{2,}?)\s+में/gu));
+  const inMatches = Array.from(content.matchAll(/([\u0900-\u097F\u0600-\u06FFA-Za-z ]{2,}?)\s+में/gu));
   for (const m of inMatches) {
     const token = (m[1] || '').trim();
     if (token.length >= 2) {
@@ -78,23 +79,23 @@ export function parsePost(post: Post) {
   }
   const where = Array.from(whereSet);
 
-  const hashtagsSet = new Set<string>(post.content.match(HASHTAG_REGEX) || []);
-  const mentions = Array.from(new Set(post.content.match(MENTION_REGEX) || []));
+  const hashtagsSet = new Set<string>(content.match(HASHTAG_REGEX) || []);
+  const mentions = Array.from(new Set(content.match(MENTION_REGEX) || []));
 
   const what: string[] = [];
   for (const k of ACTION_KEYWORDS) {
-    if (post.content.includes(k)) {
+    if (content.includes(k)) {
       what.push(k);
       hashtagsSet.add(`#${k}`);
     }
   }
   for (const k of NOUN_TAG_KEYWORDS) {
-    if (post.content.includes(k)) hashtagsSet.add(`#${k}`);
+    if (content.includes(k)) hashtagsSet.add(`#${k}`);
   }
 
   const hashtags = Array.from(hashtagsSet);
 
-  const how = post.content.trim().slice(0, 180);
+  const how = content.trim().slice(0, 180);
 
   return {
     when,

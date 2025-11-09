@@ -1,11 +1,13 @@
-import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
-import HomePage from '@/app/page';
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(),
+}));
 
-describe('HomePage', () => {
-  it('renders heading in Hindi', () => {
-    render(<HomePage />);
-    expect(screen.getByRole('heading', { name: 'ध्रुव डैशबोर्ड' })).toBeInTheDocument();
+const { redirect } = require('next/navigation') as { redirect: jest.Mock };
+const RootRedirect = require('@/app/page').default as () => void;
+
+describe('RootRedirect', () => {
+  it('redirects visitors to /analytics', () => {
+    RootRedirect();
+    expect(redirect).toHaveBeenCalledWith('/analytics');
   });
 });
-

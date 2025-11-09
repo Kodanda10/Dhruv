@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginCredentials } from '@/lib/auth/auth';
 
@@ -16,6 +16,11 @@ interface AdminLoginButtonProps {
 
 export default function AdminLoginButton({ className = '' }: AdminLoginButtonProps) {
   const { isAuthenticated, user, loginUser, logoutUser, loading, error } = useAuth();
+  
+  // Debug: Log button state
+  useEffect(() => {
+    console.log('AdminLoginButton state:', { isAuthenticated, loading, hasUser: !!user });
+  }, [isAuthenticated, loading, user]);
   const [showModal, setShowModal] = useState(false);
   const [credentials, setCredentials] = useState<LoginCredentials>({
     username: '',
@@ -37,6 +42,9 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
         console.log('Login successful, closing modal');
         setShowModal(false);
         setCredentials({ username: '', password: '' });
+        // Force a page refresh to ensure all components get updated auth state
+        // This ensures tabs and protected pages update correctly
+        window.location.reload();
       } else {
         console.log('Login failed');
         setLoginError('Invalid credentials. Please try again.');
@@ -50,7 +58,12 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
   };
 
   const handleLogout = async () => {
-    await logoutUser();
+    const success = await logoutUser();
+    if (success) {
+      // Force a page refresh to ensure all components get updated auth state
+      // This ensures tabs update correctly and protected pages redirect
+      window.location.href = '/analytics';
+    }
   };
 
   const handleInputChange = (field: keyof LoginCredentials) =>
@@ -65,9 +78,10 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
     return (
       <button
         onClick={handleLogout}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[var(--rejected)] hover:bg-[color-mix(in_srgb,var(--rejected),black_10%)] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--rejected)] focus:ring-offset-2 ${className}`}
+        className={`relative z-50 flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[var(--rejected)] hover:bg-[color-mix(in_srgb,var(--rejected),black_10%)] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--rejected)] focus:ring-offset-2 cursor-pointer ${className}`}
         aria-label="Admin logout"
         disabled={loading}
+        style={{ pointerEvents: loading ? 'none' : 'auto' }}
       >
         <span>Admin: {user.username}</span>
         <span className="text-xs">⎋</span>
@@ -78,10 +92,21 @@ export default function AdminLoginButton({ className = '' }: AdminLoginButtonPro
   return (
     <>
       <button
-        onClick={() => setShowModal(true)}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#5D3FD3] hover:bg-[#8B1A8B] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#5D3FD3] focus:ring-offset-2 ${className}`}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Login button clicked');
+          setShowModal(true);
+        }}
+        className={`relative z-[100] flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#5D3FD3] hover:bg-[#8B1A8B] rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#5D3FD3] focus:ring-offset-2 cursor-pointer ${className}`}
         aria-label="Admin login"
         disabled={loading}
+        style={{ 
+          pointerEvents: loading ? 'none' : 'auto',
+          position: 'relative',
+          zIndex: 100
+        }}
+        type="button"
       >
         <span>🔑</span>
         <span>Admin Login</span>

@@ -5,7 +5,9 @@ import type { Route } from 'next';
 
 export default function Metrics() {
   const router = useRouter();
-  const { places, actions } = computeMetrics();
+  // computeMetrics now requires data parameter - should fetch from API
+  // For now, return empty metrics (component should fetch data from API)
+  const { places, actions } = computeMetrics([]);
   return (
     <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-6 text-gray-900">
       <div>

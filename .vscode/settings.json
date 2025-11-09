@@ -18,6 +18,15 @@
 				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
 				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
 			}
+		},
+		"byterover-mcp": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"--package=@byterover/mcp",
+				"@byterover/mcp"
+			],
+			"env": {}
 		}
 	},
 	"codeQL.createQuery.qlPackLocation": "/Users/abhijita/Projects/Project_Dhruv"

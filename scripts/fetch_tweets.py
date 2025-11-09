@@ -13,6 +13,7 @@ import os
 import sys
 import argparse
 import logging
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 import psycopg2
@@ -272,4 +273,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

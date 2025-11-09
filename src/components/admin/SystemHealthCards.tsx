@@ -25,6 +25,8 @@ interface HealthResponse {
     twitter_api?: HealthService;
     gemini_api?: HealthService;
     ollama_api?: HealthService;
+    flask_api?: HealthService;
+    mapmyindia_api?: HealthService;
   };
   frontend?: {
     build_status: string;
@@ -110,9 +112,9 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
   }> = ({ title, status, metrics, details, testId }) => (
     <div
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border cursor-pointer",
-        "hover:shadow-lg transition-shadow duration-200",
-        "focus:outline-none focus:ring-2 focus:ring-blue-500"
+        "glassmorphic-card p-4 cursor-pointer border border-white/10",
+        "hover:border-[#8BF5E6]/30 hover:shadow-[0_0_15px_rgba(139,245,230,0.2)] transition-all duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-[#8BF5E6]/50"
       )}
       onClick={() => setSelectedCard(selectedCard === testId ? null : testId)}
       onKeyDown={(e) => {
@@ -128,7 +130,7 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
       data-testid={`health-card-${testId}`}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-white">
           {title}
         </h3>
         <div
@@ -140,15 +142,15 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
 
       <div className="space-y-1">
         {metrics.map((metric, index) => (
-          <p key={index} className="text-sm text-gray-600 dark:text-gray-300">
+          <p key={index} className="text-sm text-secondary">
             {metric}
           </p>
         ))}
       </div>
 
       {selectedCard === testId && details && (
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 pt-3 border-t border-white/10">
+          <p className="text-sm text-muted">
             {details}
           </p>
         </div>
@@ -160,10 +162,10 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
     return (
       <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 animate-pulse">
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
-            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+          <div key={i} className="glassmorphic-card p-4 animate-pulse">
+            <div className="h-4 bg-white/10 rounded mb-2"></div>
+            <div className="h-3 bg-white/10 rounded mb-1"></div>
+            <div className="h-3 bg-white/10 rounded"></div>
           </div>
         ))}
       </div>
@@ -172,19 +174,19 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
 
   if (error) {
     return (
-      <div className={cn("bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4", className)}>
+      <div className={cn("glassmorphic-card border border-red-500/30 p-4", className)}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium text-red-800 dark:text-red-200">
+            <h3 className="text-lg font-medium text-red-300">
               स्वास्थ्य स्थिति लोड करने में असमर्थ
             </h3>
-            <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+            <p className="text-sm text-red-400 mt-1">
               {error}
             </p>
           </div>
           <button
             onClick={fetchHealthData}
-            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="neon-button px-3 py-1 rounded focus:outline-none"
             aria-label="पुनः प्रयास करें"
           >
             पुनः प्रयास
@@ -197,7 +199,7 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
   if (!healthData) {
     return (
       <div className={cn("text-center py-8", className)}>
-        <p className="text-gray-500 dark:text-gray-400">कोई स्वास्थ्य डेटा उपलब्ध नहीं</p>
+        <p className="text-secondary">कोई स्वास्थ्य डेटा उपलब्ध नहीं</p>
       </div>
     );
   }
@@ -205,19 +207,19 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
   return (
     <div className={cn("space-y-6", className)}>
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-white">
           सिस्टम स्वास्थ्य अवलोकन
         </h2>
         <button
           onClick={fetchHealthData}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="neon-button px-4 py-2 rounded focus:outline-none"
           aria-label="स्वास्थ्य डेटा रिफ्रेश करें"
         >
           रिफ्रेश
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Database Health */}
         {healthData.services?.database && (
           <HealthCard
@@ -233,15 +235,98 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
           />
         )}
 
+        {/* Twitter API Health */}
+        {healthData.services?.twitter_api && (
+          <HealthCard
+            title="Twitter API"
+            status={healthData.services.twitter_api.status}
+            metrics={[
+              `स्थिति: ${getStatusText(healthData.services.twitter_api.status)}`,
+              `Latency: ${healthData.services.twitter_api.latency || 'N/A'}ms`,
+              healthData.services.twitter_api.remaining_calls !== undefined
+                ? `Rate Limit: ${healthData.services.twitter_api.remaining_calls} remaining`
+                : healthData.services.twitter_api.error || 'Connected'
+            ]}
+            details={healthData.services.twitter_api.user_found 
+              ? "Twitter API v2 connectivity verified - user lookup successful"
+              : "Twitter API connectivity and rate limit status"}
+            testId="twitter-api"
+          />
+        )}
+
+        {/* Gemini API Health */}
+        {healthData.services?.gemini_api && (
+          <HealthCard
+            title="Gemini API"
+            status={healthData.services.gemini_api.status}
+            metrics={[
+              `स्थिति: ${getStatusText(healthData.services.gemini_api.status)}`,
+              `Latency: ${healthData.services.gemini_api.latency || 'N/A'}ms`,
+              healthData.services.gemini_api.models_available !== undefined
+                ? `Models: ${healthData.services.gemini_api.models_available} available`
+                : healthData.services.gemini_api.error || 'Connected'
+            ]}
+            details="Google Gemini API connectivity and model availability"
+            testId="gemini-api"
+          />
+        )}
+
+        {/* Ollama API Health */}
+        {healthData.services?.ollama_api && (
+          <HealthCard
+            title="Ollama API"
+            status={healthData.services.ollama_api.status}
+            metrics={[
+              `स्थिति: ${getStatusText(healthData.services.ollama_api.status)}`,
+              `Latency: ${healthData.services.ollama_api.latency || 'N/A'}ms`,
+              healthData.services.ollama_api.models_available !== undefined
+                ? `Models: ${healthData.services.ollama_api.models_available} available`
+                : healthData.services.ollama_api.error || 'Connected'
+            ]}
+            details="Ollama local AI service connectivity and model availability"
+            testId="ollama-api"
+          />
+        )}
+
+        {/* Flask API Health */}
+        {healthData.services?.flask_api && (
+          <HealthCard
+            title="Flask API Server"
+            status={healthData.services.flask_api.status}
+            metrics={[
+              `स्थिति: ${getStatusText(healthData.services.flask_api.status)}`,
+              `Latency: ${healthData.services.flask_api.latency || 'N/A'}ms`,
+              healthData.services.flask_api.note || healthData.services.flask_api.error || 'Connected'
+            ]}
+            details={healthData.services.flask_api.note || "Flask API server health and status"}
+            testId="flask-api"
+          />
+        )}
+
+        {/* MapMyIndia API Health */}
+        {healthData.services?.mapmyindia_api && (
+          <HealthCard
+            title="MapMyIndia API"
+            status={healthData.services.mapmyindia_api.status}
+            metrics={[
+              `स्थिति: ${getStatusText(healthData.services.mapmyindia_api.status)}`,
+              `Latency: ${healthData.services.mapmyindia_api.latency || 'N/A'}ms`,
+              healthData.services.mapmyindia_api.note || healthData.services.mapmyindia_api.error || 'Connected'
+            ]}
+            details={healthData.services.mapmyindia_api.note || "MapMyIndia geocoding API connectivity"}
+            testId="mapmyindia-api"
+          />
+        )}
+
         {/* API Chain Health */}
         <HealthCard
           title="API Chain Health"
           status={healthData.status}
           metrics={[
-            `स्थिति: ${getStatusText(healthData.status)}`,
-            `Twitter API: ${getStatusText(healthData.services?.twitter_api?.status || 'unknown')}`,
-            `Gemini API: ${getStatusText(healthData.services?.gemini_api?.status || 'unknown')}`,
-            `Ollama API: ${getStatusText(healthData.services?.ollama_api?.status || 'unknown')}`
+            `Overall: ${getStatusText(healthData.status)}`,
+            `Twitter: ${getStatusText(healthData.services?.twitter_api?.status || 'unknown')}`,
+            `Gemini: ${getStatusText(healthData.services?.gemini_api?.status || 'unknown')}`,
+            `Ollama: ${getStatusText(healthData.services?.ollama_api?.status || 'unknown')}`
           ]}
           details="Complete API chain health: Fetch → Parse → Review → Analytics"
           testId="api-chain"
@@ -251,11 +336,11 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
         {healthData.frontend && (
           <HealthCard
             title="Frontend Build"
-            status={healthData.frontend.build_status === 'success' ? 'healthy' : 'unhealthy'}
+            status={healthData.frontend.build_status === 'success' || healthData.frontend.build_status === 'production-ready' ? 'healthy' : 'degraded'}
             metrics={[
-              `Build Status: ${healthData.frontend.build_status}`,
-              `Bundle Size: ${healthData.frontend.bundle_size}`,
-              `Last Build: ${new Date(healthData.frontend.last_build).toLocaleString('hi-IN')}`
+              `Status: ${healthData.frontend.build_status}`,
+              `Bundle: ${healthData.frontend.bundle_size}`,
+              `Build: ${healthData.frontend.last_build.substring(0, 8)}...`
             ]}
             details="Next.js build status and performance metrics"
             testId="frontend"

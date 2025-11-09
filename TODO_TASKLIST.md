@@ -119,6 +119,32 @@ Legend: [ ] pending • [~] in_progress • [x] completed (UTC timestamps)
 - Any attempt to implement parsing, embedding retrieval, deterministic/semantic linking, or JSON normalization before Phase 5 will violate scope lock.
 - Completion Criterion for Phase 4: All planning artifacts + flags + placeholder tests merged (green CI) with zero runtime logic added.
 
+---
+
+## Phase 5 — Production Hardening (In Progress)
+
+- [ ] **PH-01: High-volume ingestion (2,500+ tweets)**
+  - [ ] Hourly batch fetch via existing script/cron (`--resume`), keeping `raw_tweets` schema (urls + engagement + processed_at) in sync across Neon + local worktrees.
+  - [ ] Monitor rate limits + queue depth; page Ops if `npm run ops:commandview` reports `severity=alert` (exit code 1).
+- [ ] **PH-02: Three-layer parsing at scale**
+  - [ ] Run `scripts/parse_tweets_with_three_layer.js` with `PARSE_BATCH_LIMIT` batches, provisioning Gemini/Ollama quotas or pooling keys.
+  - [ ] Add queue table / status updates so tweets move from `pending` → `parsed` → `failed` deterministically.
+- [ ] **PH-03: Consensus → Review → Analytics handoff**
+  - [ ] Keep Consensus voting (Gemini → Ollama → Regex) wired to `applyConsensusVoting`, ensuring failed tweets are re-queued.
+  - [ ] Reviewers approve via `/review` UI → `/api/review/update` so `reviewed_by`, notes, and audit logs populate CommandView + analytics.
+  - [ ] `/api/analytics` remains gated to `needs_review=false` and `review_status='approved'`.
+- [ ] **PH-04: Local validation + screenshots**
+  - [ ] `npm ci && npm run dev`, login via `/api/auth/login`, walk `/home`, `/review`, `/commandview`, `/analytics`.
+  - [ ] Capture dashboard + export screenshots for `DASHBOARD_LIVE_SUMMARY.md`.
+- [ ] **PH-05: CI/CD tightening**
+  - [ ] Fix lint errors (DONE ✅) and keep suites green.
+  - [ ] Re-enable coverage, API tests, CodeQL, web-perf, perf-k6, e2e smoke once local runs stabilize.
+  - [ ] Push `analysis-main` once lint/tests are green (currently only local edits; nothing pushed).
+- [ ] **PH-06: Production isolation + legacy archive**
+  - [ ] Tag the release branch, freeze production-ready code.
+  - [ ] Move experimental branches/worktrees + heavy archives into `archive/ga-legacy/`.
+  - [ ] Update README/runbook with final architecture + deployment steps for client handoff.
+
 ### PR 38 — CI Checks Tracking (feat: SOTA Parsing Engine Bootstrap (Planning Phase))
 - [ ] PR38-01: Temporarily enforce coverage gate at 85/70 to unblock; schedule restoration to 95/70 post-hardening.
 - [ ] PR38-02: Resolve axe-core accessibility contrast issues on homepage/review links (WCAG 2.1 AA).
@@ -210,3 +236,26 @@ Legend: [ ] pending • [~] in_progress • [x] completed (UTC timestamps)
 - All tasks: TDD red→green→refactor, coverage ≥85% lines/70% branches.
 - If any gate fails, stop and fix before proceeding.
 - Completion: Full pipeline tested E2E, metrics stable, rollback verified.
+
+---
+
+## Phase 6 — Production Hardening & Dashboard Launch
+
+- [ ] PH-01: **Analytics Export Suite**
+  - [ ] PH-01.1: Stream real PDF exports (charts, Hindi labels) using live analytics payload and attach download tests.
+  - [ ] PH-01.2: Generate Excel & CSV exports (same filters/date ranges) and add Jest/Playwright assertions.
+  - [ ] PH-01.3: CLI command to validate exports end-to-end (CI job + docs).
+- [ ] PH-02: **Dashboard Visualization Upgrades**
+  - [ ] PH-02.1: Replace map/heatmap placeholders (Geo-mapping module, Raigarh micro-map, class-wise chart) with live Recharts/D3 visualizations.
+  - [ ] PH-02.2: Screenshot or Percy-style regression tests for each module (Hindi copy + data states).
+- [ ] PH-03: **Observability + Auth + CI Restore**
+  - [ ] PH-03.1: Reinstate `/api/health`, `/api/system/health`, `/ready`, `/metrics` backed by Neon/Redis/Render.
+  - [ ] PH-03.2: Enforce admin auth & session rules (Home/Review/CommandView gated; Analytics public) per CommandView spec.
+  - [ ] PH-03.3: Re-enable Ironclad CI jobs (lint, typecheck, unit, coverage, security, perf, a11y) and document the green run.
+- [ ] PH-04: **Milvus/FAISS Verification**
+  - [ ] PH-04.1: Bring up Milvus/FAISS (docker-compose-milvus) and confirm embeddings ingestion + query accuracy.
+  - [ ] PH-04.2: Document latency/precision metrics and add automated regression tests for semantic search.
+- [ ] PH-05: **Admin Navigation & Route Guards**
+  - [ ] PH-05.1: Implement CommandView route/tab with conditional nav; default `/`→`/analytics`, unknown → `/analytics`.
+  - [ ] PH-05.2: Add auth middleware/tests ensuring only admins can access Home/Review/CommandView; logout drops to Analytics-only view.
+  - [ ] PH-05.3: Playwright coverage for tab visibility, redirect behavior, and restricted routes.

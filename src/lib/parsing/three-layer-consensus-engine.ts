@@ -72,24 +72,36 @@ export class ThreeLayerConsensusEngine {
       return this.createEmptyResult(tweetId);
     }
 
-    // Execute all three layers in parallel for maximum efficiency
-    const layerPromises = [
-      this.callGeminiLayer(tweetText, tweetId).catch(err => {
-        console.warn(`Gemini layer failed for ${tweetId}:`, err.message);
-        return this.fallbackRegexResult(tweetText, 'gemini');
-      }),
-      this.callOllamaLayer(tweetText, tweetId).catch(err => {
-        console.warn(`Ollama layer failed for ${tweetId}:`, err.message);
-        return this.fallbackRegexResult(tweetText, 'ollama');
-      }),
-      Promise.resolve(this.parseWithRegex(tweetText))
-    ];
-
-    const layerResults = await Promise.all(layerPromises);
-    const successfulResults: LayerResult[] = layerResults.map((result, index) => ({
-      ...result,
-      layer: ['gemini', 'ollama', 'regex'][index] as 'gemini' | 'ollama' | 'regex'
-    }));
+    // Execute layers sequentially to respect rate limits
+    // Gemini first (most accurate), then Ollama, then regex fallback
+    const layerResults: LayerResult[] = [];
+    
+    // Try Gemini first (with rate limiting)
+    try {
+      const geminiResult = await this.callGeminiLayer(tweetText, tweetId);
+      layerResults.push({ ...geminiResult, layer: 'gemini' });
+    } catch (err: any) {
+      console.warn(`Gemini layer failed for ${tweetId}:`, err.message);
+      layerResults.push({ ...this.fallbackRegexResult(tweetText, 'gemini'), layer: 'gemini' });
+    }
+    
+    // Small delay before Ollama to avoid hitting rate limits
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+    
+    // Try Ollama second (with rate limiting)
+    try {
+      const ollamaResult = await this.callOllamaLayer(tweetText, tweetId);
+      layerResults.push({ ...ollamaResult, layer: 'ollama' });
+    } catch (err: any) {
+      console.warn(`Ollama layer failed for ${tweetId}:`, err.message);
+      layerResults.push({ ...this.fallbackRegexResult(tweetText, 'ollama'), layer: 'ollama' });
+    }
+    
+    // Regex is always available (no rate limits)
+    layerResults.push({ ...this.parseWithRegex(tweetText), layer: 'regex' });
+    
+    // Use the layerResults directly (already have layer property set)
+    const successfulResults: LayerResult[] = layerResults;
 
     // Apply consensus voting
     const consensusResult = this.applyConsensusVoting(successfulResults, tweetText, tweetDate);

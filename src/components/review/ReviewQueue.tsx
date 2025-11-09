@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import parsedTweets from '../../../data/parsed_tweets.json';
+// Removed mock data import - using only database data
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -58,6 +58,7 @@ export default function ReviewQueue() {
   const [corrections, setCorrections] = useState<Record<string, Correction[]>>({});
   const [sortBy, setSortBy] = useState<'confidence' | 'date'>('confidence');
   const [customEventTypes, setCustomEventTypes] = useState<string[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
   const allEventOptions = useMemo(() => {
     const custom = customEventTypes.map((s) => ({ value: s, label: s }));
     const merged = [...EVENT_TYPE_OPTIONS, ...custom];
@@ -97,21 +98,10 @@ export default function ReviewQueue() {
           return;
         }
       } catch (error) {
-        // console.log('API not available, using static data:', error);
+        console.error('Failed to fetch review queue:', error);
+        setApiError('Failed to load review queue. Please check database connection.');
+        if (mounted) setTweets([]);
       }
-
-      // Fallback to static JSON
-      const loaded = (parsedTweets as ParsedTweet[]).map(t => ({
-        ...t,
-        content: t.content || t.text || '',
-        needs_review: t.needs_review !== false, // Default to true for review
-        review_status: t.review_status || 'pending',
-      }));
-      const sorted = [...loaded].sort((a, b) => {
-        if (sortBy === 'confidence') return (a.confidence || 0) - (b.confidence || 0);
-        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-      });
-      if (mounted) setTweets(sorted);
     })();
     return () => { mounted = false; };
   }, [sortBy]);
@@ -136,6 +126,16 @@ export default function ReviewQueue() {
     try {
       localStorage.setItem('customEventTypes', JSON.stringify(next));
     } catch {}
+  };
+
+  const submitReviewUpdate = async (payload: Record<string, any>) => {
+    try {
+      setApiError(null);
+      await api.post('/api/review/update', payload);
+    } catch (error) {
+      console.error('Review update failed', error);
+      setApiError('सर्वर अपडेट विफल रहा। कृपया बाद में पुनः प्रयास करें।');
+    }
   };
 
   const currentTweet = tweets[currentIndex];
@@ -246,26 +246,17 @@ export default function ReviewQueue() {
       localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
     } catch {}
 
-    // Try server persistence (requires parsedEventId)
-    try {
-      const evId = currentTweet.parsedEventId;
-      if (evId) {
-        // Build locations payload: prefer hierarchical paths if provided
-        const locs = Array.isArray(editedData.locationsPaths) && editedData.locationsPaths.length
-          ? editedData.locationsPaths
-          : (editedData.locations || []).map((n: string) => ({ name: n }));
-        await api.put(`/api/parsed-events/${encodeURIComponent(evId)}`, {
-          event_type: editedData.event_type,
-          locations: locs,
-          people_mentioned: editedData.people || [],
-          organizations: editedData.organizations || [],
-          schemes_mentioned: editedData.schemes || [],
-          reviewed_by: 'reviewer',
-        });
-      }
-    } catch {
-      // ignore; local overlay already applied
-    }
+    await submitReviewUpdate({
+      id: String(currentTweet.id),
+      event_type: editedData.event_type,
+      event_type_hi: getEventTypeHindi(editedData.event_type),
+      locationsPaths: editedData.locationsPaths || [],
+      locations: editedData.locations || [],
+      people_mentioned: editedData.people || [],
+      organizations: editedData.organizations || [],
+      schemes_mentioned: editedData.schemes || [],
+      review_notes: notes || correctionReason,
+    });
 
     setEditMode(false);
     setCorrectionReason('');
@@ -302,11 +293,11 @@ export default function ReviewQueue() {
       localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
     } catch {}
     
-    // Server approve (requires parsedEventId)
-    try {
-      const evId = currentTweet.parsedEventId;
-      if (evId) await api.post(`/api/parsed-events/${encodeURIComponent(evId)}/approve`, { reviewed_by: 'reviewer' });
-    } catch {}
+    await submitReviewUpdate({
+      id: String(currentTweet.id),
+      action: 'approve',
+      notes: correctionReason || notes || 'Approved',
+    });
 
     // Move to next
     const nextIndex = currentIndex + 1;
@@ -327,14 +318,16 @@ export default function ReviewQueue() {
       localStorage.setItem(key, JSON.stringify({ ...existing, review_status: 'skipped', updated_at: new Date().toISOString() }));
       localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
     } catch {}
-    try {
-      const evId = currentTweet.parsedEventId;
-      if (evId) await api.post(`/api/parsed-events/${encodeURIComponent(evId)}/skip`, { reviewed_by: 'reviewer' });
-    } catch {}
+    await submitReviewUpdate({
+      id: String(currentTweet.id),
+      action: 'skip',
+    });
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!currentTweet) return;
+    const reason = prompt('अस्वीकार का कारण दर्ज करें (Reason for rejection):')?.trim();
+    if (!reason) return;
     
     const updatedTweets = [...tweets];
     updatedTweets[currentIndex] = {
@@ -344,6 +337,12 @@ export default function ReviewQueue() {
     };
     setTweets(updatedTweets);
     
+    await submitReviewUpdate({
+      id: String(currentTweet.id),
+      action: 'reject',
+      notes: reason,
+    });
+
     // Move to next
     if (currentIndex < tweets.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -379,9 +378,9 @@ export default function ReviewQueue() {
   if (!currentTweet) {
     return (
       <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
-          <p className="text-gray-500 mb-4">
+        <div className="max-w-md mx-auto glassmorphic-card p-8">
+          <h3 className="text-lg font-semibold text-white mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
+          <p className="text-secondary mb-4">
             {tweets.length === 0 
               ? "अभी समीक्षा के लिए कोई ट्वीट उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।"
               : "सभी ट्वीट की समीक्षा पूर्ण हो गई है।"
@@ -423,326 +422,336 @@ export default function ReviewQueue() {
     <div className="flex gap-6">
       {/* Main Content */}
       <div className="flex-1 space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4 text-center bg-gradient-to-br from-amber-50 to-white">
-          <div className="text-3xl font-bold text-amber-600">{stats.pending}</div>
-          <div className="text-sm text-gray-600">समीक्षा के लिए (Pending)</div>
-        </Card>
-        <Card className="p-4 text-center bg-gradient-to-br from-green-50 to-white">
-          <div className="text-3xl font-bold text-green-600">{stats.reviewed}</div>
-          <div className="text-sm text-gray-600">समीक्षित (Reviewed)</div>
-        </Card>
-        <Card className="p-4 text-center bg-gradient-to-br from-blue-50 to-white">
-          <div className="text-3xl font-bold text-blue-600">{Math.round(stats.avgConfidence * 100)}%</div>
-          <div className="text-sm text-gray-600">औसत विश्वास (Avg Confidence)</div>
-        </Card>
-      </div>
-
-      {/* Controls */}
-      <div className="flex justify-between items-center">
-        <Select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as 'confidence' | 'date')}
-          options={[
-            { value: 'confidence', label: 'कम विश्वास पहले (Low confidence first)' },
-            { value: 'date', label: 'नवीनतम पहले (Latest first)' },
-          ]}
-          className="w-64"
-        />
-        <div className="text-sm text-gray-600">
-          Tweet {currentIndex + 1} of {tweets.length}
+        {apiError && (
+          <div className="rounded-md border border-red-400/50 bg-red-500/20 backdrop-blur-sm px-4 py-3 text-sm text-red-300">
+            {apiError}
+          </div>
+        )}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 transition-all duration-500 ease-in-out">
+          <div className="glassmorphic-card p-4 text-center border border-amber-500/30 rounded-2xl">
+            <div className="text-2xl sm:text-3xl font-bold text-amber-400">{stats.pending}</div>
+            <div className="text-sm sm:text-base text-secondary">समीक्षा के लिए (Pending)</div>
+          </div>
+          <div className="glassmorphic-card p-4 text-center border border-green-500/30 rounded-2xl">
+            <div className="text-2xl sm:text-3xl font-bold text-green-400">{stats.reviewed}</div>
+            <div className="text-sm sm:text-base text-secondary">समीक्षित (Reviewed)</div>
+          </div>
+          <div className="glassmorphic-card p-4 text-center border border-[#8BF5E6]/30 rounded-2xl">
+            <div className="text-2xl sm:text-3xl font-bold text-[#8BF5E6]">{Math.round(stats.avgConfidence * 100)}%</div>
+            <div className="text-sm sm:text-base font-semibold text-white">औसत विश्वास <span className="text-xs sm:text-sm font-normal text-secondary">(Avg Confidence)</span></div>
+          </div>
         </div>
-      </div>
 
-      {/* Review Card */}
-      <Card className={`border-2 bg-white ${confidence <= 0.5 ? 'border-red-500' : confidence <= 0.8 ? 'border-yellow-500' : 'border-green-500'}`}>
-        <CardHeader className="bg-gray-50">
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-lg mb-1">
-                Tweet #{currentTweet.id}
-              </CardTitle>
-              <p className="text-xs text-gray-500">{formatDate(currentTweet.timestamp, 'en')}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{confidenceEmoji}</span>
-              <span className="text-sm font-semibold" style={{ color: confidenceColor }}>
-                {formatConfidence(confidence)}
-              </span>
-            </div>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-500 ease-in-out">
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'confidence' | 'date')}
+            options={[
+              { value: 'confidence', label: 'कम विश्वास पहले (Low confidence first)' },
+              { value: 'date', label: 'नवीनतम पहले (Latest first)' },
+            ]}
+            className="w-full sm:w-64"
+          />
+          <div className="text-sm sm:text-base font-semibold text-white drop-shadow-[0_0_6px_#12005E]">
+          ट्वीट {currentIndex + 1} / {tweets.length}
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-4 pt-4">
-          {/* Tweet Content */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-900 leading-relaxed">{tweetText}</p>
-          </div>
-
-          {editMode ? (
-            <>
-              {/* Edit Mode */}
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                {/* Event Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    🎯 घटना प्रकार (Event Type)
-                  </label>
-                  <AutocompleteInput
-                    fieldName="event_type"
-                    value={editedData.event_type || ''}
-                    onChange={(value) => setEditedData({ ...editedData, event_type: value })}
-                    placeholder="e.g., जन्मदिन शुभकामनाएं, बैठक, रैली, निरीक्षण, उद्घाटन"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Locations - hierarchical picker */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      📍 स्थान (Locations)
-                    </label>
-                  </div>
-                  <LocationHierarchyPicker
-                    value={editedData.locationsPaths || []}
-                    onChange={(paths) => setEditedData({ ...editedData, locationsPaths: paths })}
-                  />
-                </div>
-
-                {/* People */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      👥 लोग (People)
-                    </label>
-                    <button
-                      onClick={() => addEntity('people')}
-                      className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Add
-                    </button>
-                  </div>
-                  <AutocompleteInput
-                    fieldName="people"
-                    value={(editedData.people || []).join(', ')}
-                    onChange={(value) => setEditedData({ ...editedData, people: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
-                    placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Organizations */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      🏢 संगठन (Organizations)
-                    </label>
-                    <button
-                      onClick={() => addEntity('organizations')}
-                      className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Add
-                    </button>
-                  </div>
-                  <AutocompleteInput
-                    fieldName="organizations"
-                    value={(editedData.organizations || []).join(', ')}
-                    onChange={(value) => setEditedData({ ...editedData, organizations: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
-                    placeholder="e.g., भाजपा, राज्य शासन"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Schemes */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      📋 योजनाएं (Schemes)
-                    </label>
-                    <button
-                      onClick={() => addEntity('schemes')}
-                      className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Add
-                    </button>
-                  </div>
-                  <AutocompleteInput
-                    fieldName="schemes"
-                    value={(editedData.schemes || []).join(', ')}
-                    onChange={(value) => setEditedData({ ...editedData, schemes: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
-                    placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Topics / Tags */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      🏷️ विषय (Topics/Tags)
-                    </label>
-                  </div>
-                  <TagsSelector
-                    tweetId={String(currentTweet.id)}
-                    initialSelected={(currentTweet as any).parsed?.topics?.map((t: any) => t.label_hi) || []}
-                    onChange={(vals) => {
-                      setEditedData({ ...editedData, topics: vals });
-                      try {
-                        const key = `tweet_review:${String(currentTweet.id)}`;
-                        const raw = localStorage.getItem(key);
-                        const existing = raw ? JSON.parse(raw) : {};
-                        localStorage.setItem(key, JSON.stringify({ ...existing, topics: vals, updated_at: new Date().toISOString() }));
-                        localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
-                      } catch {}
-                    }}
-                  />
-                </div>
-
-                {/* Correction Reason */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    💬 सुधार का कारण (Why are you making this change?) *
-                  </label>
-                  <Input
-                    value={correctionReason}
-                    onChange={(e) => setCorrectionReason(e.target.value)}
-                    placeholder="e.g., Tweet mentions birthday wishes, not a rally"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Notes Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    📝 नोट्स (Notes) - Optional
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Internal notes, edge cases, or training data annotations..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3}
-                  />
-                </div>
+        {/* Review Card */}
+        <div className={`glassmorphic-card border-2 ${confidence <= 0.5 ? 'border-red-500/50' : confidence <= 0.8 ? 'border-yellow-500/50' : 'border-green-500/50'}`}>
+          <div className="p-4 border-b border-white/10">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-1 text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
+                ट्वीट #{currentTweet.id}
+                </h3>
+                <p className="text-sm sm:text-base text-[#E8EAF5]">{formatDate(currentTweet.timestamp, 'en')}</p>
               </div>
-            </>
-          ) : (
-            <>
-              {/* View Mode */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">🎯 घटना प्रकार</div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {getEventTypeHindi(currentTweet.parsed?.event_type)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">📍 स्थान</div>
-                  <div className="flex flex-wrap gap-1">
-                    {(currentTweet.parsed?.locations || []).map((loc: any, i: number) => (
-                      <Badge key={i} variant="info">{formatLocLabel(loc)}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">👥 लोग</div>
-                  <div className="flex flex-wrap gap-1">
-                    {(currentTweet.parsed?.people_mentioned || currentTweet.parsed?.people || []).map((person: string, i: number) => (
-                      <Badge key={i}>{person}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1">🏢 संगठन</div>
-                  <div className="flex flex-wrap gap-1">
-                    {(currentTweet.parsed?.organizations || []).map((org: string, i: number) => (
-                      <Badge key={i}>{org}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs font-medium text-gray-500 mb-1">🏷️ विषय (Topics/Tags)</div>
-                  <div className="flex flex-wrap gap-1">
-                    {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
-                      <TagBubble 
-                        key={i} 
-                        label={t?.label_hi || t?.label || String(t)} 
-                        selected={false}
-                      />
-                    ))}
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{confidenceEmoji}</span>
+                <span className="text-sm font-semibold" style={{ color: confidenceColor }}>
+                  {formatConfidence(confidence)}
+                </span>
               </div>
-            </>
-          )}
-        </CardContent>
-
-        <CardFooter className="flex justify-between">
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1))}
-              disabled={currentIndex === tweets.length - 1}
-            >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+            </div>
           </div>
-          
-          <div className="flex gap-2">
+
+          <div className="space-y-4 pt-4 p-4">
+            {/* Tweet Content */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
+              <p className="text-sm sm:text-base text-white leading-relaxed">{tweetText}</p>
+            </div>
+
             {editMode ? (
               <>
-                <Button variant="secondary" size="sm" onClick={() => setEditMode(false)}>
-                  Cancel
-                </Button>
-                <Button variant="success" size="sm" onClick={handleSave}>
-                  <Check className="w-4 h-4 mr-1" /> Save
-                </Button>
-                <Button variant="success" size="sm" onClick={handleSaveAndApprove}>
-                  <Check className="w-4 h-4 mr-1" /> Save & Approve
-                </Button>
+                {/* Edit Mode */}
+                <div className="space-y-4 p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
+                  {/* Event Type */}
+                  <div>
+                    <label className="block text-base sm:text-lg font-medium text-white mb-3 drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
+                    🎯 घटना प्रकार
+                    <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Event Type)</span>
+                    </label>
+                    <AutocompleteInput
+                      fieldName="event_type"
+                      value={editedData.event_type || ''}
+                      onChange={(value) => setEditedData({ ...editedData, event_type: value })}
+                      placeholder="e.g., जन्मदिन शुभकामनाएं, बैठक, रैली, निरीक्षण, उद्घाटन"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Locations - hierarchical picker */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
+                      📍 स्थान
+                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Locations)</span>
+                      </label>
+                    </div>
+                    <LocationHierarchyPicker
+                      value={editedData.locationsPaths || []}
+                      onChange={(paths: GeoNode[][]) => setEditedData({ ...editedData, locationsPaths: paths })}
+                    />
+                  </div>
+
+                  {/* People */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
+                      👥 लोग
+                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(People)</span>
+                      </label>
+                      <button
+                        onClick={() => addEntity('people')}
+                        className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                    <AutocompleteInput
+                      fieldName="people"
+                      value={(editedData.people || []).join(', ')}
+                      onChange={(value) => setEditedData({ ...editedData, people: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                      placeholder="e.g., रमन सिंह, नरेंद्र मोदी"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Organizations */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
+                      🏢 संगठन
+                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Organizations)</span>
+                      </label>
+                      <button
+                        onClick={() => addEntity('organizations')}
+                        className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                    <AutocompleteInput
+                      fieldName="organizations"
+                      value={(editedData.organizations || []).join(', ')}
+                      onChange={(value) => setEditedData({ ...editedData, organizations: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                      placeholder="e.g., भाजपा, राज्य शासन"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Schemes */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-2xl font-bold text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
+                      📋 योजनाएं
+                      <span className="text-base font-normal text-secondary ml-2">(Schemes)</span>
+                      </label>
+                      <button
+                        onClick={() => addEntity('schemes')}
+                        className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                    <AutocompleteInput
+                      fieldName="schemes"
+                      value={(editedData.schemes || []).join(', ')}
+                      onChange={(value) => setEditedData({ ...editedData, schemes: value.split(',').map((s:string)=>s.trim()).filter(Boolean) })}
+                      placeholder="e.g., प्रधानमंत्री आवास योजना, महतारी वंदन योजना"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Topics / Tags */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-2xl font-bold text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
+                      🏷️ विषय
+                      <span className="text-base font-normal text-secondary ml-2">(Topics/Tags)</span>
+                      </label>
+                    </div>
+                    <TagsSelector
+                      tweetId={String(currentTweet.id)}
+                      initialSelected={(currentTweet as any).parsed?.topics?.map((t: any) => t.label_hi) || []}
+                      onChange={(vals: string[]) => {
+                        setEditedData({ ...editedData, topics: vals });
+                        try {
+                          const key = `tweet_review:${String(currentTweet.id)}`;
+                          const raw = localStorage.getItem(key);
+                          const existing = raw ? JSON.parse(raw) : {};
+                          localStorage.setItem(key, JSON.stringify({ ...existing, topics: vals, updated_at: new Date().toISOString() }));
+                          localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
+                        } catch {}
+                      }}
+                    />
+                  </div>
+
+                  {/* Correction Reason */}
+                  <div>
+                    <label className="block text-xl font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
+                    💬 सुधार का कारण
+                    <span className="text-base font-normal text-secondary ml-2">(Why are you making this change?) *</span>
+                    </label>
+                    <Input
+                      value={correctionReason}
+                      onChange={(e) => setCorrectionReason(e.target.value)}
+                      placeholder="e.g., Tweet mentions birthday wishes, not a rally"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Notes Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                    📝 नोट्स (Notes) - Optional
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Internal notes, edge cases, or training data annotations..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={3}
+                    />
+                  </div>
+                </div>
               </>
             ) : (
               <>
-                <Button variant="danger" size="sm" onClick={handleReject}>
-                  <X className="w-4 h-4 mr-1" /> Reject
-                </Button>
-                <Button variant="secondary" size="sm" onClick={handleSkip}>
-                  Skip
-                </Button>
-                <Button variant="secondary" size="sm" onClick={handleEdit}>
-                  <Edit className="w-4 h-4 mr-1" /> Edit
-                </Button>
-                <Button variant="success" size="sm" onClick={handleApprove}>
-                  <Check className="w-4 h-4 mr-1" /> Approve
-                </Button>
+                {/* View Mode */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-medium text-secondary mb-1">🎯 घटना प्रकार</div>
+                    <div className="text-sm font-semibold text-white">
+                      {getEventTypeHindi(currentTweet.parsed?.event_type)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-secondary mb-1">📍 स्थान</div>
+                    <div className="flex flex-wrap gap-1">
+                      {(currentTweet.parsed?.locations || []).map((loc: any, i: number) => (
+                        <Badge key={i} variant="info">{formatLocLabel(loc)}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-secondary mb-1">👥 लोग</div>
+                    <div className="flex flex-wrap gap-1">
+                      {(currentTweet.parsed?.people_mentioned || currentTweet.parsed?.people || []).map((person: string, i: number) => (
+                        <Badge key={i}>{person}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-secondary mb-1">🏢 संगठन</div>
+                    <div className="flex flex-wrap gap-1">
+                      {(currentTweet.parsed?.organizations || []).map((org: string, i: number) => (
+                        <Badge key={i}>{org}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-xs font-medium text-secondary mb-1">🏷️ विषय (Topics/Tags)</div>
+                    <div className="flex flex-wrap gap-1">
+                      {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
+                        <TagBubble 
+                          key={i} 
+                          label={t?.label_hi || t?.label || String(t)} 
+                          selected={false}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </>
             )}
           </div>
-        </CardFooter>
-      </Card>
 
-      {/* Correction Log (if any) */}
-      {corrections[currentTweet.id] && (
-        <Card className="p-4 bg-green-50">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">✅ Corrections Applied:</h3>
-          {corrections[currentTweet.id].map((corr, i) => (
-            <div key={i} className="text-xs text-gray-700 mb-1">
-              • {corr.reason} ({new Date(corr.timestamp).toLocaleString()})
+          <div className="flex flex-wrap justify-center sm:justify-between gap-2 sm:gap-4 p-4 border-t border-white/10 transition-all duration-500 ease-in-out">
+            <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                disabled={currentIndex === 0}
+                className="neon-button px-3 sm:px-5 py-2 rounded text-sm sm:text-base text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]"
+              >
+                <ChevronLeft className="w-4 h-4" /> पिछला
+              </button>
+              <button
+                onClick={() => setCurrentIndex(Math.min(tweets.length - 1, currentIndex + 1))}
+                disabled={currentIndex === tweets.length - 1}
+                className="neon-button px-3 sm:px-5 py-2 rounded text-sm sm:text-base text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]"
+              >
+                अगला <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          ))}
-        </Card>
-      )}
+          
+            <div className="flex flex-wrap justify-center gap-2 w-full sm:w-auto">
+              {editMode ? (
+                <>
+                  <Button variant="secondary" size="sm" onClick={() => setEditMode(false)} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                  Cancel
+                  </Button>
+                  <Button variant="success" size="sm" onClick={handleSave} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                    <Check className="w-4 h-4 mr-1" /> Save
+                  </Button>
+                  <Button variant="success" size="sm" onClick={handleSaveAndApprove} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                    <Check className="w-4 h-4 mr-1" /> Save & Approve
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="danger" size="sm" onClick={handleReject} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                    <X className="w-4 h-4 mr-1" /> Reject
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleSkip} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                  Skip
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleEdit} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                    <Edit className="w-4 h-4 mr-1" /> Edit
+                  </Button>
+                  <Button variant="success" size="sm" onClick={handleApprove} className="px-3 sm:px-5 py-2 text-sm sm:text-base transition-all duration-500 ease-in-out transform-gpu shadow-[0_0_6px_#8FFAE8]">
+                    <Check className="w-4 h-4 mr-1" /> Approve
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Correction Log (if any) */}
+        {corrections[currentTweet.id] && (
+          <div className="glassmorphic-card p-4 border border-green-500/30">
+            <h3 className="text-sm font-semibold text-white mb-2">✅ Corrections Applied:</h3>
+            {corrections[currentTweet.id].map((corr, i) => (
+              <div key={i} className="text-xs text-secondary mb-1">
+              • {corr.reason} ({new Date(corr.timestamp).toLocaleString()})
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Progress Sidebar */}
@@ -754,4 +763,3 @@ export default function ReviewQueue() {
     </div>
   );
 }
-

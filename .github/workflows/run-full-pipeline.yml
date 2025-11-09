@@ -1,0 +1,60 @@
+name: 🚀 Run Full Pipeline (Backfill + Live Sync)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'RUN' to confirm full backfill + pipeline execution"
+        required: true
+        default: "RUN"
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  NODE_ENV: production
+
+jobs:
+  full-pipeline:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'RUN' }}
+    timeout-minutes: 120 # Allow 2 hours for full backfill
+    
+    steps:
+      - name: 🧭 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: ⚙️ Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🧹 Run full pipeline script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          chmod +x scripts/ops/run-full-pipeline.sh
+          ./scripts/ops/run-full-pipeline.sh
+      
+      - name: 📊 Upload parsing logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parse-logs
+          path: logs/parse-all.log
+          retention-days: 7
+      
+      - name: ✅ Summary
+        if: always()
+        run: |
+          echo "✅ Full pipeline completed."
+          echo "Check 'parse-logs' artifact for live parsing output."
+
+

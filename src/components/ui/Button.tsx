@@ -18,7 +18,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: 'bg-[var(--nav-bg)] text-gray-800 hover:bg-[color-mix(in_srgb,var(--nav-bg),black_10%)] focus:ring-gray-300',
       success: 'bg-[var(--approved)] text-white hover:bg-[color-mix(in_srgb,var(--approved),black_10%)] focus:ring-[var(--approved)]',
       danger: 'bg-[var(--rejected)] text-white hover:bg-[color-mix(in_srgb,var(--rejected),black_10%)] focus:ring-[var(--rejected)]',
-      ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+      ghost: 'bg-transparent text-white hover:bg-white/10 border border-white/20 focus:ring-[#8BF5E6]/50',
     } as const;
     
     const sizeStyles = {

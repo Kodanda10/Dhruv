@@ -3,6 +3,37 @@
 import React, { useState, useMemo } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 
+const DISTRICT_DATA = [
+  { name: 'रायपुर', value: 450, level: 'district', district: 'रायपुर' },
+  { name: 'बिलासपुर', value: 320, level: 'district', district: 'बिलासपुर' },
+  { name: 'रायगढ़', value: 280, level: 'district', district: 'रायगढ़' },
+  { name: 'कोरबा', value: 190, level: 'district', district: 'कोरबा' },
+  { name: 'रायपुर ग्रामीण', value: 150, level: 'district', district: 'रायपुर ग्रामीण' },
+];
+
+const ASSEMBLY_DATA = {
+  'रायपुर': [
+    { name: 'रायपुर शहर', value: 280, level: 'assembly', district: 'रायपुर', assembly: 'रायपुर शहर' },
+    { name: 'रायपुर ग्रामीण', value: 170, level: 'assembly', district: 'रायपुर', assembly: 'रायपुर ग्रामीण' },
+  ],
+  'बिलासपुर': [
+    { name: 'बिलासपुर', value: 200, level: 'assembly', district: 'बिलासपुर', assembly: 'बिलासपुर' },
+    { name: 'मस्तूरी', value: 120, level: 'assembly', district: 'बिलासपुर', assembly: 'मस्तूरी' },
+  ],
+  'रायगढ़': [
+    { name: 'रायगढ़', value: 180, level: 'assembly', district: 'रायगढ़', assembly: 'रायगढ़' },
+    { name: 'खरसिया', value: 100, level: 'assembly', district: 'रायगढ़', assembly: 'खरसिया' },
+  ],
+  'कोरबा': [
+    { name: 'कोरबा', value: 120, level: 'assembly', district: 'कोरबा', assembly: 'कोरबा' },
+    { name: 'कटघोरा', value: 70, level: 'assembly', district: 'कोरबा', assembly: 'कटघोरा' },
+  ],
+  'रायपुर ग्रामीण': [
+    { name: 'अरंग', value: 80, level: 'assembly', district: 'रायपुर ग्रामीण', assembly: 'अरंग' },
+    { name: 'धरसींवा', value: 70, level: 'assembly', district: 'रायपुर ग्रामीण', assembly: 'धरसींवा' },
+  ],
+};
+
 interface GeoHierarchyMindmapProps {
   data?: any;
   filters?: any;
@@ -26,45 +57,12 @@ export default function GeoHierarchyMindmap({
   const [drilldown, setDrilldown] = useState<DrilldownState | null>(null);
   const [selectedNode, setSelectedNode] = useState<any>(null);
 
-  // Enhanced mock data with hierarchical structure
-  const mockDistrictData = [
-    { name: 'रायपुर', value: 450, level: 'district', district: 'रायपुर' },
-    { name: 'बिलासपुर', value: 320, level: 'district', district: 'बिलासपुर' },
-    { name: 'रायगढ़', value: 280, level: 'district', district: 'रायगढ़' },
-    { name: 'कोरबा', value: 190, level: 'district', district: 'कोरबा' },
-    { name: 'रायपुर ग्रामीण', value: 150, level: 'district', district: 'रायपुर ग्रामीण' }
-  ];
-
-  // Assembly data for each district
-  const mockAssemblyData = {
-    'रायपुर': [
-      { name: 'रायपुर शहर', value: 280, level: 'assembly', district: 'रायपुर', assembly: 'रायपुर शहर' },
-      { name: 'रायपुर ग्रामीण', value: 170, level: 'assembly', district: 'रायपुर', assembly: 'रायपुर ग्रामीण' }
-    ],
-    'बिलासपुर': [
-      { name: 'बिलासपुर', value: 200, level: 'assembly', district: 'बिलासपुर', assembly: 'बिलासपुर' },
-      { name: 'मस्तूरी', value: 120, level: 'assembly', district: 'बिलासपुर', assembly: 'मस्तूरी' }
-    ],
-    'रायगढ़': [
-      { name: 'रायगढ़', value: 180, level: 'assembly', district: 'रायगढ़', assembly: 'रायगढ़' },
-      { name: 'खरसिया', value: 100, level: 'assembly', district: 'रायगढ़', assembly: 'खरसिया' }
-    ],
-    'कोरबा': [
-      { name: 'कोरबा', value: 120, level: 'assembly', district: 'कोरबा', assembly: 'कोरबा' },
-      { name: 'कटघोरा', value: 70, level: 'assembly', district: 'कोरबा', assembly: 'कटघोरा' }
-    ],
-    'रायपुर ग्रामीण': [
-      { name: 'अरंग', value: 80, level: 'assembly', district: 'रायपुर ग्रामीण', assembly: 'अरंग' },
-      { name: 'धरसींवा', value: 70, level: 'assembly', district: 'रायपुर ग्रामीण', assembly: 'धरसींवा' }
-    ]
-  };
-
   // Determine display data based on drilldown state
   const displayData = useMemo(() => {
     if (drilldown) {
       return drilldown.currentData;
     }
-    return data || mockDistrictData;
+    return data || DISTRICT_DATA;
   }, [data, drilldown]);
 
   const getColor = (value: number) => {
@@ -76,7 +74,7 @@ export default function GeoHierarchyMindmap({
   const handleNodeClick = (node: any) => {
     if (node.level === 'district') {
       // Drill down to assemblies in this district
-      const assemblies = mockAssemblyData[node.district as keyof typeof mockAssemblyData] || [];
+      const assemblies = ASSEMBLY_DATA[node.district as keyof typeof ASSEMBLY_DATA] || [];
       setDrilldown({
         level: 'assembly',
         selectedPath: [node.district],
@@ -107,7 +105,7 @@ export default function GeoHierarchyMindmap({
     } else {
       // Navigate to specific level (could be enhanced for deeper navigation)
       const district = newPath[0];
-      const assemblies = mockAssemblyData[district as keyof typeof mockAssemblyData] || [];
+      const assemblies = ASSEMBLY_DATA[district as keyof typeof ASSEMBLY_DATA] || [];
       setDrilldown({
         level: 'assembly',
         selectedPath: newPath,
@@ -119,7 +117,7 @@ export default function GeoHierarchyMindmap({
   const renderCell = (entry: any) => {
     const { x, y, width: w, height: h, payload } = entry;
     const node = payload;
-    const hasChildren = node.level === 'district' && mockAssemblyData[node.district as keyof typeof mockAssemblyData]?.length > 0;
+    const hasChildren = node.level === 'district' && ASSEMBLY_DATA[node.district as keyof typeof ASSEMBLY_DATA]?.length > 0;
     const isSelected = selectedNode?.name === node.name;
 
     return (

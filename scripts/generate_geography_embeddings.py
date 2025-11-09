@@ -35,35 +35,60 @@ except ImportError as e:
 class GeographyEmbeddingGenerator:
     """Generates embeddings for geography data using sentence transformers."""
 
-    def __init__(self, model_name: str = 'paraphrase-MiniLM-L6-v2', uri: str = None):
+    def __init__(self, model_name: str = 'paraphrase-MiniLM-L6-v2', uri: str = None, use_faiss: bool = True):
         """
         Initialize the embedding generator.
 
         Args:
             model_name: Sentence transformer model name
             uri: Milvus connection URI
+            use_faiss: Whether to use FAISS as fallback/primary backend
         """
         self.model_name = model_name
         self.uri = uri or os.getenv('MILVUS_URI', 'http://localhost:19530')
         self.collection_name = 'geography_embeddings'
         self.embedding_dim = 384  # Dimension for paraphrase-MiniLM-L6-v2
+        self.use_faiss = use_faiss
 
         print(f"Initializing embedding model: {model_name}")
         self.model = SentenceTransformer(model_name)
         print("✅ Embedding model loaded")
 
-        print(f"Connecting to Milvus at: {self.uri}")
-        self.client = MilvusClient(uri=self.uri)
-        print("✅ Connected to Milvus")
+        # Initialize backends
+        self.milvus_client = None
+        self.faiss_data = []
+
+        if not self.use_faiss:
+            self._init_milvus()
+        else:
+            print("📝 Using FAISS backend for embeddings")
+
+    def _init_milvus(self):
+        """Initialize Milvus client."""
+        try:
+            self.milvus_client = MilvusClient(uri=self.uri)
+            print(f"✅ Connected to Milvus: {self.uri}")
+        except Exception as e:
+            print(f"❌ Milvus connection failed: {e}")
+            if not self.use_faiss:
+                raise
+            print("📝 Falling back to FAISS backend")
 
     def create_collection(self):
         """Create Milvus collection for geography embeddings."""
-        if self.client.has_collection(collection_name=self.collection_name):
+        if self.use_faiss:
+            print("📝 Skipping collection creation for FAISS backend")
+            return
+
+        if not self.milvus_client:
+            return
+
+        if self.milvus_client.has_collection(collection_name=self.collection_name):
             print(f"Collection '{self.collection_name}' already exists")
             return
 
         print(f"Creating collection: {self.collection_name}")
-        schema = self.client.create_schema(auto_id=False, enable_dynamic_field=False)
+        schema = self.milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
 
         # Define schema fields
         schema.add_field(field_name="id", datatype=DataType.VARCHAR, max_length=100, is_primary=True)
@@ -75,13 +100,13 @@ class GeographyEmbeddingGenerator:
         schema.add_field(field_name="embedding", datatype=DataType.FLOAT_VECTOR, dim=self.embedding_dim)
         schema.add_field(field_name="variants", datatype=DataType.VARCHAR, max_length=2000)  # JSON string of variants
 
-        self.client.create_collection(collection_name=self.collection_name, schema=schema)
+        self.milvus_client.create_collection(collection_name=self.collection_name, schema=schema)
 
         # Create vector index
         print("Creating vector index...")
-        index_params = self.client.prepare_index_params()
+        index_params = self.milvus_client.prepare_index_params()
         index_params.add_index(field_name="embedding", index_type="AUTOINDEX", metric_type="COSINE")
-        self.client.create_index(collection_name=self.collection_name, index_params=index_params)
+        self.milvus_client.create_index(collection_name=self.collection_name, index_params=index_params)
 
         print("✅ Collection and index created")
 
@@ -156,17 +181,12 @@ class GeographyEmbeddingGenerator:
         Returns:
             Embedding record for Milvus insertion
         """
-        name = location.get('name', '').strip()
-        if not name:
-            return None
-
         # For the actual data structure, extract the appropriate name
         # The data has village, gram_panchayat, block, district fields
         actual_name = (location.get('village') or 
                       location.get('gram_panchayat') or 
                       location.get('block') or 
-                      location.get('district') or 
-                      name)
+                      location.get('district'))
         
         if not actual_name or not actual_name.strip():
             return None
@@ -239,32 +259,68 @@ class GeographyEmbeddingGenerator:
 
             # Insert in batches
             if len(records) >= batch_size:
-                try:
-                    self.client.insert(collection_name=self.collection_name, data=records)
+                if self.use_faiss:
+                    # Store in FAISS data
+                    self.faiss_data.extend(records)
                     inserted += len(records)
-                    print(f"✅ Inserted batch: {len(records)} records (total: {inserted})")
+                    print(f"✅ Added batch to FAISS: {len(records)} records (total: {inserted})")
                     records = []
-                except Exception as e:
-                    print(f"❌ Failed to insert batch: {e}")
-                    records = []
+                else:
+                    # Insert to Milvus
+                    try:
+                        self.milvus_client.insert(collection_name=self.collection_name, data=records)
+                        inserted += len(records)
+                        print(f"✅ Inserted batch: {len(records)} records (total: {inserted})")
+                        records = []
+                    except Exception as e:
+                        print(f"❌ Failed to insert batch: {e}")
+                        records = []
 
         # Insert remaining records
         if records:
-            try:
-                self.client.insert(collection_name=self.collection_name, data=records)
+            if self.use_faiss:
+                self.faiss_data.extend(records)
                 inserted += len(records)
-                print(f"✅ Inserted final batch: {len(records)} records (total: {inserted})")
-            except Exception as e:
-                print(f"❌ Failed to insert final batch: {e}")
+                print(f"✅ Added final batch to FAISS: {len(records)} records (total: {inserted})")
+            else:
+                try:
+                    self.milvus_client.insert(collection_name=self.collection_name, data=records)
+                    inserted += len(records)
+                    print(f"✅ Inserted final batch: {len(records)} records (total: {inserted})")
+                except Exception as e:
+                    print(f"❌ Failed to insert final batch: {e}")
+
+        # Save FAISS data if using FAISS
+        if self.use_faiss and self.faiss_data:
+            self._save_faiss_data()
 
         print(f"🎉 Embedding generation complete!")
         print(f"   Processed: {processed} locations")
         print(f"   Inserted: {inserted} embeddings")
+        print(f"   Backend: {'FAISS' if self.use_faiss else 'Milvus'}")
+
+    def _save_faiss_data(self):
+        """Save FAISS data to disk for later loading."""
+        import pickle
+        faiss_file = Path("data/geography_embeddings_faiss.pkl")
+        faiss_file.parent.mkdir(exist_ok=True)
+        
+        with open(faiss_file, 'wb') as f:
+            pickle.dump(self.faiss_data, f)
+        
+        print(f"✅ FAISS data saved to: {faiss_file}")
 
     def load_collection(self):
         """Load collection into memory for search."""
+        if self.use_faiss:
+            print("📝 FAISS backend - no collection loading needed")
+            return
+            
+        if not self.milvus_client:
+            return
+            
         print("Loading collection into memory...")
-        self.client.load_collection(collection_name=self.collection_name)
+        self.milvus_client.load_collection(collection_name=self.collection_name)
         print("✅ Collection loaded")
 
 
@@ -280,6 +336,10 @@ def main():
                        help='Sentence transformer model name')
     parser.add_argument('--batch-size', type=int, default=100,
                        help='Batch size for insertion')
+    parser.add_argument('--use-faiss', action='store_true', default=True,
+                       help='Use FAISS instead of Milvus (default: True for production timeline)')
+    parser.add_argument('--use-milvus', action='store_true', default=False,
+                       help='Force use of Milvus (overrides --use-faiss)')
 
     args = parser.parse_args()
 
@@ -294,22 +354,27 @@ def main():
             sys.exit(1)
 
     try:
+        # Determine backend
+        use_faiss = args.use_faiss and not args.use_milvus
+        
         # Initialize generator
         generator = GeographyEmbeddingGenerator(
             model_name=args.model,
-            uri=args.uri
+            uri=args.uri,
+            use_faiss=use_faiss
         )
 
         # Generate embeddings
         generator.generate_embeddings(data_file, args.batch_size)
 
-        # Load collection for immediate use
+        # Load collection for immediate use (if Milvus)
         generator.load_collection()
 
-        print("\n🎯 Next Steps:")
-        print("1. Test semantic location search with: python test_semantic_location.py")
+        print(f"\n🎯 Next Steps:")
+        print("1. Test semantic location search with: python scripts/test_semantic_location.py")
         print("2. Integrate with location matcher in: api/src/parsing/location_matcher.py")
         print("3. Run integration tests with real tweet data")
+        print(f"4. Backend used: {'FAISS' if use_faiss else 'Milvus'}")
 
     except Exception as e:
         print(f"❌ Error: {e}")

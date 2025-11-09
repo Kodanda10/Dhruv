@@ -12,13 +12,18 @@ import { useSystemHealth } from '../../src/hooks/useSystemHealth';
 global.fetch = jest.fn();
 
 describe('useSystemHealth Hook', () => {
+  const flushAsync = async () => {
+    await act(async () => {
+      await Promise.resolve();
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
+  afterEach(async () => {
+    await act(async () => {});
   });
 
   describe('Initial State', () => {
@@ -35,9 +40,9 @@ describe('useSystemHealth Hook', () => {
       expect(result.current.error).toBeNull();
     });
 
-    it('should respect enabled option', () => {
+    it('should respect enabled option', async () => {
       const { result } = renderHook(() => useSystemHealth({ enabled: false }));
-
+      await flushAsync();
       expect(result.current.loading).toBe(false);
       expect(global.fetch).not.toHaveBeenCalled();
     });
@@ -69,7 +74,7 @@ describe('useSystemHealth Hook', () => {
       });
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -94,7 +99,7 @@ describe('useSystemHealth Hook', () => {
       });
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -117,7 +122,7 @@ describe('useSystemHealth Hook', () => {
       });
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -133,7 +138,7 @@ describe('useSystemHealth Hook', () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -152,7 +157,7 @@ describe('useSystemHealth Hook', () => {
       });
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -163,32 +168,33 @@ describe('useSystemHealth Hook', () => {
 
   describe('Auto-refresh Functionality', () => {
     it('should auto-refresh data at specified interval', async () => {
+      jest.useFakeTimers();
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ status: 'healthy', timestamp: Date.now() })
       });
 
       const { result } = renderHook(() => useSystemHealth({ refreshInterval: 1000 }));
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
 
-      // Fast-forward time
       act(() => {
         jest.advanceTimersByTime(1000);
       });
-
+      await flushAsync();
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledTimes(2);
       });
+      jest.useRealTimers();
     });
 
-    it('should not auto-refresh when disabled', () => {
+    it('should not auto-refresh when disabled', async () => {
       const { result } = renderHook(() => useSystemHealth({ enabled: false }));
-
+      await flushAsync();
       expect(result.current.loading).toBe(false);
       expect(global.fetch).not.toHaveBeenCalled();
     });
@@ -209,7 +215,7 @@ describe('useSystemHealth Hook', () => {
       });
 
       const { result } = renderHook(() => useSystemHealth());
-
+      await flushAsync();
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
@@ -222,6 +228,7 @@ describe('useSystemHealth Hook', () => {
         await result.current.refetch();
       });
 
+      await flushAsync();
       expect(result.current.healthData).toEqual(mockData2);
       expect(callCount).toBe(2);
     });
@@ -230,16 +237,17 @@ describe('useSystemHealth Hook', () => {
   describe('Configuration Options', () => {
     it('should use custom refresh interval', () => {
       const customInterval = 5000;
+      const spy = jest.spyOn(global, 'setInterval');
 
       renderHook(() => useSystemHealth({ refreshInterval: customInterval }));
 
-      // Verify that setInterval was called with custom interval
-      expect(setInterval).toHaveBeenCalledWith(expect.any(Function), customInterval);
+      expect(spy).toHaveBeenCalledWith(expect.any(Function), customInterval);
+      spy.mockRestore();
     });
 
-    it('should handle disabled state correctly', () => {
+    it('should handle disabled state correctly', async () => {
       const { result } = renderHook(() => useSystemHealth({ enabled: false }));
-
+      await flushAsync();
       expect(result.current.loading).toBe(false);
       expect(result.current.healthData).toBeNull();
       expect(result.current.error).toBeNull();

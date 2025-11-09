@@ -1,5 +1,5 @@
 "use client";
-import parsedTweets from '../../data/parsed_tweets.json';
+// Removed mock data import - using only database data
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import SoftButton from './SoftButton';
@@ -21,7 +21,7 @@ type ParsedTweet = {
 };
 
 export default function HumanReviewSimple() {
-  const [tweets, setTweets] = useState<ParsedTweet[]>(parsedTweets as unknown as ParsedTweet[]);
+  const [tweets, setTweets] = useState<ParsedTweet[]>([]); // Start empty - fetch from database
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
 
@@ -107,8 +107,8 @@ export default function HumanReviewSimple() {
                 <div className="text-xs text-teal-300">{new Date(tweet.timestamp).toLocaleString('hi-IN')}</div>
                 <div className={`text-xs px-2 py-1 rounded ${
                   tweet.confidence > 0.7 ? 'bg-green-900 text-green-200' :
-                  tweet.confidence > 0.5 ? 'bg-yellow-900 text-yellow-200' :
-                  'bg-red-900 text-red-200'
+                    tweet.confidence > 0.5 ? 'bg-yellow-900 text-yellow-200' :
+                      'bg-red-900 text-red-200'
                 }`}>
                   विश्वास: {(tweet.confidence * 100).toFixed(0)}%
                 </div>
@@ -220,8 +220,8 @@ export default function HumanReviewSimple() {
                 <div className="text-teal-50">{tweet.content.substring(0, 100)}...</div>
                 <div className={`text-xs px-2 py-1 rounded ${
                   tweet.review_status === 'approved' ? 'bg-green-900 text-green-200' :
-                  tweet.review_status === 'rejected' ? 'bg-red-900 text-red-200' :
-                  'bg-yellow-900 text-yellow-200'
+                    tweet.review_status === 'rejected' ? 'bg-red-900 text-red-200' :
+                      'bg-yellow-900 text-yellow-200'
                 }`}>
                   {tweet.review_status}
                 </div>

@@ -1,0 +1,106 @@
+name: Fetch and Parse New Tweets Hourly
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  PARSE_BATCH_LIMIT: 25
+
+jobs:
+  fetch-and-parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25 # Allow time for fetch rate limits + parsing
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+          pip install python-dotenv
+      
+      - name: Install Node.js dependencies
+        run: npm ci
+      
+      - name: Fetch new tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+        run: |
+          echo "📥 Fetching new tweets from @opchoudhary..."
+          python scripts/fetch_tweets.py --handle opchoudhary --resume
+          echo "✅ Fetch complete"
+      
+      - name: Count newly fetched tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "📊 Checking for newly fetched tweets..."
+          # Note: This step is informational, actual parsing happens next
+      
+      - name: Parse newly fetched tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PARSE_BATCH_LIMIT: 25
+        run: |
+          echo "🔄 Parsing newly fetched tweets..."
+          
+          # Run parser in loop until queue is empty (for newly fetched tweets)
+          MAX_ITERATIONS=5
+          ITERATION=0
+          
+          while [ $ITERATION -lt $MAX_ITERATIONS ]; do
+            echo "Parser iteration $((ITERATION + 1))/$MAX_ITERATIONS"
+            
+            # Run parser (will process up to PARSE_BATCH_LIMIT tweets)
+            node scripts/parse_tweets_with_three_layer.js
+            
+            # Check if there are still pending tweets
+            # Note: We only parse tweets fetched in the last hour to avoid re-parsing old ones
+            PENDING_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM raw_tweets WHERE processing_status='pending' AND fetched_at > NOW() - INTERVAL '2 hours';" | tr -d ' ')
+            
+            if [ "$PENDING_COUNT" -eq 0 ]; then
+              echo "✅ All newly fetched tweets processed"
+              break
+            fi
+            
+            echo "⏳ Still $PENDING_COUNT newly fetched tweets pending, continuing..."
+            ITERATION=$((ITERATION + 1))
+            
+            # Small delay between iterations
+            sleep 5
+          done
+          
+          if [ $ITERATION -eq $MAX_ITERATIONS ]; then
+            echo "⚠️ Reached max iterations, some tweets may still be pending"
+          fi
+      
+      - name: Log job metrics
+        if: always()
+        run: |
+          echo "Job completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+

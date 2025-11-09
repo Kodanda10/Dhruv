@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "../.tmp-script-build"
+  },
+  "include": [
+    "../src/lib/parsing/**/*",
+    "../src/lib/i18n/**/*"
+  ]
+}

@@ -29,9 +29,11 @@ export async function checkAuthStatus(): Promise<AuthState> {
     const response = await fetch('/api/auth/status', {
       method: 'GET',
       credentials: 'include', // Include cookies
+      cache: 'no-store', // Ensure fresh check
     });
 
     if (!response.ok) {
+      console.warn('Auth status check failed:', response.status, response.statusText);
       return {
         isAuthenticated: false,
         user: null,
@@ -41,6 +43,7 @@ export async function checkAuthStatus(): Promise<AuthState> {
     }
 
     const data = await response.json();
+    console.log('Auth status response:', { authenticated: data.authenticated, user: data.user });
 
     return {
       isAuthenticated: data.authenticated || false,
@@ -64,16 +67,28 @@ export async function checkAuthStatus(): Promise<AuthState> {
  */
 export async function login(credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> {
   try {
+    // Trim credentials before sending
+    const trimmedCredentials = {
+      username: (credentials.username || '').trim(),
+      password: (credentials.password || '').trim()
+    };
+    
+    console.log('Sending login request:', {
+      username: trimmedCredentials.username,
+      passwordLength: trimmedCredentials.password.length
+    });
+    
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include', // Include cookies
-      body: JSON.stringify(credentials),
+      body: JSON.stringify(trimmedCredentials),
     });
 
     const data = await response.json();
+    console.log('Login response:', { success: data.success, error: data.error });
 
     if (data.success) {
       console.log('Login successful');

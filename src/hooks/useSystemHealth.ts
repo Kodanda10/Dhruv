@@ -52,11 +52,14 @@ export function useSystemHealth(options: UseSystemHealthOptions = {}): UseSystem
   const { refreshInterval = 30000, enabled = true } = options;
 
   const [healthData, setHealthData] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(enabled));
   const [error, setError] = useState<string | null>(null);
 
   const fetchHealth = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setError(null);
@@ -77,12 +80,15 @@ export function useSystemHealth(options: UseSystemHealthOptions = {}): UseSystem
   }, [enabled]);
 
   useEffect(() => {
-    if (enabled) {
-      fetchHealth();
-
-      const interval = setInterval(fetchHealth, refreshInterval);
-      return () => clearInterval(interval);
+    if (!enabled) {
+      setLoading(false);
+      return;
     }
+
+    fetchHealth();
+
+    const interval = setInterval(fetchHealth, refreshInterval);
+    return () => clearInterval(interval);
   }, [fetchHealth, refreshInterval, enabled]);
 
   const isHealthy = healthData?.status === 'healthy';

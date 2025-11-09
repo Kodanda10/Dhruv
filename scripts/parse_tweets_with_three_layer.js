@@ -6,6 +6,10 @@
  * Runs hourly via GitHub Actions after tweet fetching
  */
 
+require('ts-node').register({
+  transpileOnly: true,
+  project: require('path').join(__dirname, 'tsconfig.scripts.json'),
+});
 const { Pool } = require('pg');
 const { ThreeLayerConsensusEngine } = require('../src/lib/parsing/three-layer-consensus-engine');
 const { RateLimiter } = require('../src/lib/parsing/rate-limiter');
@@ -19,7 +23,7 @@ const pool = new Pool({
 async function getPendingTweets(limit = 50) {
   try {
     const result = await pool.query(`
-      SELECT id, tweet_id, text, created_at, author_handle,
+      SELECT tweet_id, text, created_at, author_handle,
              retweet_count, reply_count, like_count, quote_count,
              hashtags, mentions, urls
       FROM raw_tweets
@@ -29,7 +33,6 @@ async function getPendingTweets(limit = 50) {
     `, [limit]);
 
     return result.rows.map(row => ({
-      id: row.id,
       tweet_id: row.tweet_id,
       text: row.text,
       created_at: row.created_at,
@@ -38,9 +41,21 @@ async function getPendingTweets(limit = 50) {
       reply_count: parseInt(row.reply_count) || 0,
       like_count: parseInt(row.like_count) || 0,
       quote_count: parseInt(row.quote_count) || 0,
-      hashtags: JSON.parse(row.hashtags || '[]'),
-      mentions: JSON.parse(row.mentions || '[]'),
-      urls: JSON.parse(row.urls || '[]'),
+      hashtags: Array.isArray(row.hashtags)
+        ? row.hashtags
+        : row.hashtags
+        ? JSON.parse(row.hashtags)
+        : [],
+      mentions: Array.isArray(row.mentions)
+        ? row.mentions
+        : row.mentions
+        ? JSON.parse(row.mentions)
+        : [],
+      urls: Array.isArray(row.urls)
+        ? row.urls
+        : row.urls
+        ? JSON.parse(row.urls)
+        : [],
     }));
   } catch (error) {
     console.error('Error fetching pending tweets:', error);
@@ -62,7 +77,7 @@ async function updateTweetStatus(tweetId, status) {
 
 async function saveParsedEvent(parsedResult) {
   try {
-    const { getEventTypeInHindi } = await import('../src/lib/i18n/event-types-hi.js');
+    const { getEventTypeInHindi } = await import('../src/lib/i18n/event-types-hi.ts');
 
     await pool.query(`
       INSERT INTO parsed_events (
@@ -94,9 +109,9 @@ async function saveParsedEvent(parsedResult) {
       parsedResult.event_date,
       parsedResult.date_confidence,
       JSON.stringify(parsedResult.locations || []),
-      JSON.stringify(parsedResult.people_mentioned || []),
-      JSON.stringify(parsedResult.organizations || []),
-      JSON.stringify(parsedResult.schemes_mentioned || []),
+      parsedResult.people_mentioned || [],
+      parsedResult.organizations || [],
+      parsedResult.schemes_mentioned || [],
       parsedResult.overall_confidence,
       parsedResult.needs_review,
       parsedResult.review_status || 'pending',
@@ -110,9 +125,11 @@ async function saveParsedEvent(parsedResult) {
 }
 
 async function initializeParsingEngine() {
+  // Very conservative rate limits to respect API limits
+  // Gemini free tier: ~2-3 requests per minute
   const rateLimiter = new RateLimiter({
-    geminiRequestsPerMinute: 5, // Conservative for production
-    ollamaRequestsPerMinute: 60,
+    geminiRequestsPerMinute: 2, // Very conservative: 2 RPM = 1 request every 30 seconds
+    ollamaRequestsPerMinute: 30, // Conservative: 30 RPM = 1 request every 2 seconds
     regexRequestsPerMinute: 1000
   });
 
@@ -138,7 +155,8 @@ async function main() {
     engine = await initializeParsingEngine();
 
     // Get pending tweets
-    const pendingTweets = await getPendingTweets();
+    const maxBatch = Number(process.env.PARSE_BATCH_LIMIT || 25);
+    const pendingTweets = await getPendingTweets(maxBatch);
     console.log(`📊 Found ${pendingTweets.length} pending tweets to parse`);
 
     if (pendingTweets.length === 0) {
@@ -156,7 +174,8 @@ async function main() {
 
         const parsedResult = await engine.parseTweet(
           tweet.text,
-          tweet.tweet_id
+          tweet.tweet_id,
+          new Date(tweet.created_at)
         );
 
         // Save parsed result
@@ -168,8 +187,12 @@ async function main() {
         successCount++;
         console.log(`✅ Parsed tweet ${tweet.tweet_id}: ${parsedResult.event_type} (${(parsedResult.overall_confidence * 100).toFixed(1)}% confidence)`);
 
-        // Small delay to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Conservative delay to respect rate limits
+        // Gemini: 2 RPM = 30 seconds between requests
+        // Add extra buffer for safety
+        const delayMs = 35000; // 35 seconds between tweets (conservative)
+        console.log(`⏳ Waiting ${delayMs/1000}s before next tweet (rate limit protection)...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
 
       } catch (error) {
         console.error(`❌ Failed to parse tweet ${tweet.tweet_id}:`, error);
@@ -187,9 +210,6 @@ async function main() {
     console.error('❌ Error in tweet parsing:', error);
     process.exit(1);
   } finally {
-    if (engine) {
-      await engine.cleanup();
-    }
     await pool.end();
   }
 }

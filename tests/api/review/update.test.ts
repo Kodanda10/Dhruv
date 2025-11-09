@@ -13,8 +13,18 @@ import { Pool } from 'pg';
 jest.mock('next/server', () => ({
   NextRequest: class MockNextRequest {
     url: string;
+    private readonly _body: string;
     constructor(input: string | URL, init?: RequestInit) {
       this.url = typeof input === 'string' ? input : input.toString();
+      this._body = typeof init?.body === 'string' ? init.body : '';
+    }
+    async json() {
+      if (!this._body) return {};
+      try {
+        return JSON.parse(this._body);
+      } catch {
+        return {};
+      }
     }
   },
   NextResponse: {
@@ -83,9 +93,14 @@ describe('POST /api/review/update - Review Update API', () => {
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE parsed_events SET'),
         expect.arrayContaining([
-          'rally', 'रैली', JSON.stringify(['रायगढ़', 'रायपुर']),
-          JSON.stringify(['मुख्यमंत्री']), JSON.stringify(['भाजपा']),
-          JSON.stringify(['योजना']), 'Updated classification', '123'
+          'rally',
+          'रैली',
+          ['मुख्यमंत्री'],
+          ['भाजपा'],
+          ['योजना'],
+          JSON.stringify(['रायगढ़', 'रायपुर']),
+          'Updated classification',
+          '123'
         ])
       );
     });

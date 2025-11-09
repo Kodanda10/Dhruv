@@ -1,0 +1,80 @@
+name: Parse All Pending Tweets (One-Time)
+
+on:
+  workflow_dispatch: # Manual trigger only - this is a ONE-TIME operation
+    inputs:
+      max_batches:
+        description: 'Maximum number of batches to process (leave empty for unlimited)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run (count only, no parsing)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  PARSE_BATCH_LIMIT: 25
+
+jobs:
+  parse-all-pending:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60 # Allow time for processing large batches
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Count pending tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "📊 Counting pending tweets..."
+          PENDING_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM raw_tweets WHERE processing_status='pending';" | tr -d ' ')
+          echo "Found $PENDING_COUNT pending tweets"
+      
+      - name: Parse all pending tweets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PARSE_BATCH_LIMIT: 25
+          MAX_BATCHES: ${{ inputs.max_batches }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          echo "🚀 Starting one-time backfill: Parse All Pending Tweets"
+          node scripts/ops/parse-all-pending-tweets.js
+      
+      - name: Final status
+        if: always()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "📊 Final status:"
+          psql "$DATABASE_URL" -c "
+            SELECT 
+              processing_status,
+              COUNT(*) as count
+            FROM raw_tweets
+            GROUP BY processing_status
+            ORDER BY processing_status;
+          "
+
+

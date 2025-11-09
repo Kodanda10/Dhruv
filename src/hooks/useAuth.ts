@@ -56,6 +56,8 @@ export function useAuth(): UseAuthReturn {
 
       if (result.success) {
         // Refresh auth status to get updated user info
+        // Add a small delay to ensure cookie is set
+        await new Promise(resolve => setTimeout(resolve, 100));
         await refreshAuth();
         return true;
       } else {

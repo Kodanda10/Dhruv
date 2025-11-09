@@ -22,11 +22,14 @@ export class RateLimiter {
   private readonly HISTORY_RETENTION_MS = 60 * 1000; // Keep 1 minute of history
 
   constructor(config: RateLimiterConfig) {
-    // Override with free tier limits for safety
+    // Override with very conservative free tier limits
     this.config = {
       ...config,
-      geminiRPM: Math.min(config.geminiRPM || 10, 5), // Very conservative: max 5 RPM for Gemini free tier
-      ollamaRPM: config.ollamaRPM || 60
+      geminiRPM: Math.min(config.geminiRPM || 10, 2), // Very conservative: max 2 RPM for Gemini free tier (1 req per 30s)
+      ollamaRPM: Math.min(config.ollamaRPM || 60, 30), // Conservative: 30 RPM for Ollama (1 req per 2s)
+      maxRetries: config.maxRetries || 10,
+      backoffMultiplier: config.backoffMultiplier || 2,
+      initialBackoffMs: config.initialBackoffMs || 5000 // Start with 5 second backoff
     };
   }
 
@@ -85,7 +88,7 @@ export class RateLimiter {
   getStatus(): {
     gemini: { used: number; limit: number; remaining: number };
     ollama: { used: number; limit: number; remaining: number };
-  } {
+    } {
     this.cleanupOldRequests();
 
     const now = Date.now();

@@ -1,4 +1,4 @@
-import parsedTweets from '../../data/parsed_tweets.json';
+// Removed mock data import - metrics should use database data via API
 import { parsePost, formatHindiDate } from '@/utils/parse';
 
 type CountMap = Record<string, number>;
@@ -19,8 +19,16 @@ function topN(map: CountMap, n: number): Array<{ key: string; count: number }> {
     .map(([key, count]) => ({ key, count }));
 }
 
-export function computeMetrics() {
-  // Use parsed tweets from database
+export function computeMetrics(parsedTweets: any[] = []) {
+  // Accept parsed tweets as parameter - should come from database via API
+  // Return empty metrics if no data provided
+  if (!parsedTweets || parsedTweets.length === 0) {
+    return {
+      places: [],
+      actions: [],
+    };
+  }
+  
   const parsed = parsedTweets.map((p: any) => {
     if (p.parsed && p.parsed.event_type) {
       return {

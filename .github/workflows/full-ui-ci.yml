@@ -1,0 +1,165 @@
+name: 🧪 Full UI + Load + Visual Tests
+
+on:
+  push:
+    branches: [main, analysis-main]
+  pull_request:
+    branches: [main, analysis-main]
+  workflow_dispatch:
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 🚀 Start server
+        run: npm run start &
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: test
+      
+      - name: ⏳ Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+      
+      - name: 🧪 Run theme consistency tests
+        run: npm run test:theme
+      
+      - name: 🎨 Run visual regression tests
+        run: npx playwright test tests/ui/themeConsistency.spec.ts
+        continue-on-error: true
+      
+      - name: 📱 Run responsive layout tests
+        run: npx playwright test tests/ui/themeAndResponsive.spec.ts
+        continue-on-error: true
+      
+      - name: ♿ Run accessibility tests
+        run: npx playwright test tests/accessibility.spec.ts
+      
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
+      
+      - name: 🏁 Stop server
+        if: always()
+        run: pkill -f "next start" || true
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 🚀 Start server
+        run: npm run start &
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: test
+          PORT: 3001
+      
+      - name: ⏳ Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3001/api/health || curl -f http://localhost:3001/; do sleep 2; done'
+      
+      - name: 📈 Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D9B9
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: 🔥 Run load tests
+        run: k6 run tests/load.k6.js
+        continue-on-error: true
+      
+      - name: 🏁 Stop server
+        if: always()
+        run: pkill -f "next start" || true
+
+  lighthouse-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 🚀 Start server
+        run: npm run start &
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: test
+      
+      - name: ⏳ Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+      
+      - name: 📊 Install Lighthouse CI
+        run: npm install -g @lhci/cli
+      
+      - name: 🔍 Run Lighthouse audit
+        run: |
+          lighthouse http://localhost:3000 --output html --output-path=reports/lighthouse.html --chrome-flags="--headless" --only-categories=performance,accessibility,best-practices
+        continue-on-error: true
+      
+      - name: 📤 Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: reports/lighthouse.html
+          retention-days: 7
+      
+      - name: 🏁 Stop server
+        if: always()
+        run: pkill -f "next start" || true

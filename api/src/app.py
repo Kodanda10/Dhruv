@@ -340,13 +340,14 @@ def create_app() -> Flask:
       conn = psycopg2.connect(database_url)
       cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
       
-      # Build query
+      # Build query - include author_username if available
       query = """
         SELECT 
           pe.id,
           pe.tweet_id,
           rt.text as tweet_text,
           rt.created_at as tweet_created_at,
+          COALESCE(rt.author_handle, 'unknown') as author_username,
           pe.event_type,
           pe.event_type_confidence,
           pe.event_date,

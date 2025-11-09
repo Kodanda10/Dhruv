@@ -16,13 +16,15 @@ export function cn(...inputs: ClassValue[]) {
  * @param locale - 'hi' for Hindi, 'en' for English
  * @returns Formatted date string
  */
-export function formatDate(date: string | Date, locale: 'hi' | 'en' = 'hi'): string {
+export function formatDate(date: string | Date | null | undefined, locale: 'hi' | 'en' = 'hi'): string {
+  if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return '';
   
   if (locale === 'hi') {
     const day = d.getDate();
     const months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 
-                    'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+      'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
     const month = months[d.getMonth()];
     const year = d.getFullYear();
     return `${day} ${month} ${year}`;
@@ -42,6 +44,7 @@ export function formatDate(date: string | Date, locale: 'hi' | 'en' = 'hi'): str
  * @returns Truncated text
  */
 export function truncateText(text: string, maxLength: number = 100): string {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
@@ -161,4 +164,3 @@ export function downloadCSV(data: Record<string, any>[], filename: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
-

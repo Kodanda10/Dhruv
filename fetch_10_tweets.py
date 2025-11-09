@@ -15,6 +15,7 @@ import os
 import sys
 from pathlib import Path
 import psycopg2
+import psycopg2.extras
 from dotenv import load_dotenv
 import tweepy
 
@@ -51,16 +52,14 @@ def insert_tweets(conn, tweets: list, author_handle: str):
                 # Extract entities safely
                 hashtags = [tag.get('tag', '') for tag in tweet.get('entities', {}).get('hashtags', [])]
                 mentions = [mention.get('username', '') for mention in tweet.get('entities', {}).get('mentions', [])]
-                urls = [url.get('url', '') for url in tweet.get('entities', {}).get('urls', [])]
                 
-                # Insert tweet
+                # Insert tweet (using existing schema)
                 cur.execute("""
                     INSERT INTO raw_tweets (
                         tweet_id, author_handle, text, created_at,
-                        hashtags, mentions, urls,
-                        retweet_count, like_count, reply_count, quote_count,
-                        processing_status
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
+                        hashtags, mentions,
+                        processing_status, fetched_at, tweet_json
+                    ) VALUES (%s, %s, %s, %s, %s, %s, 'pending', NOW(), %s)
                     ON CONFLICT (tweet_id) DO NOTHING
                     RETURNING tweet_id
                 """, (
@@ -70,11 +69,7 @@ def insert_tweets(conn, tweets: list, author_handle: str):
                     tweet['created_at'],
                     hashtags,
                     mentions,
-                    urls,
-                    tweet['public_metrics'].get('retweet_count', 0),
-                    tweet['public_metrics'].get('like_count', 0),
-                    tweet['public_metrics'].get('reply_count', 0),
-                    tweet['public_metrics'].get('quote_count', 0),
+                    psycopg2.extras.Json(tweet),  # Store full tweet data
                 ))
                 
                 # Check if actually inserted (not duplicate)
