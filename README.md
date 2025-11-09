@@ -97,7 +97,7 @@ All scripts are designed to be run stepwise. Always validate that four variants 
    - Launches Chromium via Playwright.
    - Discovers Districts and iterates both filters: ग्रामीण and शहरी.
    - Extracts the largest/primary table, supports pagination.
-   - Normalizes core keys: district, block, panchayat, village, ward, ulb.
+   - Normalizes core keys: district, block, panchayat, village, ward, ulb (as applicable by row)
    - Saves incrementally for resilience.
 
    Usage (examples):
@@ -229,6 +229,36 @@ UI page:
   - Displays Hindi, English, and Transliteration columns at minimum.
 
 --------------------------------------------------------------------------------
+Labs Features (Experimental)
+--------------------------------------------------------------------------------
+
+This section describes experimental features under development, accessible via `/labs/*` and `/labs-v2/*` routes. These features are built in isolation for future integration into the main dashboard.
+
+### 1. FAISS Semantic Search
+- **Purpose:** Fast semantic search for location names using a FAISS vector database.
+- **API:** `GET /api/labs/faiss/search?q=<query>&limit=<limit>`
+- **UI:** `/labs/search` provides an interface to test the FAISS search.
+
+### 2. Milvus Health Check
+- **Purpose:** Provides a health check endpoint for the Milvus fallback service.
+- **API:** `GET /api/labs/milvus/health`
+
+### 3. Labs V2 Review UI
+- **Purpose:** AI-assisted review interface for parsed events, designed for human validation and correction.
+- **UI:** `/labs-v2/review` page.
+- **Components:**
+  - **Event Fetching:** `/api/labs-v2/parsed-events/next` endpoint to retrieve the next pending event.
+  - **Location Resolver:** Component for suggesting and confirming event locations.
+  - **Event Resolver:** Component for suggesting and confirming event types.
+  - **People Resolver:** Component for managing people associated with an event.
+  - **Scheme Resolver:** Component for managing schemes associated with an event.
+  - **Pinned Summary:** A sticky summary panel displaying key resolved entities.
+  - **Learning Banner:** A toggleable banner indicating the status of dynamic learning.
+  - **Keyboard Shortcuts:** Implemented via `useKeyboardShortcuts` hook for efficient navigation and actions.
+
+All Labs features are developed with a TDD approach and are covered by dedicated unit and E2E tests.
+
+--------------------------------------------------------------------------------
 Validation & Checklist (PR readiness)
 --------------------------------------------------------------------------------
 
@@ -303,4 +333,3 @@ Notes
 - This README is the single source of truth for the four‑variant rule and data pipeline expectations used by this project.
 - If portal schema changes, update selectors in scripts/scrape_cg_portal.js and re‑run limited tests before full runs.
 - Always prefer the latest official sources. Avoid simulated data for production artifacts.
-
