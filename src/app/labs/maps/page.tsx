@@ -39,8 +39,8 @@ export default function MapsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 flex items-center justify-center">
-        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-6">
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="glassmorphic-card border border-red-500/50">
           <p className="text-red-200">{error}</p>
         </div>
       </div>
@@ -48,36 +48,36 @@ export default function MapsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 shadow-xl border border-white/20 mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">🗺️ Mapbox Maps</h1>
-          <p className="text-white/80 mb-4">वास्तविक घटना स्थानों का मानचित्र</p>
+        <div className="glassmorphic-card mb-6">
+          <h1 className="text-3xl font-bold text-primary mb-2">🗺️ Mapbox Maps</h1>
+          <p className="text-secondary mb-4">वास्तविक घटना स्थानों का मानचित्र</p>
 
           {stats && (
             <div className="grid grid-cols-3 gap-4 mt-4">
-              <div className="bg-white/5 rounded-lg p-4">
-                <div className="text-white/60 text-sm">कुल घटनाएं</div>
-                <div className="text-white text-2xl font-bold">{stats.totalEvents}</div>
+              <div className="glassmorphic rounded-lg p-4">
+                <div className="text-secondary text-sm">कुल घटनाएं</div>
+                <div className="text-primary text-2xl font-bold">{stats.totalEvents}</div>
               </div>
-              <div className="bg-white/5 rounded-lg p-4">
-                <div className="text-white/60 text-sm">अद्वितीय स्थान</div>
-                <div className="text-white text-2xl font-bold">{stats.uniqueLocations}</div>
+              <div className="glassmorphic rounded-lg p-4">
+                <div className="text-secondary text-sm">अद्वितीय स्थान</div>
+                <div className="text-primary text-2xl font-bold">{stats.uniqueLocations}</div>
               </div>
-              <div className="bg-white/5 rounded-lg p-4">
-                <div className="text-white/60 text-sm">क्लस्टर</div>
-                <div className="text-white text-2xl font-bold">{stats.clusters}</div>
+              <div className="glassmorphic rounded-lg p-4">
+                <div className="text-secondary text-sm">क्लस्टर</div>
+                <div className="text-primary text-2xl font-bold">{stats.clusters}</div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-xl">
+        <div className="glassmorphic-card">
           {isLoading ? (
             <div className="flex items-center justify-center h-[600px]">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">मानचित्र लोड हो रहा है...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-green mx-auto"></div>
+                <p className="mt-4 text-secondary">मानचित्र लोड हो रहा है...</p>
               </div>
             </div>
           ) : (

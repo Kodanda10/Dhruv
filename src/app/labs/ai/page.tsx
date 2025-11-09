@@ -52,10 +52,10 @@ export default function AIPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 flex items-center justify-center">
+      <div className="min-h-screen p-8 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="text-white mt-4">लोड हो रहा है...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-green mx-auto"></div>
+          <p className="text-primary mt-4">लोड हो रहा है...</p>
         </div>
       </div>
     );
@@ -63,8 +63,8 @@ export default function AIPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 flex items-center justify-center">
-        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-6">
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="glassmorphic-card border border-red-500/50">
           <p className="text-red-200">{error}</p>
         </div>
       </div>
@@ -73,40 +73,40 @@ export default function AIPage() {
 
   if (!tweet) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 flex items-center justify-center">
-        <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6">
-          <p className="text-white">कोई ट्वीट उपलब्ध नहीं</p>
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="glassmorphic-card">
+          <p className="text-primary">कोई ट्वीट उपलब्ध नहीं</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 shadow-xl border border-white/20 mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">🤖 AI Assistant Demo</h1>
-          <p className="text-white/80">AI सहायक सुझाव का परीक्षण करें</p>
+        <div className="glassmorphic-card mb-6">
+          <h1 className="text-3xl font-bold text-primary mb-2">🤖 AI Assistant Demo</h1>
+          <p className="text-secondary">AI सहायक सुझाव का परीक्षण करें</p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 shadow-xl border border-white/20 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">ट्वीट</h2>
-          <div className="bg-white/5 rounded-lg p-4 mb-4">
-            <p className="text-white">{tweet.content}</p>
+        <div className="glassmorphic-card mb-6">
+          <h2 className="text-xl font-semibold text-primary mb-4">ट्वीट</h2>
+          <div className="glassmorphic rounded-lg p-4 mb-4">
+            <p className="text-primary">{tweet.content}</p>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-white/60">घटना प्रकार:</span>
-              <span className="text-white ml-2">{tweet.event_type}</span>
+              <span className="text-secondary">घटना प्रकार:</span>
+              <span className="text-primary ml-2">{tweet.event_type}</span>
             </div>
             <div>
-              <span className="text-white/60">स्थान:</span>
-              <span className="text-white ml-2">{tweet.locations.join(', ') || 'N/A'}</span>
+              <span className="text-secondary">स्थान:</span>
+              <span className="text-primary ml-2">{tweet.locations.join(', ') || 'N/A'}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-xl">
+        <div className="glassmorphic-card">
           <AIReviewAssistant tweet={tweet} onSuggestionAccept={handleSuggestionAccept} />
         </div>
       </div>

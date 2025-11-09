@@ -69,27 +69,27 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 shadow-xl border border-white/20">
-          <h1 className="text-3xl font-bold text-white mb-2">🔍 FAISS Vector Search</h1>
-          <p className="text-white/80 mb-6">स्थान खोज के लिए FAISS वेक्टर खोज का परीक्षण करें</p>
+        <div className="glassmorphic-card">
+          <h1 className="text-3xl font-bold text-primary mb-2">🔍 FAISS Vector Search</h1>
+          <p className="text-secondary mb-6">स्थान खोज के लिए FAISS वेक्टर खोज का परीक्षण करें</p>
 
           {stats && (
-            <div className="bg-white/5 rounded-lg p-4 mb-6">
-              <h2 className="text-lg font-semibold text-white mb-2">Index Statistics</h2>
+            <div className="glassmorphic rounded-lg p-4 mb-6">
+              <h2 className="text-lg font-semibold text-primary mb-2">Index Statistics</h2>
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-white/60">Locations:</span>
-                  <span className="text-white ml-2 font-semibold">{stats.locationCount.toLocaleString()}</span>
+                  <span className="text-secondary">Locations:</span>
+                  <span className="text-primary ml-2 font-semibold">{stats.locationCount.toLocaleString()}</span>
                 </div>
                 <div>
-                  <span className="text-white/60">Dimension:</span>
-                  <span className="text-white ml-2 font-semibold">{stats.dimension}</span>
+                  <span className="text-secondary">Dimension:</span>
+                  <span className="text-primary ml-2 font-semibold">{stats.dimension}</span>
                 </div>
                 <div>
-                  <span className="text-white/60">Backend:</span>
-                  <span className="text-white ml-2 font-semibold">FAISS</span>
+                  <span className="text-secondary">Backend:</span>
+                  <span className="text-primary ml-2 font-semibold">FAISS</span>
                 </div>
               </div>
             </div>
@@ -102,46 +102,46 @@ export default function SearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="स्थान नाम दर्ज करें (उदा: खरसिया)"
-              className="flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 rounded-lg"
             />
             <button
               onClick={handleSearch}
               disabled={isLoading}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+              className="neon-button px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'खोज रहे हैं...' : 'खोजें'}
             </button>
           </div>
 
           {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6">
+            <div className="glassmorphic border border-red-500/50 rounded-lg p-4 mb-6">
               <p className="text-red-200">{error}</p>
             </div>
           )}
 
           {latency !== null && (
-            <div className="text-white/80 text-sm mb-4">
+            <div className="text-secondary text-sm mb-4">
               लेटेंसी: {latency}ms
             </div>
           )}
 
           {results.length > 0 && (
             <div className="space-y-3">
-              <h2 className="text-xl font-semibold text-white mb-4">परिणाम (Top {results.length})</h2>
+              <h2 className="text-xl font-semibold text-primary mb-4">परिणाम (Top {results.length})</h2>
               {results.map((result, index) => (
                 <div
                   key={result.id || index}
-                  className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20"
+                  className="glassmorphic rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-white font-semibold text-lg">{result.name}</h3>
-                      <p className="text-white/60 text-sm mt-1">
+                      <h3 className="text-primary font-semibold text-lg">{result.name}</h3>
+                      <p className="text-secondary text-sm mt-1">
                         Score: {(result.score || result.similarity_score || 0).toFixed(4)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs bg-blue-500/20 text-blue-200 px-2 py-1 rounded">
+                      <span className="text-xs glassmorphic px-2 py-1 rounded">
                         {result.match_type || 'semantic'}
                       </span>
                     </div>
@@ -152,7 +152,7 @@ export default function SearchPage() {
           )}
 
           {!isLoading && results.length === 0 && !error && query && (
-            <div className="text-center py-8 text-white/60">
+            <div className="text-center py-8 text-secondary">
               कोई परिणाम नहीं मिला
             </div>
           )}
