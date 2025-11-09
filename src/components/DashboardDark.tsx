@@ -359,11 +359,11 @@ export default function DashboardDark() {
     }
   };
 
-  // Temporarily disabled sorting
-  // const { sortedData, handleSort, getSortIcon } = useSortableTable(sanitizedData, getFieldValue);
-  const sortedData = sanitizedData; // Use unsorted data
-  const handleSort = () => {}; // No-op
-  const getSortIcon = () => ''; // No-op
+  // ✅ Corrected function definition
+  const handleSort = (field: string) => {
+    setSortField(field);
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
 
   // Fix count discrepancy: Use actual data source count, not parsed length
   const totalCount = serverRows.length > 0 ? serverRows.length : 0;
@@ -546,7 +546,7 @@ export default function DashboardDark() {
             <tr>
               <th 
                 className="text-center font-semibold p-2 border-b border-white border-opacity-20 cursor-pointer hover:bg-white hover:bg-opacity-10 transition-colors"
-                onClick={() => handleSort('date')}
+                onClick={() => handleSort('date' as any)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
