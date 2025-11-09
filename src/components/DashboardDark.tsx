@@ -359,6 +359,10 @@ export default function DashboardDark() {
     }
   };
 
+  // Sorting state (temporarily disabled - hooks not found)
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
   // ✅ Corrected function definition
   const handleSort = (field: string) => {
     setSortField(field);
@@ -367,6 +371,24 @@ export default function DashboardDark() {
 
   // Fix count discrepancy: Use actual data source count, not parsed length
   const totalCount = serverRows.length > 0 ? serverRows.length : 0;
+
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortField) return serverRows;
+    return [...serverRows].sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+      if (aVal === bVal) return 0;
+      const comparison = aVal > bVal ? 1 : -1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [serverRows, sortField, sortDirection]);
+
+  // Get sort icon
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
   const shownCount = filtered.length;
 
   // Show loading state

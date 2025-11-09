@@ -1,0 +1,95 @@
+name: Labs Verify
+
+on:
+  push:
+    branches:
+      - feature/labs-prod-ready
+  pull_request:
+    branches:
+      - feature/labs-prod-ready
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify FAISS index exists
+        run: |
+          if [ ! -f "data/embeddings/multilingual_geography/faiss_index.bin" ]; then
+            echo "FAISS index not found - skipping FAISS tests"
+          else
+            echo "FAISS index found"
+          fi
+
+      - name: Build application
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
+
+      - name: Start application
+        run: npm run start &
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
+
+      - name: Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/system/health; do sleep 2; done'
+
+      - name: Run Playwright E2E tests
+        run: npm run labs:test:e2e
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Run k6 load tests
+        run: npm run labs:test:load
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse
+        run: npm run labs:lighthouse
+        continue-on-error: true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: labs-artifacts
+          path: |
+            reports/labs-*.html
+            perf/labs-api-summary.json
+            playwright-report/
+          retention-days: 7
+
+      - name: Check FAISS manifest
+        run: |
+          if [ -f "data/embeddings/multilingual_geography/locations.json" ]; then
+            echo "FAISS locations file found"
+            LOCATION_COUNT=$(cat data/embeddings/multilingual_geography/locations.json | jq 'length')
+            echo "Location count: $LOCATION_COUNT"
+          fi
+
+      - name: Check learning artifacts
+        run: |
+          if [ -d "data/learning" ]; then
+            echo "Learning artifacts directory found"
+            ls -la data/learning/ || echo "No artifacts yet"
+          fi
+
