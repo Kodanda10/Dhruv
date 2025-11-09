@@ -74,8 +74,7 @@ export async function GET(request: NextRequest) {
         paramIndex += 2;
       }
 
-      query += ` ORDER BY rt.created_at DESC LIMIT $${paramIndex}`;
-      params.push(limit);
+      query += ` ORDER BY rt.created_at DESC`;
 
       const result = await client.query(query, params);
 
@@ -97,7 +96,6 @@ export async function GET(request: NextRequest) {
         console.log(`[API] Parsed events query result:`, {
           returned: result.rows.length,
           total_in_db: opChoudharyCount,
-          limit_requested: limit,
           query_used: query.substring(0, 100) + '...'
         });
       } catch (e) {

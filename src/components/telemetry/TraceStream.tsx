@@ -153,7 +153,7 @@ export default function TraceStream({ onTraceClick }: TraceStreamProps) {
                   <span className="text-secondary">Latency: </span>
                   <span className={`font-semibold ${
                     trace.latency_ms < 250 ? 'text-green-400' :
-                    trace.latency_ms < 350 ? 'text-yellow-400' : 'text-red-400'
+                      trace.latency_ms < 350 ? 'text-yellow-400' : 'text-red-400'
                   }`}>
                     {trace.latency_ms}ms
                   </span>

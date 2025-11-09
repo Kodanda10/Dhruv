@@ -6,19 +6,9 @@ export const dynamic = 'force-dynamic';
 
 /**
  * API endpoint to fetch ALL tweets (parsed + unparsed) for bulk review
- * 
- * Query Parameters:
- * - limit: Maximum number of tweets to return (default: 20 for testing, will be 10000 for production)
- * - test_mode: If true, returns only 20 tweets for testing (default: true)
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const testMode = searchParams.get('test_mode') !== 'false'; // Default to test mode
-    const limit = testMode 
-      ? 20 // Test mode: return only 20 tweets
-      : Math.min(parseInt(searchParams.get('limit') || '10000', 10), 10000); // Production: up to 10,000
-
     const pool = getDbPool();
     const client = await pool.connect();
 
@@ -55,10 +45,9 @@ export async function GET(request: NextRequest) {
         LEFT JOIN parsed_events pe ON rt.tweet_id = pe.tweet_id
         WHERE rt.author_handle = 'OPChoudhary_Ind'
         ORDER BY rt.created_at DESC
-        LIMIT $1
       `;
 
-      const result = await client.query(query, [limit]);
+      const result = await client.query(query);
 
       // Get counts
       const countQuery = `
@@ -137,7 +126,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      console.log(`[API /all-tweets] Test mode: ${testMode}, Returned: ${formattedTweets.length} tweets`, {
+      console.log(`[API /all-tweets] Returned: ${formattedTweets.length} tweets`, {
         parsed: formattedTweets.filter(t => t.is_parsed).length,
         unparsed: formattedTweets.filter(t => !t.is_parsed).length,
         total_in_db: counts.total,
@@ -147,7 +136,6 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        test_mode: testMode,
         source: 'database',
         count: formattedTweets.length,
         returned: formattedTweets.length,

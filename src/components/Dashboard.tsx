@@ -59,7 +59,7 @@ export default function Dashboard() {
             parsed?: number;
             unparsed?: number;
             test_mode?: boolean;
-          }>(`/api/all-tweets?test_mode=true&limit=20`);
+          }>(`/api/all-tweets`);
           
           if (mounted && res.success) {
             const tweets = res.tweets || res.events || res.data || [];
@@ -77,7 +77,7 @@ export default function Dashboard() {
           }
         } else {
           // Normal mode: Fetch only parsed events
-          const res = await api.get<{ success: boolean; events: any[]; count?: number; total?: number; total_op_choudhary?: number }>(`/api/parsed-events?limit=5000`);
+          const res = await api.get<{ success: boolean; events: any[]; count?: number; total?: number; total_op_choudhary?: number }>(`/api/parsed-events`);
           if (mounted && res.success && res.events && res.events.length > 0) {
             console.log(`[Dashboard] Normal Mode: Fetched ${res.events.length} parsed events from API`, {
               count: res.count,
@@ -417,98 +417,98 @@ export default function Dashboard() {
               const baseRow = baseRows.find((r: any) => r.id === row.id);
               const isParsed = baseRow?.is_parsed !== false;
               return (
-              <tr key={row.id} className={`align-top hover:bg-white/5 transition-colors`}>
-                <td className="p-2 border-b border-white/10 whitespace-nowrap">{row.when}</td>
-                {bulkReviewMode && (
-                  <td className="p-2 border-b border-l border-white/10">
-                    {isParsed ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30">
+                <tr key={row.id} className={`align-top hover:bg-white/5 transition-colors`}>
+                  <td className="p-2 border-b border-white/10 whitespace-nowrap">{row.when}</td>
+                  {bulkReviewMode && (
+                    <td className="p-2 border-b border-l border-white/10">
+                      {isParsed ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30">
                         ✅ पार्स
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
                         ⚠️ अपार्स
-                      </span>
+                        </span>
+                      )}
+                    </td>
+                  )}
+                  <td className="p-2 border-b border-l border-white/10">{row.where.join(', ') || '—'}</td>
+                  <td className="p-2 border-b border-l border-white/10">
+                    {row.what.length ? (
+                      row.what.map((w:any) => getEventTypeInHindi(w)).join(', ')
+                    ) : (
+                      isParsed ? '—' : <span className="text-yellow-300 text-xs">⚠️ अपार्स - समीक्षा आवश्यक</span>
                     )}
                   </td>
-                )}
-                <td className="p-2 border-b border-l border-white/10">{row.where.join(', ') || '—'}</td>
-                <td className="p-2 border-b border-l border-white/10">
-                  {row.what.length ? (
-                    row.what.map((w:any) => getEventTypeInHindi(w)).join(', ')
-                  ) : (
-                    isParsed ? '—' : <span className="text-yellow-300 text-xs">⚠️ अपार्स - समीक्षा आवश्यक</span>
-                  )}
-                </td>
-                <td className="p-2 border-b border-l border-white/10 align-top w-[14%]" aria-label="कौन/टैग">
-                  {(() => {
-                    const tags = [...row.which.mentions, ...row.which.hashtags];
-                    if (!tags.length) return '—';
-                    return (
-                      <div className="flex gap-2 flex-wrap max-w-[14rem]">
-                        {tags.map((t, i) => {
-                          const isSelected = tagFilter
-                            .split(/[#,\s]+/)
-                            .filter(Boolean)
-                            .some((q) => matchTagFlexible(t, q));
-                          return (
-                            <Chip
-                              key={`${t}-${i}`}
-                              label={t}
-                              selected={isSelected}
-                              onClick={() => {
-                                const current = tagFilter.trim();
-                                const norm = t.replace(/^[@#]/, '');
-                                // toggle behavior: add if missing, remove if present
-                                const tokens = current
-                                  ? current.split(/[,\s]+/).filter(Boolean)
-                                  : [];
-                                const exists = tokens.some((q) => matchTagFlexible(norm, q));
-                                let nextTokens: string[];
-                                if (exists) {
-                                  nextTokens = tokens.filter((q) => !matchTagFlexible(norm, q));
-                                } else {
-                                  nextTokens = [...tokens, `#${norm}`];
-                                }
-                                const next = nextTokens.join(', ');
-                                setTagFilter(next);
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </td>
-                <td
-                  className="p-2 border-b border-l border-white/10 align-top whitespace-pre-wrap break-words w-[38%]"
-                  aria-label="विवरण"
-                  title={row.how || ''}
-                >
-                  {(() => {
-                    const urlRegex = /(https?:\/\/[^\s]+)/g;
-                    const howText = row.how || '';
-                    const parts = howText.split(urlRegex);
-                    return parts.map((part: string, i: number) => {
-                      const isUrl = part.startsWith('http://') || part.startsWith('https://');
-                      return isUrl ? (
-                        <a
-                          key={i}
-                          href={part}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#8BF5E6] underline break-all hover:text-[#b8fff5] transition-colors"
-                        >
-                          {part}
-                        </a>
-                      ) : (
-                        <span key={i}>{part}</span>
+                  <td className="p-2 border-b border-l border-white/10 align-top w-[14%]" aria-label="कौन/टैग">
+                    {(() => {
+                      const tags = [...row.which.mentions, ...row.which.hashtags];
+                      if (!tags.length) return '—';
+                      return (
+                        <div className="flex gap-2 flex-wrap max-w-[14rem]">
+                          {tags.map((t, i) => {
+                            const isSelected = tagFilter
+                              .split(/[#,\s]+/)
+                              .filter(Boolean)
+                              .some((q) => matchTagFlexible(t, q));
+                            return (
+                              <Chip
+                                key={`${t}-${i}`}
+                                label={t}
+                                selected={isSelected}
+                                onClick={() => {
+                                  const current = tagFilter.trim();
+                                  const norm = t.replace(/^[@#]/, '');
+                                  // toggle behavior: add if missing, remove if present
+                                  const tokens = current
+                                    ? current.split(/[,\s]+/).filter(Boolean)
+                                    : [];
+                                  const exists = tokens.some((q) => matchTagFlexible(norm, q));
+                                  let nextTokens: string[];
+                                  if (exists) {
+                                    nextTokens = tokens.filter((q) => !matchTagFlexible(norm, q));
+                                  } else {
+                                    nextTokens = [...tokens, `#${norm}`];
+                                  }
+                                  const next = nextTokens.join(', ');
+                                  setTagFilter(next);
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
                       );
-                    });
-                  })()}
-                </td>
-              </tr>
-            );
+                    })()}
+                  </td>
+                  <td
+                    className="p-2 border-b border-l border-white/10 align-top whitespace-pre-wrap break-words w-[38%]"
+                    aria-label="विवरण"
+                    title={row.how || ''}
+                  >
+                    {(() => {
+                      const urlRegex = /(https?:\/\/[^\s]+)/g;
+                      const howText = row.how || '';
+                      const parts = howText.split(urlRegex);
+                      return parts.map((part: string, i: number) => {
+                        const isUrl = part.startsWith('http://') || part.startsWith('https://');
+                        return isUrl ? (
+                          <a
+                            key={i}
+                            href={part}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#8BF5E6] underline break-all hover:text-[#b8fff5] transition-colors"
+                          >
+                            {part}
+                          </a>
+                        ) : (
+                          <span key={i}>{part}</span>
+                        );
+                      });
+                    })()}
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>

@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
 
     // Import modules
     if (Array.isArray(modules)) {
-      for (const module of modules) {
-        const sanitizedKey = sanitizeInput(module.module_key || '', { maxLength: 100 });
-        const enabled = Boolean(module.enabled);
+      for (const mod of modules) {
+        const sanitizedKey = sanitizeInput(mod.module_key || '', { maxLength: 100 });
+        const enabled = Boolean(mod.enabled);
 
         await pool.query(
           `UPDATE analytics_modules
@@ -128,5 +128,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

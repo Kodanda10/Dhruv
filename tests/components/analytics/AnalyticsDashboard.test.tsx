@@ -113,9 +113,13 @@ describe('AnalyticsDashboard Component - Hindi Layout Specification', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const blobPayload = new Blob([JSON.stringify(mockAnalyticsData)], {
+      type: 'application/json',
+    });
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, data: mockAnalyticsData })
+      json: async () => ({ success: true, data: mockAnalyticsData }),
+      blob: async () => blobPayload,
     });
   });
 
@@ -346,9 +350,16 @@ describe('AnalyticsDashboard Component - Hindi Layout Specification', () => {
 
   describe('Loading and Error States', () => {
     it('should show loading state while fetching data', () => {
-      (global.fetch as jest.Mock).mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
-      );
+      const loadingPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            ok: true,
+            json: async () => ({ success: true, data: mockAnalyticsData }),
+            blob: async () => new Blob(),
+          });
+        }, 100);
+      });
+      (global.fetch as jest.Mock).mockImplementation(() => loadingPromise);
 
       render(<AnalyticsDashboard />);
 
@@ -395,10 +406,10 @@ describe('AnalyticsDashboard Component - Hindi Layout Specification', () => {
       render(<AnalyticsDashboard />);
 
       await waitFor(() => {
-        // Charts should have alt text or aria-label
+        // Charts should expose accessible labels for screen readers
         const charts = screen.getAllByRole('img', { hidden: true });
-        charts.forEach(chart => {
-          expect(chart).toHaveAttribute('alt');
+        charts.forEach((chart) => {
+          expect(chart).toHaveAttribute('aria-label');
         });
       });
     });
@@ -408,8 +419,8 @@ describe('AnalyticsDashboard Component - Hindi Layout Specification', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        buttons.forEach(button => {
-          expect(button).toHaveAttribute('tabIndex');
+        buttons.forEach((button) => {
+          expect(button.tabIndex).toBeGreaterThanOrEqual(0);
         });
       });
     });

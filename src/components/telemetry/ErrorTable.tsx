@@ -191,8 +191,8 @@ export default function ErrorTable({ onTraceClick }: ErrorTableProps) {
                       err.status_code >= 500
                         ? 'bg-red-500/20 text-red-300'
                         : err.status_code >= 400
-                        ? 'bg-yellow-500/20 text-yellow-300'
-                        : 'bg-green-500/20 text-green-300'
+                          ? 'bg-yellow-500/20 text-yellow-300'
+                          : 'bg-green-500/20 text-green-300'
                     }`}>
                       {err.status_code}
                     </span>

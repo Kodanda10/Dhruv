@@ -167,7 +167,7 @@ export default function TraceHeatmap() {
                     <span className="text-xs text-secondary">p95 Latency</span>
                     <span className={`text-sm font-bold ${
                       metric.p95 < 250 ? 'text-green-400' :
-                      metric.p95 < 350 ? 'text-yellow-400' : 'text-red-400'
+                        metric.p95 < 350 ? 'text-yellow-400' : 'text-red-400'
                     }`}>
                       {Math.round(metric.p95)}ms
                     </span>

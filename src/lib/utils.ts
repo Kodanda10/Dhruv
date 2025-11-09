@@ -16,10 +16,13 @@ export function cn(...inputs: ClassValue[]) {
  * @param locale - 'hi' for Hindi, 'en' for English
  * @returns Formatted date string
  */
-export function formatDate(date: string | Date | null | undefined, locale: 'hi' | 'en' = 'hi'): string {
+export function formatDate(
+  date: string | Date | null | undefined,
+  locale: 'hi' | 'en' = 'hi',
+): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return '';
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
   
   if (locale === 'hi') {
     const day = d.getDate();

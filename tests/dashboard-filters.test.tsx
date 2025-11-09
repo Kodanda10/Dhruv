@@ -1,19 +1,22 @@
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import Dashboard from '@/components/Dashboard';
 
 describe('Dashboard filters', () => {
-  it('filters rows by स्थान (कहाँ)', () => {
+  it('filters rows by स्थान (कहाँ)', async () => {
     render(<Dashboard />);
-    const table = screen.getByRole('table', { name: 'गतिविधि सारणी' });
+    const table = await screen.findByRole('table', { name: 'गतिविधि सारणी' });
     const tbody = within(table).getByTestId('tbody');
-    const before = within(tbody).getAllByRole('row').length;
+    const beforeRows = await within(tbody).findAllByRole('row');
+    const before = beforeRows.length;
 
     const locationInput = screen.getByLabelText('स्थान फ़िल्टर');
     fireEvent.change(locationInput, { target: { value: 'रायगढ़' } });
 
-    const after = within(tbody).getAllByRole('row').length;
-    expect(after).toBeLessThan(before);
+    await waitFor(() => {
+      const after = within(tbody).getAllByRole('row').length;
+      expect(after).toBeLessThan(before);
+    });
 
     // Check that remaining rows include रायगढ़ in the स्थान cell
     const rows = within(tbody).getAllByRole('row');
@@ -23,29 +26,35 @@ describe('Dashboard filters', () => {
     }
   });
 
-  it('filters rows by टैग/मेंशन', () => {
+  it('filters rows by टैग/मेंशन', async () => {
     render(<Dashboard />);
-    const table = screen.getByRole('table', { name: 'गतिविधि सारणी' });
+    const table = await screen.findByRole('table', { name: 'गतिविधि सारणी' });
     const tbody = within(table).getByTestId('tbody');
-    const before = within(tbody).getAllByRole('row').length;
+    const beforeRows = await within(tbody).findAllByRole('row');
+    const before = beforeRows.length;
 
     const tagInput = screen.getByLabelText('टैग/मेंशन फ़िल्टर');
     fireEvent.change(tagInput, { target: { value: '#विकास' } });
 
-    const after = within(tbody).getAllByRole('row').length;
-    expect(after).toBeLessThanOrEqual(before);
+    await waitFor(() => {
+      const after = within(tbody).getAllByRole('row').length;
+      expect(after).toBeLessThanOrEqual(before);
+    });
   });
 
-  it('filters rows by तिथि से', () => {
+  it('filters rows by तिथि से', async () => {
     render(<Dashboard />);
-    const table = screen.getByRole('table', { name: 'गतिविधि सारणी' });
+    const table = await screen.findByRole('table', { name: 'गतिविधि सारणी' });
     const tbody = within(table).getByTestId('tbody');
-    const before = within(tbody).getAllByRole('row').length;
+    const beforeRows = await within(tbody).findAllByRole('row');
+    const before = beforeRows.length;
 
     const fromInput = screen.getByLabelText('तिथि से');
     fireEvent.change(fromInput, { target: { value: '2025-09-01' } });
 
-    const after = within(tbody).getAllByRole('row').length;
-    expect(after).toBeLessThanOrEqual(before);
+    await waitFor(() => {
+      const after = within(tbody).getAllByRole('row').length;
+      expect(after).toBeLessThanOrEqual(before);
+    });
   });
 });

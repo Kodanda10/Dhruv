@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { formatHindiDate } from '@/utils/parse';
-import type { AnalyticsData } from './data-source';
+import type { AnalyticsData } from '../types';
 
 type EntryLike = Record<string, number>;
 

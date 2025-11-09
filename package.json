@@ -35,6 +35,7 @@
     "ops:fix-all": "bash scripts/ops/fix-all-issues.sh",
     "db:count-tweets": "node -e \"const {getTweetCount} = require('./scripts/ops/db-helpers.js'); (async () => { const c = await getTweetCount(); console.log('Total tweets:', c); process.exit(0); })();\"",
     "project:move": "node scripts/move-to-deployed.js",
+    "labs:faiss:build": "python3 api/scripts/rebuild_geography_embeddings_multilingual.py",
     "labs:faiss:verify": "tsx src/labs/faiss/verify.ts",
     "labs:test:e2e": "playwright test tests/labs/e2e/",
     "labs:test:load": "k6 run perf/labs-api.k6.js",
@@ -62,7 +63,8 @@
     "tailwind-merge": "^3.3.1",
     "task-master": "^2.3.0",
     "task-master-ai": "^0.26.0",
-    "taskmaster": "^0.0.3"
+    "taskmaster": "^0.0.3",
+    "transliteration": "^2.3.5"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

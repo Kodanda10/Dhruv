@@ -276,25 +276,25 @@ export default function DashboardDark() {
       // Ensure where is always string[]
       const where: string[] = Array.isArray(row.where) 
         ? row.where.map((w: any) => {
-            if (typeof w === 'string') return w;
-            if (w && typeof w === 'object' && w !== null) {
-              const name = w.name || w.location || '';
-              return typeof name === 'string' ? name.trim() : '';
-            }
-            return '';
-          }).filter((loc: string): loc is string => typeof loc === 'string' && loc.length > 0)
+          if (typeof w === 'string') return w;
+          if (w && typeof w === 'object' && w !== null) {
+            const name = w.name || w.location || '';
+            return typeof name === 'string' ? name.trim() : '';
+          }
+          return '';
+        }).filter((loc: string): loc is string => typeof loc === 'string' && loc.length > 0)
         : [];
       
       // Ensure what is always string[]
       const what: string[] = Array.isArray(row.what)
         ? row.what.map((w: any) => {
-            if (typeof w === 'string') return w;
-            if (w && typeof w === 'object' && w !== null) {
-              const name = w.name || '';
-              return typeof name === 'string' ? name.trim() : '';
-            }
-            return '';
-          }).filter((evt: string): evt is string => typeof evt === 'string' && evt.length > 0)
+          if (typeof w === 'string') return w;
+          if (w && typeof w === 'object' && w !== null) {
+            const name = w.name || '';
+            return typeof name === 'string' ? name.trim() : '';
+          }
+          return '';
+        }).filter((evt: string): evt is string => typeof evt === 'string' && evt.length > 0)
         : [];
       
       // Ensure how is always string
@@ -306,15 +306,15 @@ export default function DashboardDark() {
       // Ensure which.mentions and hashtags are string[]
       const mentions: string[] = Array.isArray(row.which?.mentions)
         ? row.which.mentions.map((m: any) => {
-            if (typeof m === 'string') return m;
-            return String(m || '');
-          }).filter((m: string): m is string => typeof m === 'string' && m.length > 0)
+          if (typeof m === 'string') return m;
+          return String(m || '');
+        }).filter((m: string): m is string => typeof m === 'string' && m.length > 0)
         : [];
       const hashtags: string[] = Array.isArray(row.which?.hashtags)
         ? row.which.hashtags.map((h: any) => {
-            if (typeof h === 'string') return h;
-            return String(h || '');
-          }).filter((h: string): h is string => typeof h === 'string' && h.length > 0)
+          if (typeof h === 'string') return h;
+          return String(h || '');
+        }).filter((h: string): h is string => typeof h === 'string' && h.length > 0)
         : [];
       
       // Return only safe properties - don't spread ...row to avoid carrying over objects
@@ -656,105 +656,105 @@ export default function DashboardDark() {
               </tr>
             ) : (
               sortedData.map((row, index) => (
-              <tr key={row.id || index} className={`align-top hover:bg-white hover:bg-opacity-5 transition-colors`}>
-                <td className="p-2 border-b border-white border-opacity-10 whitespace-nowrap">
-                  {typeof row.when === 'string' ? row.when : String(row.when || '')}
-                </td>
-                <td className="p-2 border-b border-l border-white border-opacity-10">
-                  {(() => {
-                    const locations = Array.isArray(row.where) 
-                      ? row.where.map((w: any) => {
+                <tr key={row.id || index} className={`align-top hover:bg-white hover:bg-opacity-5 transition-colors`}>
+                  <td className="p-2 border-b border-white border-opacity-10 whitespace-nowrap">
+                    {typeof row.when === 'string' ? row.when : String(row.when || '')}
+                  </td>
+                  <td className="p-2 border-b border-l border-white border-opacity-10">
+                    {(() => {
+                      const locations = Array.isArray(row.where) 
+                        ? row.where.map((w: any) => {
                           if (typeof w === 'string') return w;
                           if (w && typeof w === 'object') return w.name || w.location || '';
                           return String(w || '');
                         }).filter((loc: string) => loc && loc.trim())
-                      : [];
-                    return locations.length > 0 ? locations.join(', ') : '—';
-                  })()}
-                </td>
-                <td className="p-2 border-b border-l border-white border-opacity-10">
-                  {(() => {
-                    const events = Array.isArray(row.what) 
-                      ? row.what.map((w: any) => {
+                        : [];
+                      return locations.length > 0 ? locations.join(', ') : '—';
+                    })()}
+                  </td>
+                  <td className="p-2 border-b border-l border-white border-opacity-10">
+                    {(() => {
+                      const events = Array.isArray(row.what) 
+                        ? row.what.map((w: any) => {
                           const evt = typeof w === 'string' ? w : (w?.name || String(w || ''));
                           return getEventTypeHindi(evt);
                         }).filter(Boolean)
-                      : [];
-                    return events.length > 0 ? events.join(', ') : '—';
-                  })()}
-                </td>
-                <td className="p-2 border-b border-l border-gray-700 align-top w-[14%]" aria-label="कौन/टैग">
-                  {(() => {
-                    const tags = [...row.which.mentions, ...row.which.hashtags];
-                    if (!tags.length) return '—';
-                    return (
-                      <div className="flex gap-2 flex-wrap max-w-[14rem]">
-                        {tags.map((t: string, i: number) => {
-                          const isSelected = tagFilter
-                            .split(/[#,\s]+/)
-                            .filter(Boolean)
-                            .some((q) => matchTagFlexible(t, q));
-                          return (
-                            <button
-                              key={`${t}-${i}`}
-                              onClick={() => {
-                                const current = tagFilter.trim();
-                                const norm = t.replace(/^[@#]/, '');
-                                const tokens = current
-                                  ? current.split(/[,\s]+/).filter(Boolean)
-                                  : [];
-                                const exists = tokens.some((q) => matchTagFlexible(norm, q));
-                                let nextTokens: string[];
-                                if (exists) {
-                                  nextTokens = tokens.filter((q) => !matchTagFlexible(norm, q));
-                                } else {
-                                  nextTokens = [...tokens, `#${norm}`];
-                                }
-                                const next = nextTokens.join(', ');
-                                setTagFilter(next);
-                              }}
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                                isSelected 
-                                  ? 'bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40' 
-                                  : 'bg-white bg-opacity-10 text-secondary border border-white border-opacity-20 hover:bg-opacity-15'
-                              }`}
-                            >
-                              {t}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </td>
-                <td
-                  className="p-2 border-b border-l border-gray-700 align-top whitespace-pre-wrap break-words w-[38%]"
-                  aria-label="विवरण"
-                  title={typeof row.how === 'string' ? row.how : String(row.how || '')}
-                >
-                  {(() => {
-                    const urlRegex = /(https?:\/\/[^\s]+)/g;
-                    const parts = row.how.split(urlRegex);
-                    return parts.map((part: string, i: number) => {
-                      const isUrl = part.startsWith('http://') || part.startsWith('https://');
-                      return isUrl ? (
-                        <a
-                          key={i}
-                          href={part}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 underline break-all"
-                        >
-                          {part}
-                        </a>
-                      ) : (
-                        <span key={i}>{part}</span>
+                        : [];
+                      return events.length > 0 ? events.join(', ') : '—';
+                    })()}
+                  </td>
+                  <td className="p-2 border-b border-l border-gray-700 align-top w-[14%]" aria-label="कौन/टैग">
+                    {(() => {
+                      const tags = [...row.which.mentions, ...row.which.hashtags];
+                      if (!tags.length) return '—';
+                      return (
+                        <div className="flex gap-2 flex-wrap max-w-[14rem]">
+                          {tags.map((t: string, i: number) => {
+                            const isSelected = tagFilter
+                              .split(/[#,\s]+/)
+                              .filter(Boolean)
+                              .some((q) => matchTagFlexible(t, q));
+                            return (
+                              <button
+                                key={`${t}-${i}`}
+                                onClick={() => {
+                                  const current = tagFilter.trim();
+                                  const norm = t.replace(/^[@#]/, '');
+                                  const tokens = current
+                                    ? current.split(/[,\s]+/).filter(Boolean)
+                                    : [];
+                                  const exists = tokens.some((q) => matchTagFlexible(norm, q));
+                                  let nextTokens: string[];
+                                  if (exists) {
+                                    nextTokens = tokens.filter((q) => !matchTagFlexible(norm, q));
+                                  } else {
+                                    nextTokens = [...tokens, `#${norm}`];
+                                  }
+                                  const next = nextTokens.join(', ');
+                                  setTagFilter(next);
+                                }}
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                                  isSelected 
+                                    ? 'bg-mint-green bg-opacity-20 text-mint-green border border-mint-green border-opacity-40' 
+                                    : 'bg-white bg-opacity-10 text-secondary border border-white border-opacity-20 hover:bg-opacity-15'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            );
+                          })}
+                        </div>
                       );
-                    });
-                  })()}
-                </td>
-              </tr>
-            )))}
+                    })()}
+                  </td>
+                  <td
+                    className="p-2 border-b border-l border-gray-700 align-top whitespace-pre-wrap break-words w-[38%]"
+                    aria-label="विवरण"
+                    title={typeof row.how === 'string' ? row.how : String(row.how || '')}
+                  >
+                    {(() => {
+                      const urlRegex = /(https?:\/\/[^\s]+)/g;
+                      const parts = row.how.split(urlRegex);
+                      return parts.map((part: string, i: number) => {
+                        const isUrl = part.startsWith('http://') || part.startsWith('https://');
+                        return isUrl ? (
+                          <a
+                            key={i}
+                            href={part}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 underline break-all"
+                          >
+                            {part}
+                          </a>
+                        ) : (
+                          <span key={i}>{part}</span>
+                        );
+                      });
+                    })()}
+                  </td>
+                </tr>
+              )))}
           </tbody>
         </table>
       </div>

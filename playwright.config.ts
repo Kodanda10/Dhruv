@@ -24,7 +24,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run start',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     // Reuse existing server if BASE_URL is set (CI already started server) or in non-CI environments
     reuseExistingServer: !!process.env.BASE_URL || !process.env.CI,

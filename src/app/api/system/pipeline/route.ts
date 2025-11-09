@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent parsed events to determine last execution
     const lastParseResult = await pool.query(`
-      SELECT MAX(created_at) as last_execution
+      SELECT MAX(parsed_at) as last_execution
       FROM parsed_events
     `);
     const lastParse = lastParseResult.rows[0]?.last_execution;

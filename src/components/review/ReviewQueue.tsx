@@ -71,7 +71,7 @@ export default function ReviewQueue() {
     (async () => {
       // Try server queue first
       try {
-        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true&limit=100`);
+        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true`);
         if (mounted && res.success && res.events && res.events.length > 0) {
           const mapped: ParsedTweet[] = res.events.map((e) => ({
             id: String(e.tweet_id),
@@ -492,7 +492,7 @@ export default function ReviewQueue() {
                   <div>
                     <label className="block text-base sm:text-lg font-medium text-white mb-3 drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
                     🎯 घटना प्रकार
-                    <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Event Type)</span>
+                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Event Type)</span>
                     </label>
                     <AutocompleteInput
                       fieldName="event_type"
@@ -508,7 +508,7 @@ export default function ReviewQueue() {
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
                       📍 स्थान
-                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Locations)</span>
+                        <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Locations)</span>
                       </label>
                     </div>
                     <LocationHierarchyPicker
@@ -522,7 +522,7 @@ export default function ReviewQueue() {
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
                       👥 लोग
-                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(People)</span>
+                        <span className="text-sm sm:text-base font-normal text-secondary ml-2">(People)</span>
                       </label>
                       <button
                         onClick={() => addEntity('people')}
@@ -545,7 +545,7 @@ export default function ReviewQueue() {
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-base sm:text-lg font-medium text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
                       🏢 संगठन
-                      <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Organizations)</span>
+                        <span className="text-sm sm:text-base font-normal text-secondary ml-2">(Organizations)</span>
                       </label>
                       <button
                         onClick={() => addEntity('organizations')}
@@ -568,7 +568,7 @@ export default function ReviewQueue() {
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-2xl font-bold text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
                       📋 योजनाएं
-                      <span className="text-base font-normal text-secondary ml-2">(Schemes)</span>
+                        <span className="text-base font-normal text-secondary ml-2">(Schemes)</span>
                       </label>
                       <button
                         onClick={() => addEntity('schemes')}
@@ -591,7 +591,7 @@ export default function ReviewQueue() {
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-2xl font-bold text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
                       🏷️ विषय
-                      <span className="text-base font-normal text-secondary ml-2">(Topics/Tags)</span>
+                        <span className="text-base font-normal text-secondary ml-2">(Topics/Tags)</span>
                       </label>
                     </div>
                     <TagsSelector
@@ -614,7 +614,7 @@ export default function ReviewQueue() {
                   <div>
                     <label className="block text-xl font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">
                     💬 सुधार का कारण
-                    <span className="text-base font-normal text-secondary ml-2">(Why are you making this change?) *</span>
+                      <span className="text-base font-normal text-secondary ml-2">(Why are you making this change?) *</span>
                     </label>
                     <Input
                       value={correctionReason}

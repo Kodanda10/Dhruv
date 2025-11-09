@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="7.235374">
+<testsuite name="e2e/labs-v2/review.spec.ts" timestamp="2025-11-09T21:04:21.229Z" hostname="chromium" tests="1" failures="0" skipped="0" time="1.223" errors="0">
+<testcase name="Labs V2 Review UI › [V2R-4] should load the review page and display all components" classname="e2e/labs-v2/review.spec.ts" time="1.223">
+</testcase>
+</testsuite>
+</testsuites>

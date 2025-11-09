@@ -1,64 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { search, getIndexStats } from '@/labs/faiss/search';
+import { NextResponse } from 'next/server';
+import { search, FaissSearchResult } from '@/labs/faiss/search';
 
-export const dynamic = 'force-dynamic';
+type ErrorResponse = {
+  error: string;
+};
 
-export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get('q');
+  const limit = searchParams.get('limit');
+
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    traceId: request.headers.get('x-trace-id') || 'local-dev',
+    service: 'faiss-search',
+    method: request.method,
+    url: request.url,
+    query: { q, limit },
+    message: 'Received FAISS search request.',
+  }));
+
+  if (typeof q !== 'string' || q.trim() === '') {
+    return NextResponse.json({ error: 'Query parameter "q" is required.' }, { status: 400 });
+  }
+
+  const parsedLimit = parseInt(limit || '5', 10);
 
   try {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q') || '';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '5', 10), 20);
-
-    // Allow empty query for stats only
-    if (!query.trim() && limit > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Query parameter "q" is required' },
-        { status: 400 }
-      );
-    }
-
-    // If query is empty and limit is 0, return stats only
-    if (!query.trim() && limit === 0) {
-      const stats = await getIndexStats().catch(() => null);
-      return NextResponse.json({
-        success: true,
-        results: [],
-        latency_ms: Date.now() - startTime,
-        backend: 'faiss',
-        query: '',
-        limit: 0,
-        stats,
-      });
-    }
-
-    // Perform search
-    const results = await search(query, limit);
-    const latency = Date.now() - startTime;
-
-    // Get index stats
-    const stats = await getIndexStats().catch(() => null);
-
-    return NextResponse.json({
-      success: true,
-      results,
-      latency_ms: latency,
-      backend: 'faiss',
-      query,
-      limit,
-      stats,
-    });
+    const results = await search(q, parsedLimit);
+    return NextResponse.json(results);
   } catch (error: any) {
-    const latency = Date.now() - startTime;
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Search failed',
-        latency_ms: latency,
-      },
-      { status: 500 }
-    );
+    console.error(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      traceId: request.headers.get('x-trace-id') || 'local-dev',
+      service: 'faiss-search',
+      method: request.method,
+      url: request.url,
+      query: { q, limit },
+      error: error.message,
+      stack: error.stack,
+      message: 'Error during FAISS search.',
+    }));
+    return NextResponse.json({ error: 'An error occurred during the search.' }, { status: 500 });
   }
 }
-

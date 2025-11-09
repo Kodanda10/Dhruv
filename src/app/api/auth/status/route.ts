@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSessionToken } from '@/lib/auth/session';
 
+export const dynamic = 'force-dynamic';
+
 interface StatusResponse {
   authenticated: boolean;
   user?: {
@@ -75,4 +77,3 @@ export async function GET(req: NextRequest): Promise<NextResponse<StatusResponse
     );
   }
 }
-

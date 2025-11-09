@@ -1,25 +1,39 @@
 import { NextResponse } from 'next/server';
-import { checkMilvusHealth } from '@/labs/milvus/milvus_fallback';
 
-export const dynamic = 'force-dynamic';
+/**
+ * @swagger
+ * /api/labs/milvus/health:
+ *   get:
+ *     summary: Milvus Health Check
+ *     description: Returns the health status of the Milvus fallback service. Currently returns a static 'ok' as Milvus is deferred.
+ *     tags:
+ *       - Labs
+ *     responses:
+ *       200:
+ *         description: Service is healthy.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ */
+export async function GET(request: Request) {
+  // Per the execution plan, Milvus is a deferred fallback.
+  // This health check currently returns a static 'ok'.
+  
+  // [M-API-8] Structured logging
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    traceId: request.headers.get('x-trace-id') || 'local-dev',
+    service: 'milvus-health-check',
+    method: request.method,
+    url: request.url,
+    responseStatus: 200,
+    message: 'Milvus health check successful (static response).',
+  }));
 
-export async function GET() {
-  try {
-    const health = await checkMilvusHealth();
-    
-    return NextResponse.json(health, {
-      status: health.status === 'healthy' ? 200 : 503,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
-        latency_ms: 0,
-        error: error.message || 'Health check failed',
-        connected: false,
-      },
-      { status: 503 }
-    );
-  }
+  return NextResponse.json({ status: 'ok' });
 }
-

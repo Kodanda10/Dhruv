@@ -1,121 +1,87 @@
-/**
- * FAISS Search Module
- * 
- * Wraps Python FAISS implementation for Node.js use.
- * Uses child_process to call Python script that performs vector search.
- */
+import { execFile } from 'child_process';
+import path from 'path';
+import { getBackendConfig } from './config'; // Import the config module
 
-import { spawn } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { getBackendConfig } from './config';
-
-export interface SearchResult {
+export type FaissSearchResult = {
   id: string;
-  name: string;
   score: number;
-  similarity_score: number;
-  source: string;
-  match_type: string;
-}
+  name: string;
+  match_type?: string;
+  [key: string]: any;
+};
+
+export type FaissIndexStats = {
+  locationCount: number;
+  dimension: number;
+  indexPath: string;
+};
+
+const PYTHON_SCRIPT_PATH = path.resolve(process.cwd(), 'api/scripts/faiss_search_script.py');
+const PYTHON_EXECUTABLE = process.env.PYTHON_PATH || 'python3';
 
 /**
- * Search FAISS index using Python wrapper
- * 
- * @param query - Search query text
- * @param limit - Maximum number of results (default: 5)
- * @returns Array of search results with scores
+ * Performs a semantic search using the FAISS python script.
+ * @param query The search query string.
+ * @param limit The maximum number of results to return.
+ * @returns A promise that resolves to an array of search results.
  */
-export async function search(
-  query: string,
-  limit: number = 5
-): Promise<SearchResult[]> {
-  const config = getBackendConfig();
-
-  if (config.backend !== 'faiss') {
-    throw new Error(`FAISS backend not available. Current backend: ${config.backend}`);
-  }
-
-  if (!config.faiss) {
-    throw new Error('FAISS configuration missing');
-  }
-
-  // Check if index exists
-  if (!existsSync(config.faiss.indexPath)) {
-    throw new Error(`FAISS index not found at ${config.faiss.indexPath}`);
-  }
-
-  // Use Python helper script to perform search
-  // Path relative to project root
-  const scriptPath = join(process.cwd(), 'src', 'labs', 'faiss', 'search_helper.py');
-
+export function search(query: string, limit: number = 5): Promise<FaissSearchResult[]> {
   return new Promise((resolve, reject) => {
-    const pythonPath = process.env.PYTHON_PATH || 'python3';
-    const pythonProcess = spawn(pythonPath, [scriptPath, query, String(limit)], {
-      cwd: process.cwd(),
-      env: { ...process.env },
-    });
+    const backendConfig = getBackendConfig();
+    if (backendConfig.backend !== 'faiss') {
+      return reject(new Error('FAISS backend not configured or available.'));
+    }
 
-    let stdout = '';
-    let stderr = '';
+    const args = [query, String(limit)];
 
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python script failed: ${stderr || stdout}`));
-        return;
+    execFile(PYTHON_EXECUTABLE, [PYTHON_SCRIPT_PATH, ...args], (error, stdout, stderr) => {
+      if (error) {
+        console.error(`FAISS script execution error: ${error.message}`);
+        console.error(`FAISS script stderr: ${stderr}`);
+        return reject(new Error('Failed to execute FAISS search script.'));
       }
 
       try {
-        const result = JSON.parse(stdout);
-        if (result.error) {
-          reject(new Error(result.error));
-          return;
-        }
-        resolve(result.results || []);
-      } catch (error) {
-        reject(new Error(`Failed to parse Python output: ${error}`));
+        const results: FaissSearchResult[] = JSON.parse(stdout);
+        resolve(results);
+      } catch (parseError: any) {
+        console.error(`Failed to parse FAISS script output: ${parseError.message}`);
+        console.error(`FAISS script stdout: ${stdout}`);
+        reject(new Error('Failed to parse FAISS search results.'));
       }
     });
   });
 }
 
 /**
- * Get FAISS index statistics
+ * Retrieves statistics about the FAISS index.
+ * @returns A promise that resolves to an object containing index statistics.
  */
-export async function getIndexStats(): Promise<{
-  locationCount: number;
-  dimension: number;
-  indexPath: string;
-}> {
-  const config = getBackendConfig();
-
-  if (config.backend !== 'faiss' || !config.faiss) {
-    throw new Error('FAISS backend not available');
-  }
-
-  // Read locations file to get count
-  let locationCount = 0;
-  if (existsSync(config.faiss.locationsPath)) {
-    try {
-      const locations = JSON.parse(readFileSync(config.faiss.locationsPath, 'utf-8'));
-      locationCount = Array.isArray(locations) ? locations.length : 0;
-    } catch (error) {
-      console.warn('Failed to read locations file:', error);
+export function getIndexStats(): Promise<FaissIndexStats> {
+  return new Promise((resolve, reject) => {
+    const backendConfig = getBackendConfig();
+    if (backendConfig.backend !== 'faiss') {
+      return reject(new Error('FAISS backend not configured or available.'));
     }
-  }
 
-  return {
-    locationCount,
-    dimension: config.faiss.dimension,
-    indexPath: config.faiss.indexPath,
-  };
+    // Use a special query to trigger stats output from the Python script
+    const args = ["__GET_INDEX_STATS__", "0"]; // Query and limit are ignored for stats
+
+    execFile(PYTHON_EXECUTABLE, [PYTHON_SCRIPT_PATH, ...args], (error, stdout, stderr) => {
+      if (error) {
+        console.error(`FAISS stats script execution error: ${error.message}`);
+        console.error(`FAISS stats script stderr: ${stderr}`);
+        return reject(new Error('Failed to execute FAISS stats script.'));
+      }
+
+      try {
+        const stats: FaissIndexStats = JSON.parse(stdout);
+        resolve(stats);
+      } catch (parseError: any) {
+        console.error(`Failed to parse FAISS stats output: ${parseError.message}`);
+        console.error(`FAISS stats script stdout: ${stdout}`);
+        reject(new Error('Failed to parse FAISS index statistics.'));
+      }
+    });
+  });
 }
-
