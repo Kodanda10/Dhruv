@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="24" failures="24" skipped="0" errors="0" time="2.6120409999999996">
-<testsuite name="ui/themeAndResponsive.spec.ts" timestamp="2025-11-09T08:00:44.660Z" hostname="chromium" tests="18" failures="18" skipped="0" time="0.043" errors="0">
-<testcase name="Home layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.001">
+<testsuites id="" name="" tests="24" failures="24" skipped="0" errors="0" time="2.7436100000000003">
+<testsuite name="ui/themeAndResponsive.spec.ts" timestamp="2025-11-09T08:05:28.962Z" hostname="chromium" tests="18" failures="18" skipped="0" time="0.031" errors="0">
+<testcase name="Home layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.008">
 <failure message="themeAndResponsive.spec.ts:26:9 Home layout on iPhone SE" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Home layout on iPhone SE ───────────────────────
 
@@ -32,7 +32,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Home layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="Home layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Home layout on MacBook Pro" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Home layout on MacBook Pro ─────────────────────
 
@@ -48,7 +48,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Home layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="Home layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Home layout on Ultra-Wide" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Home layout on Ultra-Wide ──────────────────────
 
@@ -64,7 +64,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Review layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="Review layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Review layout on iPhone SE" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Review layout on iPhone SE ─────────────────────
 
@@ -80,7 +80,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Review layout on iPad Air" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="Review layout on iPad Air" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Review layout on iPad Air" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Review layout on iPad Air ──────────────────────
 
@@ -96,7 +96,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Review layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="Review layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Review layout on MacBook Pro" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Review layout on MacBook Pro ───────────────────
 
@@ -144,7 +144,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="CommandView layout on iPad Air" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="CommandView layout on iPad Air" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 CommandView layout on iPad Air" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › CommandView layout on iPad Air ─────────────────
 
@@ -160,7 +160,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="CommandView layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.009">
+<testcase name="CommandView layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.002">
 <failure message="themeAndResponsive.spec.ts:26:9 CommandView layout on MacBook Pro" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › CommandView layout on MacBook Pro ──────────────
 
@@ -176,7 +176,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="CommandView layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.002">
+<testcase name="CommandView layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 CommandView layout on Ultra-Wide" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › CommandView layout on Ultra-Wide ───────────────
 
@@ -192,7 +192,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Analytics layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.003">
+<testcase name="Analytics layout on iPhone SE" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Analytics layout on iPhone SE" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Analytics layout on iPhone SE ──────────────────
 
@@ -224,7 +224,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Analytics layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.003">
+<testcase name="Analytics layout on MacBook Pro" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:26:9 Analytics layout on MacBook Pro" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Analytics layout on MacBook Pro ────────────────
 
@@ -240,7 +240,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Analytics layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.003">
+<testcase name="Analytics layout on Ultra-Wide" classname="ui/themeAndResponsive.spec.ts" time="0.002">
 <failure message="themeAndResponsive.spec.ts:26:9 Analytics layout on Ultra-Wide" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:26:9 › Analytics layout on Ultra-Wide ─────────────────
 
@@ -256,7 +256,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Typography scale ratio consistency across breakpoints" classname="ui/themeAndResponsive.spec.ts" time="0.003">
+<testcase name="Typography scale ratio consistency across breakpoints" classname="ui/themeAndResponsive.spec.ts" time="0.001">
 <failure message="themeAndResponsive.spec.ts:59:5 Typography scale ratio consistency across breakpoints" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:59:5 › Typography scale ratio consistency across breakpoints 
 
@@ -272,7 +272,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="Layout deviation ≤ 5% across breakpoints" classname="ui/themeAndResponsive.spec.ts" time="0.001">
+<testcase name="Layout deviation ≤ 5% across breakpoints" classname="ui/themeAndResponsive.spec.ts" time="0.003">
 <failure message="themeAndResponsive.spec.ts:94:5 Layout deviation ≤ 5% across breakpoints" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeAndResponsive.spec.ts:94:5 › Layout deviation ≤ 5% across breakpoints ───────
 
@@ -289,7 +289,7 @@
 </failure>
 </testcase>
 </testsuite>
-<testsuite name="ui/themeConsistency.spec.ts" timestamp="2025-11-09T08:00:44.660Z" hostname="chromium" tests="6" failures="6" skipped="0" time="0.009" errors="0">
+<testsuite name="ui/themeConsistency.spec.ts" timestamp="2025-11-09T08:05:28.962Z" hostname="chromium" tests="6" failures="6" skipped="0" time="0.007" errors="0">
 <testcase name="UI theme consistency for Home (/home)" classname="ui/themeConsistency.spec.ts" time="0.002">
 <failure message="themeConsistency.spec.ts:21:7 UI theme consistency for Home (/home)" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeConsistency.spec.ts:21:7 › UI theme consistency for Home (/home) ────────────
@@ -306,7 +306,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="UI theme consistency for Review (/review)" classname="ui/themeConsistency.spec.ts" time="0.002">
+<testcase name="UI theme consistency for Review (/review)" classname="ui/themeConsistency.spec.ts" time="0.001">
 <failure message="themeConsistency.spec.ts:21:7 UI theme consistency for Review (/review)" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeConsistency.spec.ts:21:7 › UI theme consistency for Review (/review) ────────
 
@@ -322,7 +322,7 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="UI theme consistency for CommandView (/commandview)" classname="ui/themeConsistency.spec.ts" time="0.002">
+<testcase name="UI theme consistency for CommandView (/commandview)" classname="ui/themeConsistency.spec.ts" time="0.001">
 <failure message="themeConsistency.spec.ts:21:7 UI theme consistency for CommandView (/commandview)" type="FAILURE">
 <![CDATA[  [chromium] › ui/themeConsistency.spec.ts:21:7 › UI theme consistency for CommandView (/commandview) 
 

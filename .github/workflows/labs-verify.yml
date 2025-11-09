@@ -94,9 +94,16 @@ jobs:
         run: |
           if [ -f "data/embeddings/multilingual_geography/locations.json" ]; then
             echo "FAISS locations file found"
-            LOCATION_COUNT=$(cat data/embeddings/multilingual_geography/locations.json | jq 'length')
-            echo "Location count: $LOCATION_COUNT"
+            if command -v jq &> /dev/null; then
+              LOCATION_COUNT=$(cat data/embeddings/multilingual_geography/locations.json | jq 'length')
+              echo "Location count: $LOCATION_COUNT"
+            else
+              echo "jq not available, skipping count"
+            fi
+          else
+            echo "FAISS locations file not found (expected in CI)"
           fi
+        continue-on-error: true
 
       - name: Check learning artifacts
         run: |
