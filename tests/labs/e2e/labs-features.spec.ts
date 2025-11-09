@@ -7,10 +7,6 @@ import { test, expect } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('Labs Features E2E Tests', () => {
-  test.beforeAll(async ({ request }) => {
-    // Wait for server to be ready
-    await request.get(`${BASE_URL}/api/system/health`).catch(() => {});
-  });
   test('FAISS Search returns results for "खरसिया" within p95 < 400ms', async ({ page }) => {
     await page.goto(`${BASE_URL}/labs/search`);
 
