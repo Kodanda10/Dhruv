@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { setLearningFlag } from '../status/route'; // Import the setter from the status route
+import { setLearningFlag } from '@/lib/learningStore'; // Import the setter from the new store
 
 export async function POST(request: Request) {
   try {
