@@ -1,0 +1,8 @@
+{
+  "runs_done": 10,
+  "last_total": "2506",
+  "last_oldest": "2025-02-14",
+  "last_newest": "2025-11-04",
+  "paused": true,
+  "pause_reason": "zero_inserts_after_retry"
+}

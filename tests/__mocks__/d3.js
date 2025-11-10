@@ -1,0 +1,133 @@
+// Mock D3 for Jest tests
+module.exports = {
+  select: jest.fn(() => ({
+    append: jest.fn().mockReturnThis(),
+    attr: jest.fn().mockReturnThis(),
+    style: jest.fn().mockReturnThis(),
+    text: jest.fn().mockReturnThis(),
+    call: jest.fn().mockReturnThis(),
+    node: jest.fn(),
+    selectAll: jest.fn().mockReturnThis(),
+    data: jest.fn().mockReturnThis(),
+    enter: jest.fn().mockReturnThis(),
+    exit: jest.fn().mockReturnThis(),
+    remove: jest.fn().mockReturnThis(),
+    on: jest.fn().mockReturnThis(),
+    transition: jest.fn().mockReturnThis(),
+    duration: jest.fn().mockReturnThis(),
+    ease: jest.fn().mockReturnThis(),
+    delay: jest.fn().mockReturnThis(),
+  })),
+  selectAll: jest.fn(() => ({
+    append: jest.fn().mockReturnThis(),
+    attr: jest.fn().mockReturnThis(),
+    style: jest.fn().mockReturnThis(),
+    text: jest.fn().mockReturnThis(),
+    call: jest.fn().mockReturnThis(),
+    data: jest.fn().mockReturnThis(),
+    enter: jest.fn().mockReturnThis(),
+    exit: jest.fn().mockReturnThis(),
+    remove: jest.fn().mockReturnThis(),
+    on: jest.fn().mockReturnThis(),
+    transition: jest.fn().mockReturnThis(),
+    duration: jest.fn().mockReturnThis(),
+    ease: jest.fn().mockReturnThis(),
+    delay: jest.fn().mockReturnThis(),
+  })),
+  scaleLinear: jest.fn(() => ({
+    domain: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
+    nice: jest.fn().mockReturnThis(),
+  })),
+  scaleTime: jest.fn(() => ({
+    domain: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
+    nice: jest.fn().mockReturnThis(),
+  })),
+  scaleBand: jest.fn(() => ({
+    domain: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
+    padding: jest.fn().mockReturnThis(),
+  })),
+  scaleSequential: jest.fn(() => ({
+    domain: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
+  })),
+  line: jest.fn(() => ({
+    x: jest.fn().mockReturnThis(),
+    y: jest.fn().mockReturnThis(),
+    curve: jest.fn().mockReturnThis(),
+  })),
+  area: jest.fn(() => ({
+    x: jest.fn().mockReturnThis(),
+    y0: jest.fn().mockReturnThis(),
+    y1: jest.fn().mockReturnThis(),
+    curve: jest.fn().mockReturnThis(),
+  })),
+  arc: jest.fn(() => ({
+    innerRadius: jest.fn().mockReturnThis(),
+    outerRadius: jest.fn().mockReturnThis(),
+    startAngle: jest.fn().mockReturnThis(),
+    endAngle: jest.fn().mockReturnThis(),
+  })),
+  pie: jest.fn(() => ({
+    value: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+  })),
+  axisBottom: jest.fn(() => ({
+    scale: jest.fn().mockReturnThis(),
+    tickFormat: jest.fn().mockReturnThis(),
+    ticks: jest.fn().mockReturnThis(),
+  })),
+  axisLeft: jest.fn(() => ({
+    scale: jest.fn().mockReturnThis(),
+    tickFormat: jest.fn().mockReturnThis(),
+    ticks: jest.fn().mockReturnThis(),
+  })),
+  format: jest.fn((specifier) => (value) => value.toString()),
+  timeFormat: jest.fn((specifier) => (date) => date.toString()),
+  timeParse: jest.fn((specifier) => (string) => new Date(string)),
+  extent: jest.fn((data, accessor) => [0, 100]),
+  max: jest.fn((data, accessor) => 100),
+  min: jest.fn((data, accessor) => 0),
+  sum: jest.fn((data, accessor) => 100),
+  mean: jest.fn((data, accessor) => 50),
+  median: jest.fn((data, accessor) => 50),
+  quantile: jest.fn((data, p) => 50),
+  bisector: jest.fn(() => ({
+    left: jest.fn(),
+    right: jest.fn(),
+  })),
+  curveLinear: jest.fn(),
+  curveBasis: jest.fn(),
+  curveCardinal: jest.fn(),
+  curveMonotoneX: jest.fn(),
+  easeLinear: jest.fn(),
+  easeQuad: jest.fn(),
+  easeCubic: jest.fn(),
+  interpolate: jest.fn((a, b) => (t) => a + (b - a) * t),
+  interpolateNumber: jest.fn((a, b) => (t) => a + (b - a) * t),
+  interpolateString: jest.fn((a, b) => (t) => a),
+  interpolateRgb: jest.fn((a, b) => (t) => a),
+  interpolateHsl: jest.fn((a, b) => (t) => a),
+  schemeCategory10: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
+  schemeCategory20: Array.from({length: 20}, (_, i) => `hsl(${i * 18}, 100%, 50%)`),
+  schemeSet1: ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33', '#a65628', '#f781bf', '#999999'],
+  schemeSet2: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494', '#b3b3b3'],
+  schemeSet3: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f'],
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

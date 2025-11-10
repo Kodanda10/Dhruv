@@ -1,0 +1,3875 @@
+{
+  "district": "रायगढ़",
+  "parliamentary_constituency": "रायगढ़ (एसटी)",
+  "assembly_constituencies": [
+    "लैलूंगा",
+    "रायगढ़",
+    "खरसिया",
+    "धरमजयगढ़"
+  ],
+  "blocks": [
+    "खरसिया",
+    "घरघोडा",
+    "तमनार",
+    "धरमजयगढ़",
+    "पुसौर",
+    "रायगढ़",
+    "लैलूंगा"
+  ],
+  "ulbs": [
+    "किरोड़ीमलनगर",
+    "खरसिया",
+    "घरघोडा",
+    "धर्मजयगढ़",
+    "पुसौर",
+    "रायगढ़",
+    "लैलूंगा"
+  ],
+  "hierarchy": {
+    "धरमजयगढ़": {
+      "Kancheera": [
+        "Kanchira",
+        "Kanchira",
+        "Kanchira"
+      ],
+      "Paremer": [
+        "Paremer",
+        "Dagbhona",
+        "Paremer",
+        "Dagbhona",
+        "Paremer",
+        "Dagbhona"
+      ],
+      "Kuma": [
+        "Kuma",
+        "Inchpara",
+        "Kuma",
+        "Inchpara",
+        "Kuma",
+        "Inchpara"
+      ],
+      "Krindha": [
+        "Jaldega",
+        "Krindha",
+        "Jaldega",
+        "Krindha",
+        "Jaldega",
+        "Krindha"
+      ],
+      "Ruwaphul": [
+        "Ruwaful",
+        "Batati",
+        "Ruwaful",
+        "Batati",
+        "Ruwaful",
+        "Batati"
+      ],
+      "Chalha": [
+        "Chalha",
+        "Chalha",
+        "Chalha"
+      ],
+      "Newar": [
+        "Newar",
+        "Poriya",
+        "Sirki",
+        "Newar",
+        "Poriya",
+        "Sirki",
+        "Newar",
+        "Poriya",
+        "Sirki"
+      ],
+      "Jabga": [
+        "Balpeda",
+        "Jabaga",
+        "Balpeda",
+        "Jabaga",
+        "Balpeda",
+        "Jabaga"
+      ],
+      "Boro": [
+        "Sangra",
+        "Boro",
+        "Sangra",
+        "Boro",
+        "Sangra",
+        "Boro"
+      ],
+      "Amlitikra": [
+        "Amalitikra",
+        "Amalitikra",
+        "Amalitikra"
+      ],
+      "Nakna": [
+        "Laxminagar",
+        "Nakana",
+        "Laxminagar",
+        "Nakana",
+        "Laxminagar",
+        "Nakana"
+      ],
+      "Laxmipur": [
+        "Gawarghutori",
+        "Semipali Khurd",
+        "Laxmipur (Sarasmar)",
+        "Gawarghutori",
+        "Semipali Khurd",
+        "Laxmipur (Sarasmar)",
+        "Gawarghutori",
+        "Semipali Khurd",
+        "Laxmipur (Sarasmar)"
+      ],
+      "Jamargidi": [
+        "Jamargidee",
+        "Chunchunidand",
+        "Rajida",
+        "Jamargidee",
+        "Chunchunidand",
+        "Rajida",
+        "Jamargidee",
+        "Chunchunidand",
+        "Rajida"
+      ],
+      "Miriguda": [
+        "Miriguda",
+        "Miriguda",
+        "Miriguda"
+      ],
+      "Purtukachhar": [
+        "Thirri Ama",
+        "Putukachhar",
+        "Thirri Ama",
+        "Putukachhar",
+        "Thirri Ama",
+        "Putukachhar"
+      ],
+      "Khamhar": [
+        "Khamhar",
+        "Khamhar",
+        "Khamhar"
+      ],
+      "Kamosindand": [
+        "Rampur",
+        "Rampur",
+        "Rampur"
+      ],
+      "Bhojpur": [
+        "Ghonchal",
+        "Bhojpur",
+        "Ghonchal",
+        "Bhojpur",
+        "Ghonchal",
+        "Bhojpur"
+      ],
+      "Bakalo": [
+        "Bakalo",
+        "Sariya",
+        "Bakalo",
+        "Sariya",
+        "Bakalo",
+        "Sariya"
+      ],
+      "Jamraga": [
+        "Jamarga",
+        "Jamarga",
+        "Jamarga"
+      ],
+      "Pelma": [
+        "Pelama",
+        "Pelama",
+        "Pelama"
+      ],
+      "Tonahinara": [
+        "Tonahinara",
+        "Ranpur",
+        "Tonahinara",
+        "Ranpur",
+        "Tonahinara",
+        "Ranpur"
+      ],
+      "Sonpur": [
+        "Sonpur",
+        "Sonpur",
+        "Sonpur"
+      ],
+      "Bandhanpur": [
+        "Thakurnagar (Jobi)",
+        "Bandhanpur",
+        "Thakurnagar (Jobi)",
+        "Bandhanpur",
+        "Thakurnagar (Jobi)",
+        "Bandhanpur"
+      ],
+      "Ratanpur": [
+        "Ratanpur",
+        "Ratanpur",
+        "Ratanpur"
+      ],
+      "Kadamdhodhi": [
+        "Kadamdhnodhi",
+        "Kadamdhnodhi",
+        "Kadamdhnodhi"
+      ],
+      "Kumhichuwa": [
+        "Kumhichuwan",
+        "Kumhichuwan",
+        "Kumhichuwan"
+      ],
+      "Bairagi": [
+        "Parsa",
+        "Bairagi",
+        "Parsa",
+        "Bairagi",
+        "Parsa",
+        "Bairagi"
+      ],
+      "Salka": [
+        "Salka",
+        "Dahidand",
+        "Salka",
+        "Dahidand",
+        "Salka",
+        "Dahidand"
+      ],
+      "Gidhkalo": [
+        "Gibhakalo",
+        "Salkheta",
+        "Gibhakalo",
+        "Salkheta",
+        "Gibhakalo",
+        "Salkheta"
+      ],
+      "Kumarta": [
+        "Kumarta",
+        "Pusaudera",
+        "Kumarta",
+        "Pusaudera",
+        "Kumarta",
+        "Pusaudera"
+      ],
+      "Pathalgaon Khurd": [
+        "Gosaipondi",
+        "Pathalgaon Khurd",
+        "Dhanpuri",
+        "Gosaipondi",
+        "Pathalgaon Khurd",
+        "Dhanpuri",
+        "Gosaipondi",
+        "Pathalgaon Khurd",
+        "Dhanpuri"
+      ],
+      "Samaniya": [
+        "Banjh Ama",
+        "Samaniya",
+        "Banjh Ama",
+        "Samaniya",
+        "Banjh Ama",
+        "Samaniya"
+      ],
+      "Kapu": [
+        "Kapu",
+        "Kapu",
+        "Kapu"
+      ],
+      "Gorhikhurd": [
+        "Godhi Khurd",
+        "Godhi Khurd",
+        "Godhi Khurd"
+      ],
+      "Vijaynagar": [
+        "Vijaynagar",
+        "Vijaynagar",
+        "Vijaynagar"
+      ],
+      "Sakalo": [
+        "Sakalo",
+        "Indkalo",
+        "Sakalo",
+        "Indkalo",
+        "Sakalo",
+        "Indkalo"
+      ],
+      "Alola": [
+        "Alola",
+        "Alola",
+        "Alola"
+      ],
+      "Talgaon": [
+        "Talgaon",
+        "Talgaon",
+        "Talgaon"
+      ],
+      "Lipti": [
+        "Lipti",
+        "Lipti",
+        "Lipti"
+      ],
+      "Golabuda": [
+        "Golabuda",
+        "Golabuda",
+        "Golabuda"
+      ],
+      "Pakhnakoat": [
+        "Pakhanakot",
+        "Pakhanakot",
+        "Pakhanakot"
+      ],
+      "Jagalmauha": [
+        "Jagalmauha",
+        "Jagalmauha",
+        "Jagalmauha"
+      ],
+      "Supkalo": [
+        "Supkalo",
+        "Supkalo",
+        "Supkalo"
+      ],
+      "Kamrai": [
+        "Kamrai",
+        "Kamrai",
+        "Kamrai"
+      ],
+      "Sajapali": [
+        "Sajapali",
+        "Chulhakhol",
+        "Dharampur",
+        "Aamanara",
+        "Sajapali",
+        "Chulhakhol",
+        "Dharampur",
+        "Aamanara",
+        "Sajapali",
+        "Chulhakhol",
+        "Dharampur",
+        "Aamanara"
+      ],
+      "Chirodih": [
+        "Chidodih",
+        "Bhalupakhana",
+        "Chidodih",
+        "Bhalupakhana",
+        "Chidodih",
+        "Bhalupakhana"
+      ],
+      "Ganpatpur": [
+        "Ganpatpur",
+        "Ganpatpur",
+        "Ganpatpur"
+      ],
+      "Kiriya": [
+        "Kiriya",
+        "Kiriya",
+        "Kiriya"
+      ],
+      "Raimer": [
+        "Raimer",
+        "Raimer",
+        "Raimer"
+      ],
+      "Kapiyabhouna": [
+        "Kapiyabhouna",
+        "Dumarnara",
+        "Kapiyabhouna",
+        "Dumarnara",
+        "Kapiyabhouna",
+        "Dumarnara"
+      ],
+      "Saskoba": [
+        "Saskoba",
+        "Saskoba",
+        "Saskoba"
+      ],
+      "Paraghati": [
+        "Paraghati",
+        "Paraghati",
+        "Paraghati"
+      ],
+      "Thakurpodi": [
+        "Thakurpondi",
+        "Thakurpondi",
+        "Thakurpondi"
+      ],
+      "Balakpodi": [
+        "Balakpondi",
+        "Balakpondi",
+        "Balakpondi"
+      ],
+      "Charkhapara": [
+        "Charkhapara",
+        "Charkhapara",
+        "Charkhapara"
+      ],
+      "Rairumakhurd": [
+        "Rairuma Khurd",
+        "Rairuma Khurd",
+        "Rairuma Khurd"
+      ],
+      "Bakaruma": [
+        "Bakaruma",
+        "Bakaruma",
+        "Bakaruma"
+      ],
+      "Dhourabhata": [
+        "Dhourabhata",
+        "Dhourabhata",
+        "Dhourabhata"
+      ],
+      "Rajkot": [
+        "Dindwanara",
+        "Rajkot",
+        "Supkona",
+        "Madanpur",
+        "Amaljharia",
+        "Dindwanara",
+        "Rajkot",
+        "Supkona",
+        "Madanpur",
+        "Amaljharia",
+        "Dindwanara",
+        "Rajkot",
+        "Supkona",
+        "Madanpur",
+        "Amaljharia"
+      ],
+      "Kataipali D": [
+        "Mainipur",
+        "Kataipali Dee",
+        "Shakarlaya",
+        "Mainipur",
+        "Kataipali Dee",
+        "Shakarlaya",
+        "Mainipur",
+        "Kataipali Dee",
+        "Shakarlaya"
+      ],
+      "Sokhamuda": [
+        "Sokhamuda",
+        "Sokhamuda",
+        "Sokhamuda"
+      ],
+      "Jamabira": [
+        "Jamabira",
+        "Jamabira",
+        "Jamabira"
+      ],
+      "Sagarpur": [
+        "Bagdahi",
+        "Sagarpur",
+        "Bagdahi",
+        "Sagarpur",
+        "Bagdahi",
+        "Sagarpur"
+      ],
+      "Nagdarha": [
+        "Chherchuchi",
+        "Nagdarha",
+        "Chherchuchi",
+        "Nagdarha",
+        "Chherchuchi",
+        "Nagdarha"
+      ],
+      "Sohanpur": [
+        "Tejpur",
+        "Sohanpur",
+        "Sajwari",
+        "Tejpur",
+        "Sohanpur",
+        "Sajwari",
+        "Tejpur",
+        "Sohanpur",
+        "Sajwari"
+      ],
+      "Sisringa": [
+        "Sisringa",
+        "Ganeshpur",
+        "Sisringa",
+        "Ganeshpur",
+        "Sisringa",
+        "Ganeshpur"
+      ],
+      "Ongana": [
+        "Bhandarimunda",
+        "Ongana",
+        "Bhandarimunda",
+        "Ongana",
+        "Bhandarimunda",
+        "Ongana"
+      ],
+      "Potiya": [
+        "Kanakula",
+        "Potiya",
+        "Kanakula",
+        "Potiya",
+        "Kanakula",
+        "Potiya"
+      ],
+      "Dodagaon": [
+        "Dhodhagaon",
+        "Dhodhagaon",
+        "Dhodhagaon"
+      ],
+      "Darridih": [
+        "Darridih",
+        "Darridih",
+        "Darridih"
+      ],
+      "Bayasi Colony": [
+        "Medarmar",
+        "Baisy Colony",
+        "Medarmar",
+        "Baisy Colony",
+        "Medarmar",
+        "Baisy Colony"
+      ],
+      "Durgapur": [
+        "Dharamjaigarh Colony",
+        "Durgapur",
+        "Dharamjaigarh Colony",
+        "Durgapur",
+        "Dharamjaigarh Colony",
+        "Durgapur"
+      ],
+      "Shahpur": [
+        "Shahpur",
+        "Taraimar",
+        "Shahpur",
+        "Taraimar",
+        "Shahpur",
+        "Taraimar"
+      ],
+      "Baysi": [
+        "Bayasi",
+        "Bayasi",
+        "Bayasi"
+      ],
+      "Koylar": [
+        "Koilar",
+        "Koilar",
+        "Koilar"
+      ],
+      "Ududa": [
+        "Udauda",
+        "Udauda",
+        "Udauda"
+      ],
+      "Rupunga": [
+        "Rupunga",
+        "Fattepur",
+        "Rupunga",
+        "Fattepur",
+        "Rupunga",
+        "Fattepur"
+      ],
+      "Narkalo": [
+        "Narkalo",
+        "Narkalo",
+        "Narkalo"
+      ],
+      "Khadgaon": [
+        "Khadgaon",
+        "Khadgaon",
+        "Khadgaon"
+      ],
+      "Sithara": [
+        "Sithara",
+        "Sithara",
+        "Sithara"
+      ],
+      "Semipali": [
+        "Semipali",
+        "Semipali",
+        "Semipali"
+      ],
+      "Krondha": [
+        "Krondha",
+        "Krondha",
+        "Krondha"
+      ],
+      "Nawagaon": [
+        "Nawagaon(Shyampur)",
+        "Nawagaon(Shyampur)",
+        "Nawagaon(Shyampur)"
+      ],
+      "Bartapali": [
+        "Baratapali",
+        "Baratapali",
+        "Baratapali"
+      ],
+      "Tendumudi": [
+        "Chainpur",
+        "Kokdar",
+        "Tendumudi",
+        "Chainpur",
+        "Kokdar",
+        "Tendumudi",
+        "Chainpur",
+        "Kokdar",
+        "Tendumudi"
+      ],
+      "Siwar": [
+        "Siwar",
+        "Pandaripani Khurd",
+        "Siwar",
+        "Pandaripani Khurd",
+        "Siwar",
+        "Pandaripani Khurd"
+      ],
+      "Gersha": [
+        "Gersa",
+        "Gersa",
+        "Gersa"
+      ],
+      "Amapali": [
+        "Amapali",
+        "Amgaon",
+        "Amapali",
+        "Amgaon",
+        "Amapali",
+        "Amgaon"
+      ],
+      "Purunga": [
+        "Purunga",
+        "Purunga",
+        "Purunga"
+      ],
+      "Samharsingha": [
+        "Samharsingha",
+        "Gerwani",
+        "Samharsingha",
+        "Gerwani",
+        "Samharsingha",
+        "Gerwani"
+      ],
+      "Hati": [
+        "Hati",
+        "Hati",
+        "Hati"
+      ],
+      "Jogada": [
+        "Jogada",
+        "Jogada",
+        "Jogada"
+      ],
+      "Barbaspur": [
+        "Barbaspur",
+        "Barbaspur",
+        "Barbaspur"
+      ],
+      "Munund": [
+        "Munund",
+        "Munund",
+        "Munund"
+      ],
+      "Kida": [
+        "Jampali",
+        "Kida",
+        "Jampali",
+        "Kida",
+        "Jampali",
+        "Kida"
+      ],
+      "Khharra": [
+        "Kharra",
+        "Ganlimar",
+        "Kharra",
+        "Ganlimar",
+        "Kharra",
+        "Ganlimar"
+      ],
+      "Bansajhar": [
+        "Bansajhar",
+        "Bansajhar",
+        "Bansajhar"
+      ],
+      "Behramar": [
+        "Behramar",
+        "Behramar",
+        "Behramar"
+      ],
+      "Kudekela": [
+        "Kudekela",
+        "Kudekela",
+        "Kudekela"
+      ],
+      "Tarekela": [
+        "Tarekela",
+        "Tarekela",
+        "Tarekela"
+      ],
+      "Banhar": [
+        "Ganjaipali",
+        "Banhar",
+        "Ganjaipali",
+        "Banhar",
+        "Ganjaipali",
+        "Banhar"
+      ],
+      "Chuhkimar": [
+        "Bhalmundi",
+        "Chuhkimar",
+        "Auranara",
+        "Bhalmundi",
+        "Chuhkimar",
+        "Auranara",
+        "Bhalmundi",
+        "Chuhkimar",
+        "Auranara"
+      ],
+      "Maharajganj": [
+        "Maharajganj",
+        "Maharajganj",
+        "Maharajganj"
+      ],
+      "Dhaskamuda": [
+        "Dhaskamunda",
+        "Dhaskamunda",
+        "Dhaskamunda"
+      ],
+      "Podi Chhal": [
+        "Bhundibahari",
+        "Pondichhal",
+        "Bhundibahari",
+        "Pondichhal",
+        "Bhundibahari",
+        "Pondichhal"
+      ],
+      "Bangarsuta": [
+        "Bangarsuta",
+        "Bangarsuta",
+        "Bangarsuta"
+      ],
+      "Bokramuda": [
+        "Reelo",
+        "Bokaramuda",
+        "Reelo",
+        "Bokaramuda",
+        "Reelo",
+        "Bokaramuda"
+      ],
+      "Chhal": [
+        "Kansabahar",
+        "Chhal",
+        "Kansabahar",
+        "Chhal",
+        "Kansabahar",
+        "Chhal"
+      ],
+      "Khedapali": [
+        "Bandhapali",
+        "Khedapali",
+        "Bandhapali",
+        "Khedapali",
+        "Bandhapali",
+        "Khedapali"
+      ],
+      "Nawapara": [
+        "Nawapara",
+        "Gadain Bahri",
+        "Nawapara",
+        "Gadain Bahri",
+        "Nawapara",
+        "Gadain Bahri"
+      ],
+      "Bojiya": [
+        "Bojiya",
+        "Chitapali",
+        "Bojiya",
+        "Chitapali",
+        "Bojiya",
+        "Chitapali"
+      ],
+      "Chandrashekharpur": [
+        "Chandrasekharpur",
+        "Chandrasekharpur",
+        "Chandrasekharpur"
+      ],
+      "Pusalda": [
+        "Puslda",
+        "Puslda",
+        "Puslda"
+      ],
+      "Behramuda": [
+        "Baheramuda",
+        "Baheramuda",
+        "Baheramuda"
+      ],
+      "Kataipali C": [
+        "Kataipali See",
+        "Lotan",
+        "Kataipali See",
+        "Lotan",
+        "Kataipali See",
+        "Lotan"
+      ],
+      "Deurmar": [
+        "Deormar",
+        "Singhijhap",
+        "Lamikhar",
+        "Donga Bhouna",
+        "Deormar",
+        "Singhijhap",
+        "Lamikhar",
+        "Donga Bhouna",
+        "Deormar",
+        "Singhijhap",
+        "Lamikhar",
+        "Donga Bhouna"
+      ],
+      "Edukala": [
+        "Adukala",
+        "Adukala",
+        "Adukala"
+      ]
+    },
+    "लैलूंगा": {
+      "Choranga": [
+        "Chorga",
+        "Chorga",
+        "Chorga"
+      ],
+      "Bagudega": [
+        "Bagudega",
+        "Bagudega",
+        "Bagudega"
+      ],
+      "Bhedimuda B": [
+        "Bhendimuda",
+        "Bhendimuda",
+        "Bhendimuda"
+      ],
+      "Rajgaon": [
+        "Rajgaon",
+        "Saraimuda",
+        "Rajgaon",
+        "Saraimuda",
+        "Rajgaon",
+        "Saraimuda"
+      ],
+      "Taragarh": [
+        "Taragarh",
+        "Taragarh",
+        "Taragarh"
+      ],
+      "Baigin Jhariya": [
+        "Baigin Jhariya",
+        "Baigin Jhariya",
+        "Baigin Jhariya"
+      ],
+      "Bhedimuda A": [
+        "Rampur",
+        "Bhendimuda",
+        "Rampur",
+        "Bhendimuda",
+        "Rampur",
+        "Bhendimuda"
+      ],
+      "Ghatgaon": [
+        "Ishwarpur",
+        "Ghatgaon",
+        "Ishwarpur",
+        "Ghatgaon",
+        "Ishwarpur",
+        "Ghatgaon"
+      ],
+      "Gudubahal": [
+        "Gudu Bahal",
+        "Tetka Ama",
+        "Gudu Bahal",
+        "Tetka Ama",
+        "Gudu Bahal",
+        "Tetka Ama"
+      ],
+      "Bahama": [
+        "Bahama",
+        "Bahama",
+        "Bahama"
+      ],
+      "Mudagaon": [
+        "Munda Gaon",
+        "Munda Gaon",
+        "Munda Gaon"
+      ],
+      "Rupdega": [
+        "Rupdega",
+        "Rupdega",
+        "Rupdega"
+      ],
+      "Kodasiya": [
+        "Kodasiya",
+        "Kodasiya",
+        "Kodasiya"
+      ],
+      "Gahnajhariya": [
+        "Gahna Jhariya",
+        "Gahna Jhariya",
+        "Gahna Jhariya"
+      ],
+      "Bansdand": [
+        "Bansdand",
+        "Bansdand",
+        "Bansdand"
+      ],
+      "Jamabahar": [
+        "Bhelwa Toli",
+        "Jambahar",
+        "Bhelwa Toli",
+        "Jambahar",
+        "Bhelwa Toli",
+        "Jambahar"
+      ],
+      "Sardega": [
+        "Sardega",
+        "Sardega",
+        "Sardega"
+      ],
+      "Kurra": [
+        "Kurra",
+        "Kurra",
+        "Kurra"
+      ],
+      "Ghiyarmuda": [
+        "Ghiyar Munda",
+        "Ratakhand",
+        "Ghiyar Munda",
+        "Ratakhand",
+        "Ghiyar Munda",
+        "Ratakhand"
+      ],
+      "Dap": [
+        "Dhap",
+        "Bhawanipur",
+        "Dhap",
+        "Bhawanipur",
+        "Dhap",
+        "Bhawanipur"
+      ],
+      "Rajpur": [
+        "Rajpur",
+        "Rajpur",
+        "Rajpur"
+      ],
+      "Pahadludeg": [
+        "Pahadludeg",
+        "Pahadludeg",
+        "Pahadludeg"
+      ],
+      "Salkhiya": [
+        "Salakhiya",
+        "Salakhiya",
+        "Salakhiya"
+      ],
+      "Hirapur": [
+        "Hirapur",
+        "Hirapur",
+        "Hirapur"
+      ],
+      "Rudukela": [
+        "Kendatikra",
+        "Rudukela",
+        "Kendatikra",
+        "Rudukela",
+        "Kendatikra",
+        "Rudukela"
+      ],
+      "Khendama": [
+        "Khand Ama",
+        "Khand Ama",
+        "Khand Ama"
+      ],
+      "Khamhar": [
+        "Khamhar",
+        "Khamhar",
+        "Khamhar"
+      ],
+      "Jharan": [
+        "Jharan",
+        "Jharan",
+        "Jharan"
+      ],
+      "Potra": [
+        "Potra",
+        "Potra",
+        "Potra"
+      ],
+      "Kupakani": [
+        "Manjhi Ama",
+        "Kupakani",
+        "Manjhi Ama",
+        "Kupakani",
+        "Manjhi Ama",
+        "Kupakani"
+      ],
+      "Regdi": [
+        "Angekela",
+        "Gosaidihi",
+        "Regdi",
+        "Angekela",
+        "Gosaidihi",
+        "Regdi",
+        "Angekela",
+        "Gosaidihi",
+        "Regdi"
+      ],
+      "Kunjara": [
+        "Kunjara",
+        "Kunjara",
+        "Kunjara"
+      ],
+      "Dorrobija": [
+        "Kanjhari",
+        "Dharrobija",
+        "Kanjhari",
+        "Dharrobija",
+        "Kanjhari",
+        "Dharrobija"
+      ],
+      "Gamekela": [
+        "Gamekela",
+        "Gamekela",
+        "Gamekela"
+      ],
+      "Jatara": [
+        "Jatra",
+        "Jatra",
+        "Jatra"
+      ],
+      "Jharama": [
+        "Jhar Ama",
+        "Jhar Ama",
+        "Jhar Ama"
+      ],
+      "Pakargaon": [
+        "Pakargaon",
+        "Pakargaon",
+        "Pakargaon"
+      ],
+      "Birsingha": [
+        "Birsingha",
+        "Birsingha",
+        "Birsingha"
+      ],
+      "Katkliya": [
+        "Katakliya",
+        "Katakliya",
+        "Katakliya",
+        "Chitkibahar"
+      ],
+      "Kamarga": [
+        "Kamarga",
+        "Kamarga",
+        "Kamarga"
+      ],
+      "Bhuyapani": [
+        "Chhatasarai",
+        "Bhuyapani",
+        "Chhatasarai",
+        "Bhuyapani",
+        "Chhatasarai",
+        "Bhuyapani"
+      ],
+      "Baiskimuda": [
+        "Baiskimuda",
+        "Baiskimuda",
+        "Baiskimuda"
+      ],
+      "Mukdega": [
+        "Mukdega",
+        "Mukdega",
+        "Mukdega"
+      ],
+      "Lohdapani": [
+        "Lohadapani",
+        "Lohadapani",
+        "Lohadapani"
+      ],
+      "Karwarjor": [
+        "Karwarjor",
+        "Karwarjor",
+        "Karwarjor"
+      ],
+      "Chiraikhar": [
+        "Kuropahari",
+        "Chiraikhar",
+        "Kuropahari",
+        "Chiraikhar",
+        "Kuropahari",
+        "Chiraikhar"
+      ],
+      "Chanverpur": [
+        "Chawarpur",
+        "Chawarpur",
+        "Chawarpur"
+      ],
+      "Tolma": [
+        "Tolma",
+        "Tolma",
+        "Tolma"
+      ],
+      "Sihardhar": [
+        "Siyardhar",
+        "Siyardhar",
+        "Siyardhar"
+      ],
+      "Sonajori": [
+        "Sonajori",
+        "Sonajori",
+        "Sonajori"
+      ],
+      "Dhouradand": [
+        "Karadega",
+        "Dhouradand",
+        "Karadega",
+        "Dhouradand",
+        "Karadega",
+        "Dhouradand"
+      ],
+      "Kilkila": [
+        "Kilkila",
+        "Kilkila",
+        "Kilkila"
+      ],
+      "Basantpur": [
+        "Jamuna",
+        "Basantpur",
+        "Jamuna",
+        "Basantpur",
+        "Jamuna",
+        "Basantpur"
+      ],
+      "Turtura": [
+        "Turtura",
+        "Saramdega",
+        "Turtura",
+        "Saramdega",
+        "Turtura",
+        "Saramdega"
+      ],
+      "Libra": [
+        "Libra",
+        "Horroguda",
+        "Libra",
+        "Horroguda",
+        "Libra",
+        "Horroguda"
+      ],
+      "Tolge": [
+        "Ainkra",
+        "Tolage",
+        "Hardijhariya",
+        "Piparahi",
+        "Ainkra",
+        "Tolage",
+        "Hardijhariya",
+        "Piparahi",
+        "Ainkra",
+        "Tolage",
+        "Hardijhariya",
+        "Piparahi"
+      ],
+      "Lamdand": [
+        "Kaharchuwan",
+        "Lamdand",
+        "Kaharchuwan",
+        "Lamdand",
+        "Kaharchuwan",
+        "Lamdand"
+      ],
+      "Narayanpur": [
+        "Kodamai",
+        "Narayanpur",
+        "Pokdega",
+        "Kodamai",
+        "Narayanpur",
+        "Pokdega",
+        "Kodamai",
+        "Narayanpur",
+        "Pokdega"
+      ],
+      "Gerupani": [
+        "Gerupani",
+        "Kenkrajhariya",
+        "Gerupani",
+        "Kenkrajhariya",
+        "Gerupani",
+        "Kenkrajhariya"
+      ],
+      "Kondkel": [
+        "Piparahi",
+        "Kondkel",
+        "Piparahi",
+        "Kondkel",
+        "Piparahi",
+        "Kondkel"
+      ],
+      "Keshla": [
+        "Keshala",
+        "Khairbahal",
+        "Mendharmal",
+        "Keshala",
+        "Khairbahal",
+        "Mendharmal",
+        "Keshala",
+        "Khairbahal",
+        "Mendharmal"
+      ],
+      "Khar": [
+        "Khar",
+        "Gorhi",
+        "Khar",
+        "Gorhi",
+        "Khar",
+        "Gorhi"
+      ],
+      "Tatkela": [
+        "Tatkela",
+        "Naharkela",
+        "Tatkela",
+        "Naharkela",
+        "Tatkela",
+        "Naharkela"
+      ],
+      "Subra": [
+        "Subara",
+        "Subara",
+        "Subara"
+      ],
+      "Amapali": [
+        "Amapali",
+        "Raja Ama",
+        "Amapali",
+        "Raja Ama",
+        "Amapali",
+        "Raja Ama"
+      ],
+      "Kerabahar": [
+        "Kerabahar",
+        "Banekela",
+        "Tilaidarha",
+        "Kerabahar",
+        "Banekela",
+        "Tilaidarha",
+        "Kerabahar",
+        "Banekela",
+        "Tilaidarha"
+      ],
+      "Jhagarpur": [
+        "Jhagarpur",
+        "Jhagarpur",
+        "Jhagarpur"
+      ],
+      "Mohanpur": [
+        "Mohanpur",
+        "Sohanpur",
+        "Mohanpur",
+        "Sohanpur",
+        "Mohanpur",
+        "Sohanpur"
+      ],
+      "Diyagarh": [
+        "Kenapara",
+        "Chingari",
+        "Diyagarh",
+        "Kenapara",
+        "Chingari",
+        "Diyagarh",
+        "Kenapara",
+        "Chingari",
+        "Diyagarh"
+      ],
+      "Bhakurra": [
+        "Gahira",
+        "Bhakurra",
+        "Muskati",
+        "Gahira",
+        "Bhakurra",
+        "Muskati",
+        "Gahira",
+        "Bhakurra",
+        "Muskati"
+      ],
+      "Gunu": [
+        "Gunu",
+        "Gunu",
+        "Gunu"
+      ],
+      "Ganjpur": [
+        "Ganjpur",
+        "Baratangar",
+        "Madiyakachar",
+        "Ganjpur",
+        "Baratangar",
+        "Madiyakachar",
+        "Ganjpur",
+        "Baratangar",
+        "Madiyakachar"
+      ],
+      "Bardih": [
+        "Potebirni",
+        "Bardih",
+        "Potebirni",
+        "Bardih",
+        "Potebirni",
+        "Bardih"
+      ],
+      "Fulikunda": [
+        "Phutaha Munda",
+        "Phulikunda",
+        "Phutaha Munda",
+        "Phulikunda",
+        "Phutaha Munda",
+        "Phulikunda"
+      ],
+      "Laripani": [
+        "Laripani",
+        "Sagarpali",
+        "Laripani",
+        "Sagarpali",
+        "Laripani",
+        "Sagarpali"
+      ]
+    },
+    "घरघोडा": {
+      "Kaya": [
+        "Kaya",
+        "Kaya",
+        "Kaya"
+      ],
+      "Kamtara": [
+        "Kamtara",
+        "Karrikachar",
+        "Sahaspur Paimise",
+        "Kamtara",
+        "Karrikachar",
+        "Sahaspur Paimise",
+        "Kamtara",
+        "Karrikachar",
+        "Sahaspur Paimise"
+      ],
+      "Chilkaguda": [
+        "Chilkaguda",
+        "Dangbira",
+        "Danaut",
+        "Chilkaguda",
+        "Dangbira",
+        "Danaut",
+        "Chilkaguda",
+        "Dangbira",
+        "Danaut"
+      ],
+      "Baturakachhar": [
+        "Batura Kachar",
+        "Batura Kachar",
+        "Batura Kachar"
+      ],
+      "Chimtapani": [
+        "Kurunjkhol",
+        "Kantajhariya",
+        "Chimtapani",
+        "Bamhanpali",
+        "Kurunjkhol",
+        "Kantajhariya",
+        "Chimtapani",
+        "Bamhanpali",
+        "Kurunjkhol",
+        "Kantajhariya",
+        "Chimtapani",
+        "Bamhanpali"
+      ],
+      "Pushlda": [
+        "Pusalda",
+        "Pusalda",
+        "Pusalda"
+      ],
+      "Kurmibhaona": [
+        "Pordi",
+        "Rai",
+        "Kurmibhaona",
+        "Pordi",
+        "Rai",
+        "Kurmibhaona",
+        "Pordi",
+        "Rai",
+        "Kurmibhaona"
+      ],
+      "Faguram": [
+        "Faguram",
+        "Saraipali",
+        "Karichapar",
+        "Faguram",
+        "Saraipali",
+        "Karichapar",
+        "Faguram",
+        "Saraipali",
+        "Karichapar"
+      ],
+      "Baroud": [
+        "Baraud",
+        "Bulekera",
+        "Baraud",
+        "Bulekera",
+        "Baraud",
+        "Bulekera"
+      ],
+      "Kudumkela": [
+        "Kudumkela",
+        "Ghoghara",
+        "Kudumkela",
+        "Ghoghara",
+        "Kudumkela",
+        "Ghoghara"
+      ],
+      "Koshamghat": [
+        "Kosamghat",
+        "Kosamghat",
+        "Kosamghat"
+      ],
+      "Puri": [
+        "Puri",
+        "Puri",
+        "Puri"
+      ],
+      "Gharghodi": [
+        "Gharghodi",
+        "Malideh",
+        "Gharghodi",
+        "Malideh",
+        "Gharghodi",
+        "Malideh"
+      ],
+      "Baronakunda": [
+        "Jarkat",
+        "Baronakunda",
+        "Jarkat",
+        "Baronakunda",
+        "Jarkat",
+        "Baronakunda"
+      ],
+      "Nawagarh": [
+        "Tendubhantha",
+        "Nawagarh",
+        "Tendubhantha",
+        "Nawagarh",
+        "Tendubhantha",
+        "Nawagarh"
+      ],
+      "Chhotegumda": [
+        "Katangdih",
+        "Chhote Gumda",
+        "Katangdih",
+        "Chhote Gumda",
+        "Katangdih",
+        "Chhote Gumda"
+      ],
+      "Tenda": [
+        "Tenda",
+        "Dangninara",
+        "Tenda",
+        "Dangninara",
+        "Tenda",
+        "Dangninara"
+      ],
+      "Badegumda": [
+        "Bade Gumda",
+        "Bade Gumda",
+        "Bade Gumda"
+      ],
+      "Bhengari": [
+        "Khokhro Ama",
+        "Charmar",
+        "Bhengari",
+        "Khokhro Ama",
+        "Charmar",
+        "Bhengari",
+        "Khokhro Ama",
+        "Charmar",
+        "Bhengari"
+      ],
+      "Dehridih": [
+        "Dehridih",
+        "Bilaskhar",
+        "Pakadarha",
+        "Dehridih",
+        "Bilaskhar",
+        "Pakadarha",
+        "Dehridih",
+        "Bilaskhar",
+        "Pakadarha"
+      ],
+      "Nawapara": [
+        "Nawapara Tenda",
+        "Nawapara Tenda",
+        "Nawapara Tenda"
+      ],
+      "Bagchaba": [
+        "Panikhet",
+        "Bagchaba",
+        "Panikhet",
+        "Bagchaba",
+        "Panikhet",
+        "Bagchaba"
+      ],
+      "Charratangar": [
+        "Charratangar",
+        "Dokarbuda",
+        "Suhai",
+        "Charratangar",
+        "Dokarbuda",
+        "Suhai",
+        "Charratangar",
+        "Dokarbuda",
+        "Suhai"
+      ],
+      "Tumidih": [
+        "Tumidih",
+        "Tumidih",
+        "Tumidih"
+      ],
+      "Amlidih": [
+        "Amlidih",
+        "Amlidih",
+        "Amlidih"
+      ],
+      "Bhalumar": [
+        "Chaidoria",
+        "Bhalumar",
+        "Chaidoria",
+        "Bhalumar",
+        "Chaidoria",
+        "Bhalumar"
+      ],
+      "Baihamuda": [
+        "Pandripani",
+        "Baihamuda",
+        "Pandripani",
+        "Baihamuda",
+        "Pandripani",
+        "Baihamuda"
+      ],
+      "Bhendra": [
+        "Bhendra",
+        "Bhendra",
+        "Bhendra"
+      ],
+      "Jhariyapali": [
+        "Jhariyapali",
+        "Jhankadarha",
+        "Jhariyapali",
+        "Jhankadarha",
+        "Jhariyapali",
+        "Jhankadarha"
+      ],
+      "Charbhantha": [
+        "Charbhantha",
+        "Kognara",
+        "Charbhantha",
+        "Kognara",
+        "Charbhantha",
+        "Kognara"
+      ],
+      "Kanchanpur": [
+        "Kanchanpur",
+        "Kanchanpur",
+        "Kanchanpur"
+      ],
+      "Bahirkela": [
+        "Bahirkela",
+        "Bahirkela",
+        "Bahirkela"
+      ],
+      "Teram": [
+        "Chheerbhauna",
+        "Teram",
+        "Chheerbhauna",
+        "Teram",
+        "Chheerbhauna",
+        "Teram"
+      ],
+      "Dhoram": [
+        "Dhoram",
+        "Dhoram",
+        "Dhoram"
+      ],
+      "Patrapali": [
+        "Patrapali",
+        "Bijari",
+        "Patrapali",
+        "Bijari",
+        "Patrapali",
+        "Bijari"
+      ],
+      "Rumkera": [
+        "Rumkera",
+        "Rumkera",
+        "Rumkera"
+      ],
+      "Konpara": [
+        "Konpara",
+        "Kathrapali",
+        "Konpara",
+        "Kathrapali",
+        "Konpara",
+        "Kathrapali"
+      ],
+      "Kotrimal": [
+        "Kotarimal",
+        "Muskura",
+        "Salhepali",
+        "Kotarimal",
+        "Muskura",
+        "Salhepali",
+        "Kotarimal",
+        "Muskura",
+        "Salhepali"
+      ],
+      "Porda": [
+        "Porda",
+        "Porda",
+        "Porda"
+      ],
+      "Chotiguda": [
+        "Ajijgarh",
+        "Chotiguda",
+        "Ajijgarh",
+        "Chotiguda",
+        "Ajijgarh",
+        "Chotiguda"
+      ],
+      "Bichinara": [
+        "Kudhurmauha",
+        "Tilaipali",
+        "Naya Rampur",
+        "Bichinara",
+        "Kudhurmauha",
+        "Tilaipali",
+        "Naya Rampur",
+        "Bichinara",
+        "Kudhurmauha",
+        "Tilaipali",
+        "Naya Rampur",
+        "Bichinara"
+      ],
+      "Raikera": [
+        "Raikera",
+        "Raikera",
+        "Raikera"
+      ]
+    },
+    "तमनार": {
+      "Pelma": [
+        "Pelama",
+        "Kharra",
+        "Pelama",
+        "Kharra",
+        "Pelama",
+        "Kharra"
+      ],
+      "Urba": [
+        "Uraba",
+        "Uraba",
+        "Uraba"
+      ],
+      "Hinjahr": [
+        "Hinjher",
+        "Semijor",
+        "Chirwani",
+        "Hinjher",
+        "Semijor",
+        "Chirwani",
+        "Hinjher",
+        "Semijor",
+        "Chirwani",
+        "Jarhidih"
+      ],
+      "Lalpur": [
+        "Lalpur",
+        "Maduadumar",
+        "Banjikhol",
+        "Sakta",
+        "Lalpur",
+        "Maduadumar",
+        "Banjikhol",
+        "Sakta",
+        "Lalpur",
+        "Maduadumar",
+        "Banjikhol",
+        "Sakta"
+      ],
+      "Rodopali": [
+        "Bhalumuda",
+        "Rodopali",
+        "Bhalumuda",
+        "Rodopali",
+        "Bhalumuda",
+        "Rodopali"
+      ],
+      "Bazarmuda": [
+        "Dholnara",
+        "Bajarmuda",
+        "Dholnara",
+        "Bajarmuda",
+        "Dholnara",
+        "Bajarmuda"
+      ],
+      "Khamharia": [
+        "Karwahi",
+        "Khamahariya",
+        "Karwahi",
+        "Khamahariya",
+        "Karwahi",
+        "Khamahariya"
+      ],
+      "Milupara": [
+        "Milupara",
+        "Milupara",
+        "Milupara"
+      ],
+      "Gare": [
+        "Lamdarha",
+        "Gare",
+        "Lamdarha",
+        "Gare",
+        "Lamdarha",
+        "Gare"
+      ],
+      "Kondkel": [
+        "Kodkel",
+        "Baljor",
+        "Kodkel",
+        "Baljor",
+        "Kodkel",
+        "Baljor"
+      ],
+      "Auraimuda": [
+        "Auraimuda",
+        "Auraimuda",
+        "Auraimuda"
+      ],
+      "Noondarha": [
+        "Nundarha",
+        "Kerakhol",
+        "Nundarha",
+        "Kerakhol",
+        "Nundarha",
+        "Kerakhol"
+      ],
+      "Banai": [
+        "Chirramuda",
+        "Banai",
+        "Chirramuda",
+        "Banai",
+        "Chirramuda",
+        "Banai"
+      ],
+      "Barkaspali": [
+        "Rengalbahri",
+        "Barkaspali",
+        "Rengalbahri",
+        "Barkaspali",
+        "Rengalbahri",
+        "Barkaspali"
+      ],
+      "Uttar Regoan": [
+        "Uttar Regaon",
+        "Dakshin Regaon",
+        "Uttar Regaon",
+        "Dakshin Regaon",
+        "Uttar Regaon",
+        "Dakshin Regaon"
+      ],
+      "Chitwani": [
+        "Kolam",
+        "Chitwahi",
+        "Kolam",
+        "Chitwahi",
+        "Kolam",
+        "Chitwahi"
+      ],
+      "Dolesara": [
+        "Dolesara",
+        "Dolesara",
+        "Dolesara"
+      ],
+      "Salihabhantha": [
+        "Salihabhanttha",
+        "Salihabhanttha",
+        "Salihabhanttha"
+      ],
+      "Barpali": [
+        "Ukaripali",
+        "Barpali",
+        "Ukaripali",
+        "Barpali",
+        "Ukaripali",
+        "Barpali"
+      ],
+      "Devgarh": [
+        "Deogarha",
+        "Deogarha",
+        "Deogarha"
+      ],
+      "Mahuapali": [
+        "Patrapali",
+        "Mauhapali",
+        "Patrapali",
+        "Mauhapali",
+        "Patrapali",
+        "Mauhapali"
+      ],
+      "Rabo": [
+        "Amapali",
+        "Rabo",
+        "Amapali",
+        "Rabo",
+        "Amapali",
+        "Rabo"
+      ],
+      "Gadgaon": [
+        "Gadgaon",
+        "Harradih",
+        "Jamdabri",
+        "Gadgaon",
+        "Harradih",
+        "Jamdabri",
+        "Gadgaon",
+        "Harradih",
+        "Jamdabri"
+      ],
+      "Samaruma": [
+        "Punjipathra",
+        "Samaruma",
+        "Padkipahri",
+        "Punjipathra",
+        "Samaruma",
+        "Padkipahri",
+        "Punjipathra",
+        "Samaruma",
+        "Padkipahri"
+      ],
+      "Saraipali": [
+        "Gaurmudi",
+        "Saraipali",
+        "Gaurmudi",
+        "Saraipali",
+        "Gaurmudi",
+        "Saraipali"
+      ],
+      "Jivri": [
+        "Jamchunwa",
+        "Jivri",
+        "Jamchunwa",
+        "Jivri",
+        "Jamchunwa",
+        "Jivri"
+      ],
+      "Dararma": [
+        "Tharakpur",
+        "Darama",
+        "Tharakpur",
+        "Darama",
+        "Tharakpur",
+        "Darama"
+      ],
+      "Bhuikurri": [
+        "Bagbuda",
+        "Bhuikurri",
+        "Bagbuda",
+        "Bhuikurri",
+        "Bagbuda",
+        "Bhuikurri"
+      ],
+      "Kasdol": [
+        "Kasdol",
+        "Salihari",
+        "Kanta Jhariya",
+        "Ratrot",
+        "Kasdol",
+        "Salihari",
+        "Kanta Jhariya",
+        "Ratrot",
+        "Kasdol",
+        "Salihari",
+        "Kanta Jhariya",
+        "Ratrot"
+      ],
+      "Taraimal": [
+        "Gorkamuda",
+        "Traimal",
+        "Ujalpur",
+        "Gorkamuda",
+        "Traimal",
+        "Ujalpur",
+        "Gorkamuda",
+        "Traimal",
+        "Ujalpur"
+      ],
+      "Badgaon": [
+        "Bhainsgarhi",
+        "Barbahli",
+        "Chindbhauna",
+        "Badgaon",
+        "Bhainsgarhi",
+        "Barbahli",
+        "Chindbhauna",
+        "Badgaon",
+        "Bhainsgarhi",
+        "Barbahli",
+        "Chindbhauna",
+        "Badgaon"
+      ],
+      "Aamaghat": [
+        "Amaghat",
+        "Amaghat",
+        "Amaghat"
+      ],
+      "Kachckoba": [
+        "Kachkoba",
+        "Nawapara",
+        "Kachkoba",
+        "Nawapara",
+        "Kachkoba",
+        "Nawapara"
+      ],
+      "Jerekela": [
+        "Jarekela",
+        "Jarekela",
+        "Jarekela"
+      ],
+      "Basanpali": [
+        "Basanpali",
+        "Basanpali",
+        "Basanpali"
+      ],
+      "Gorhi": [
+        "Godhi",
+        "Godhi",
+        "Godhi"
+      ],
+      "Tamnar": [
+        "Tamnar",
+        "Tamnar",
+        "Tamnar"
+      ],
+      "Budia": [
+        "Budiya",
+        "Budiya",
+        "Budiya"
+      ],
+      "Jhinkabahal": [
+        "Bagbadi",
+        "Jhinku Bahal",
+        "Bagbadi",
+        "Jhinku Bahal",
+        "Bagbadi",
+        "Jhinku Bahal"
+      ],
+      "Kunjemura": [
+        "Kunjemura",
+        "Kunjemura",
+        "Kunjemura"
+      ],
+      "Sarasmal": [
+        "Kosampali",
+        "Sarasmal",
+        "Dongamauha",
+        "Kosampali",
+        "Sarasmal",
+        "Dongamauha",
+        "Kosampali",
+        "Sarasmal",
+        "Dongamauha"
+      ],
+      "Peta": [
+        "Pata",
+        "Pata",
+        "Pata"
+      ],
+      "Saraitola": [
+        "Mudagaon",
+        "Saraitola",
+        "Mudagaon",
+        "Saraitola",
+        "Mudagaon",
+        "Saraitola"
+      ],
+      "Tihlirampur": [
+        "Tihli Rampur",
+        "Tihli Rampur",
+        "Tihli Rampur"
+      ],
+      "Aamgaon": [
+        "Aamgaon",
+        "Aamgaon",
+        "Aamgaon"
+      ],
+      "Janjgir": [
+        "Janjgir",
+        "Nagramuda",
+        "Janjgir",
+        "Nagramuda",
+        "Janjgir",
+        "Nagramuda"
+      ],
+      "Dhanurabhantha": [
+        "Tapranga",
+        "Dhaurabhatha",
+        "Tapranga",
+        "Dhaurabhatha",
+        "Tapranga",
+        "Dhaurabhatha"
+      ],
+      "Tangarghat": [
+        "Tangarghat",
+        "Telaipara",
+        "Tangarghat",
+        "Telaipara",
+        "Tangarghat",
+        "Telaipara"
+      ],
+      "Libra": [
+        "Libara",
+        "Libara",
+        "Libara"
+      ],
+      "Jharna": [
+        "Jharna",
+        "Jharna",
+        "Jharna"
+      ],
+      "Samkera": [
+        "Raipara",
+        "Samkera",
+        "Raipara",
+        "Samkera",
+        "Raipara",
+        "Samkera"
+      ],
+      "Gourbahari": [
+        "Gourbahari",
+        "Amalidhondha",
+        "Gourbahari",
+        "Amalidhondha",
+        "Gourbahari",
+        "Amalidhondha"
+      ],
+      "Mahloi": [
+        "Mahloi",
+        "Mahloi",
+        "Mahloi"
+      ],
+      "Deogaon": [
+        "Deogaon",
+        "Deogaon",
+        "Deogaon"
+      ],
+      "Padigoan": [
+        "Padi Gaon",
+        "Padi Gaon",
+        "Padi Gaon"
+      ],
+      "Jobro": [
+        "Pali",
+        "Jobaro",
+        "Karmagarh",
+        "Kenani Bahra",
+        "Pali",
+        "Jobaro",
+        "Karmagarh",
+        "Kenani Bahra",
+        "Pali",
+        "Jobaro",
+        "Karmagarh",
+        "Kenani Bahra"
+      ],
+      "Kesharchuan": [
+        "Auorajor",
+        "Karra Pali",
+        "Kesharchunwa",
+        "Auorajor",
+        "Karra Pali",
+        "Kesharchunwa",
+        "Auorajor",
+        "Karra Pali",
+        "Kesharchunwa",
+        "Jampali"
+      ],
+      "Bhagora": [
+        "Kusmel",
+        "Chakabahal",
+        "Barkachar",
+        "Bhagora",
+        "Kusmel",
+        "Chakabahal",
+        "Barkachar",
+        "Bhagora",
+        "Kusmel",
+        "Chakabahal",
+        "Barkachar",
+        "Bhagora"
+      ],
+      "Khuruslenga": [
+        "Khurus Lenga",
+        "Khurus Lenga",
+        "Khurus Lenga"
+      ],
+      "Bijna": [
+        "Bijana",
+        "Bijana",
+        "Bijana"
+      ],
+      "Hamirpur": [
+        "Hamirpur",
+        "Hamirpur",
+        "Hamirpur"
+      ]
+    },
+    "रायगढ़": {
+      "Kerajhar": [
+        "Kerajhar",
+        "Dongadhakel",
+        "Kerajhar",
+        "Dongadhakel",
+        "Kerajhar",
+        "Dongadhakel"
+      ],
+      "Kushwabahari": [
+        "Kushwabahari",
+        "Garhkurri",
+        "Kushwabahari",
+        "Garhkurri",
+        "Kushwabahari",
+        "Garhkurri"
+      ],
+      "Kondtrai": [
+        "Kodtarai",
+        "Kodtarai",
+        "Kodtarai"
+      ],
+      "Dongitrai": [
+        "Dongitarai",
+        "Hardijhariya",
+        "Dongitarai",
+        "Hardijhariya",
+        "Dongitarai",
+        "Hardijhariya"
+      ],
+      "Pandrepani (W)": [
+        "Pandripani",
+        "Pandripani",
+        "Pandripani"
+      ],
+      "Uchchabhithi": [
+        "Uchhbhithi",
+        "Uchhbhithi",
+        "Uchhbhithi"
+      ],
+      "Kosampali": [
+        "Kosampali",
+        "Kosampali",
+        "Kosampali"
+      ],
+      "Gejamuda": [
+        "Gejamuda",
+        "Gejamuda",
+        "Gejamuda",
+        "Rampur Chhote"
+      ],
+      "Parsada": [
+        "Muralipali",
+        "Parsada",
+        "Muralipali",
+        "Parsada",
+        "Muralipali",
+        "Parsada"
+      ],
+      "Kusmura": [
+        "Kusmura",
+        "Kusmura",
+        "Kusmura"
+      ],
+      "Kashichunwa": [
+        "Kashichuwan",
+        "Kashichuwan",
+        "Kashichuwan"
+      ],
+      "Jampali": [
+        "Jampali",
+        "Jampali",
+        "Jampali"
+      ],
+      "Dumerpali": [
+        "Dumarpali",
+        "Dumarpali",
+        "Dumarpali"
+      ],
+      "Baghanpur": [
+        "Banhar",
+        "Baghanpur",
+        "Banhar",
+        "Baghanpur",
+        "Banhar",
+        "Baghanpur"
+      ],
+      "Kacchar": [
+        "Kachhar",
+        "Kachhar",
+        "Kachhar"
+      ],
+      "Lebdrha": [
+        "Charbhatha",
+        "Lebda",
+        "Charbhatha",
+        "Lebda",
+        "Charbhatha",
+        "Lebda"
+      ],
+      "Deori": [
+        "Deori",
+        "Deori",
+        "Deori"
+      ],
+      "Bayang": [
+        "Bayang",
+        "Bayang",
+        "Bayang"
+      ],
+      "Nandali": [
+        "Nandeli",
+        "Baispali",
+        "Nandeli",
+        "Baispali",
+        "Nandeli",
+        "Baispali"
+      ],
+      "Panjhar": [
+        "Panjhar",
+        "Raniguda",
+        "Panjhar",
+        "Raniguda",
+        "Panjhar",
+        "Raniguda"
+      ],
+      "Sardamal": [
+        "Sardamal",
+        "Bokaramuda",
+        "Sardamal",
+        "Bokaramuda",
+        "Sardamal",
+        "Bokaramuda"
+      ],
+      "Barpali": [
+        "Arsipali",
+        "Barpali",
+        "Mauhapali",
+        "Arsipali",
+        "Barpali",
+        "Mauhapali",
+        "Arsipali",
+        "Barpali",
+        "Mauhapali"
+      ],
+      "Nawapara": [
+        "Junwani",
+        "Nawapara",
+        "Junwani",
+        "Nawapara",
+        "Junwani",
+        "Nawapara"
+      ],
+      "Sarwani": [
+        "Litaipali",
+        "Sarwani",
+        "Litaipali",
+        "Sarwani",
+        "Litaipali",
+        "Sarwani"
+      ],
+      "Kulba": [
+        "Kulba",
+        "Nawagaon",
+        "Kulba",
+        "Nawagaon",
+        "Kulba",
+        "Nawagaon"
+      ],
+      "Kantahardi": [
+        "Kantahardi",
+        "Kantahardi",
+        "Kantahardi"
+      ],
+      "Bardaputi": [
+        "Bardapuri",
+        "Basantpur",
+        "Bardapuri",
+        "Basantpur",
+        "Bardapuri",
+        "Basantpur"
+      ],
+      "Sahaspuri": [
+        "Sahaspuri",
+        "Sahaspuri",
+        "Sahaspuri"
+      ],
+      "Naorangapur": [
+        "Naurangpur",
+        "Naurangpur",
+        "Naurangpur"
+      ],
+      "Bhatpur": [
+        "Dulopur",
+        "Salhepali",
+        "Bhatpur",
+        "Dulopur",
+        "Salhepali",
+        "Bhatpur",
+        "Dulopur",
+        "Salhepali",
+        "Bhatpur"
+      ],
+      "Usroat": [
+        "Usraut",
+        "Usraut",
+        "Usraut"
+      ],
+      "Aurabhata": [
+        "Aunrabhantha",
+        "Thakurpali",
+        "Aunrabhantha",
+        "Thakurpali",
+        "Aunrabhantha",
+        "Thakurpali"
+      ],
+      "Kuramapali": [
+        "Kurmapali",
+        "Kurmapali",
+        "Kurmapali"
+      ],
+      "Kotara": [
+        "Kotara",
+        "Kotara",
+        "Kotara"
+      ],
+      "Tarapur": [
+        "Tarapur",
+        "Tarapur",
+        "Tarapur"
+      ],
+      "Balamgoda": [
+        "Balamgoda",
+        "Balamgoda",
+        "Balamgoda"
+      ],
+      "Tarkela": [
+        "Tarkela",
+        "Tarkela",
+        "Tarkela"
+      ],
+      "Patelpali": [
+        "Patelpali",
+        "Patelpali",
+        "Patelpali"
+      ],
+      "Bansia": [
+        "Bansiya",
+        "Bansiya",
+        "Bansiya"
+      ],
+      "Jorapali": [
+        "Kenapali",
+        "Jorapali",
+        "Kenapali",
+        "Jorapali",
+        "Kenapali",
+        "Jorapali"
+      ],
+      "Kosamnara": [
+        "Kosamnara",
+        "Kosamnara",
+        "Kosamnara"
+      ],
+      "Nansia": [
+        "Chhuhipali",
+        "Nansia",
+        "Chhuhipali",
+        "Nansia",
+        "Chhuhipali",
+        "Nansia"
+      ],
+      "Dhanagar": [
+        "Dhanagar",
+        "Dhanagar",
+        "Dhanagar"
+      ],
+      "Sangitarai": [
+        "Sangitarai",
+        "Sangitarai",
+        "Sangitarai"
+      ],
+      "Kalmi": [
+        "Kalmi (Part)",
+        "Kalmi (Part)",
+        "Kalmi (Part)"
+      ],
+      "Khairpur": [
+        "Khairpur",
+        "Tipakhol",
+        "Khairpur",
+        "Tipakhol",
+        "Khairpur",
+        "Tipakhol"
+      ],
+      "Chraipani": [
+        "Chiraipani",
+        "Chiraipani",
+        "Chiraipani"
+      ],
+      "Lamidaraha": [
+        "Amapal",
+        "Lamidaraha",
+        "Amapal",
+        "Lamidaraha",
+        "Amapal",
+        "Lamidaraha"
+      ],
+      "Gerwani": [
+        "Gerawani",
+        "Gerawani",
+        "Gerawani",
+        "Shivpuri"
+      ],
+      "Lakha": [
+        "Chiraipani",
+        "Lakha",
+        "Chiraipani",
+        "Lakha",
+        "Chiraipani",
+        "Lakha"
+      ],
+      "Delari": [
+        "Delari",
+        "Pali",
+        "Delari",
+        "Pali",
+        "Delari",
+        "Pali"
+      ],
+      "Barlia": [
+        "Barliya",
+        "Barliya",
+        "Barliya"
+      ],
+      "Bhelwatikara": [
+        "Bhelwa Tikra",
+        "Bhelwa Tikra",
+        "Bhelwa Tikra",
+        "Danot"
+      ],
+      "Regada": [
+        "Regada",
+        "Regada",
+        "Regada"
+      ],
+      "Nawagaon": [
+        "Chakradharpur",
+        "Dhumabahal",
+        "Chhirwani",
+        "Nawagaon",
+        "Chakradharpur",
+        "Dhumabahal",
+        "Chhirwani",
+        "Nawagaon",
+        "Chakradharpur",
+        "Dhumabahal",
+        "Chhirwani",
+        "Nawagaon"
+      ],
+      "Bangursia": [
+        "Bagursiya",
+        "Junwani",
+        "Bagursiya",
+        "Junwani",
+        "Bagursiya",
+        "Junwani"
+      ],
+      "Sambalpuri": [
+        "Badpali",
+        "Sambalpuri",
+        "Badpali",
+        "Sambalpuri",
+        "Badpali",
+        "Sambalpuri"
+      ],
+      "Adbahal": [
+        "Adbahal",
+        "Balbhadrapur",
+        "Sarbahal",
+        "Sikosimal",
+        "Adbahal",
+        "Balbhadrapur",
+        "Sarbahal",
+        "Sikosimal",
+        "Adbahal",
+        "Balbhadrapur",
+        "Sarbahal",
+        "Sikosimal"
+      ],
+      "Jharguda": [
+        "Jharguda",
+        "Deobahal",
+        "Natwarpur",
+        "Jharguda",
+        "Deobahal",
+        "Natwarpur",
+        "Jharguda",
+        "Deobahal",
+        "Natwarpur"
+      ],
+      "Sapnai": [
+        "Sapanai",
+        "Saraipali",
+        "Sapanai",
+        "Saraipali",
+        "Sapanai",
+        "Saraipali"
+      ],
+      "Kotmar": [
+        "Kotmar",
+        "Kotmar",
+        "Kotmar",
+        "Kari Chhapar"
+      ],
+      "Tarpali": [
+        "Tarpali",
+        "Tarpali",
+        "Tarpali"
+      ],
+      "Tilga": [
+        "Tilaga",
+        "Tilaga",
+        "Tilaga"
+      ],
+      "Patrapali (E)": [
+        "Patrapali",
+        "Patrapali",
+        "Patrapali"
+      ],
+      "Bhagora": [
+        "Bhagora",
+        "Bhagora",
+        "Bhagora"
+      ],
+      "Gopalpur": [
+        "Bhikharimal",
+        "Gopalpur",
+        "Bhikharimal",
+        "Gopalpur",
+        "Bhikharimal",
+        "Gopalpur"
+      ],
+      "Kotarlia": [
+        "Kotarliya",
+        "Chitakakani",
+        "Kotarliya",
+        "Chitakakani",
+        "Kotarliya",
+        "Chitakakani"
+      ],
+      "Siyarpali": [
+        "Kotrapali",
+        "Siyarpali",
+        "Kotrapali",
+        "Siyarpali",
+        "Kotrapali",
+        "Siyarpali"
+      ],
+      "Jurda": [
+        "Jurda",
+        "Jurda",
+        "Jurda"
+      ],
+      "Pandaripani (E)": [
+        "Pandaripani",
+        "Pandaripani",
+        "Pandaripani"
+      ],
+      "Viswanathpali": [
+        "Vishwanath Pali",
+        "Kosampali",
+        "Vishwanath Pali",
+        "Kosampali",
+        "Vishwanath Pali",
+        "Kosampali"
+      ],
+      "Loing": [
+        "Loing",
+        "Loing",
+        "Loing"
+      ],
+      "Belria": [
+        "Dumarpali",
+        "Belriya",
+        "Dumarpali",
+        "Belriya",
+        "Dumarpali",
+        "Belriya"
+      ],
+      "Banora": [
+        "Banora",
+        "Banora",
+        "Banora"
+      ],
+      "Mahapalli": [
+        "Mauhapali",
+        "Mauhapali",
+        "Mauhapali"
+      ],
+      "Sakarboga": [
+        "Shankarboga",
+        "Salheona",
+        "Shankarboga",
+        "Salheona",
+        "Shankarboga",
+        "Salheona"
+      ],
+      "Kukurda": [
+        "Kukurda",
+        "Kukurda",
+        "Kukurda"
+      ],
+      "Koylanga": [
+        "Koylanga",
+        "Koylanga",
+        "Koylanga"
+      ],
+      "Kolaibahal": [
+        "Kolaibahal",
+        "Kolaibahal",
+        "Kolaibahal"
+      ],
+      "Chuhipali": [
+        "Chhuhipali",
+        "Nawapara",
+        "Chhuhipali",
+        "Nawapara",
+        "Chhuhipali",
+        "Nawapara"
+      ],
+      "Jamgaon": [
+        "Jamgaon",
+        "Jamgaon",
+        "Jamgaon"
+      ],
+      "Behrapali": [
+        "Beharapali",
+        "Bhuiyapali",
+        "Beharapali",
+        "Bhuiyapali",
+        "Beharapali",
+        "Bhuiyapali"
+      ],
+      "Manwapali": [
+        "Manuwapali",
+        "Manuwapali",
+        "Manuwapali"
+      ],
+      "Bade Attarmuda": [
+        "Bade Attarmuda (Og)",
+        "Bade Attarmuda (Og)",
+        "Bade Attarmuda (Og)",
+        "Benderchua (Og)"
+      ]
+    },
+    "पुसौर": {
+      "Amapali": [
+        "Amalipali",
+        "Amapali",
+        "Mauhapali",
+        "Amalipali",
+        "Amapali",
+        "Mauhapali",
+        "Amalipali",
+        "Amapali",
+        "Mauhapali"
+      ],
+      "Keshala": [
+        "Keshala",
+        "Dumarmuda",
+        "Keshala",
+        "Dumarmuda",
+        "Keshala",
+        "Dumarmuda"
+      ],
+      "Midmida": [
+        "Midmida",
+        "Midmida",
+        "Midmida"
+      ],
+      "Jhalmala": [
+        "Jhalmala",
+        "Jhalmala",
+        "Jhalmala"
+      ],
+      "Bijkot": [
+        "Boirdih",
+        "Binjkot Tilaipali",
+        "Nawapali",
+        "Boirdih",
+        "Binjkot Tilaipali",
+        "Nawapali",
+        "Boirdih",
+        "Binjkot Tilaipali",
+        "Nawapali"
+      ],
+      "Garhumariya": [
+        "Garh Umariya",
+        "Garh Umariya",
+        "Garh Umariya"
+      ],
+      "Darramuda": [
+        "Gudgahan",
+        "Darramuda",
+        "Gudgahan",
+        "Darramuda",
+        "Gudgahan",
+        "Darramuda"
+      ],
+      "Kondatarai": [
+        "Kodatarai",
+        "Kodatarai",
+        "Kodatarai"
+      ],
+      "Belpali": [
+        "Kunjedabri",
+        "Belpali",
+        "Kunjedabri",
+        "Belpali",
+        "Kunjedabri",
+        "Belpali"
+      ],
+      "Dumarpali": [
+        "Dumarpali",
+        "Dumarpali",
+        "Dumarpali"
+      ],
+      "Loharsingha": [
+        "Loharsingh",
+        "Loharsingh",
+        "Loharsingh"
+      ],
+      "Kanwariha": [
+        "Kawrhiha",
+        "Bulaki",
+        "Kawrhiha",
+        "Bulaki",
+        "Kawrhiha",
+        "Bulaki"
+      ],
+      "Jogitarai": [
+        "Jogitarai",
+        "Bijana",
+        "Jogitarai",
+        "Bijana",
+        "Jogitarai",
+        "Bijana"
+      ],
+      "Putkapuri": [
+        "Putkapuri",
+        "Putkapuri",
+        "Putkapuri"
+      ],
+      "Basanpali": [
+        "Basanpali",
+        "Basanpali",
+        "Basanpali"
+      ],
+      "Linjir": [
+        "Linjir",
+        "Linjir",
+        "Linjir"
+      ],
+      "Kauwatal": [
+        "Koanuwatal",
+        "Raitarai",
+        "Koanuwatal",
+        "Raitarai",
+        "Koanuwatal",
+        "Raitarai"
+      ],
+      "Khokhara": [
+        "Khokhara",
+        "Khokhara",
+        "Khokhara"
+      ],
+      "Gorra": [
+        "Gorra",
+        "Gorra",
+        "Gorra"
+      ],
+      "Telipali": [
+        "Jampali",
+        "Telipali",
+        "Jampali",
+        "Telipali",
+        "Jampali",
+        "Telipali"
+      ],
+      "Pacheda": [
+        "Teka",
+        "Pacheda",
+        "Amaldiha",
+        "Teka",
+        "Pacheda",
+        "Amaldiha",
+        "Teka",
+        "Pacheda",
+        "Amaldiha"
+      ],
+      "Nawapara M": [
+        "Dhangaon",
+        "Nawapara",
+        "Dhangaon",
+        "Nawapara",
+        "Dhangaon",
+        "Nawapara"
+      ],
+      "Litaipali": [
+        "Rawan Khondra",
+        "Litaipali",
+        "Rawan Khondra",
+        "Litaipali",
+        "Rawan Khondra",
+        "Litaipali"
+      ],
+      "Ruchida": [
+        "Ruchida",
+        "Ruchida",
+        "Ruchida"
+      ],
+      "Ghughuwa": [
+        "Ghughawa",
+        "Torna",
+        "Ghughawa",
+        "Torna",
+        "Ghughawa",
+        "Torna"
+      ],
+      "Jatri": [
+        "Jatari",
+        "Jatari",
+        "Jatari"
+      ],
+      "Pusalda": [
+        "Pusalda",
+        "Shankarpali",
+        "Pusalda",
+        "Shankarpali",
+        "Pusalda",
+        "Shankarpali"
+      ],
+      "Semra": [
+        "Semibhanwar",
+        "Semara",
+        "Semibhanwar",
+        "Semara",
+        "Semibhanwar",
+        "Semara"
+      ],
+      "Kensara": [
+        "Kensara",
+        "Bandimal",
+        "Kensara",
+        "Bandimal",
+        "Kensara",
+        "Bandimal"
+      ],
+      "Tetla": [
+        "Tetala",
+        "Tetala",
+        "Tetala"
+      ],
+      "Surri": [
+        "Surri",
+        "Surri",
+        "Surri"
+      ],
+      "Aurda": [
+        "Aurda",
+        "Aurda",
+        "Aurda"
+      ],
+      "Jakela": [
+        "Jakela",
+        "Jakela",
+        "Jakela"
+      ],
+      "Jharmuda": [
+        "Jharmuda",
+        "Jharmuda",
+        "Jharmuda"
+      ],
+      "Kosmanda": [
+        "Kusmuda",
+        "Dhuranpali",
+        "Kusmuda",
+        "Dhuranpali",
+        "Kusmuda",
+        "Dhuranpali"
+      ],
+      "Sukulbhatli": [
+        "Dhantarai",
+        "Daubhathli",
+        "Sukulbhathli",
+        "Dhantarai",
+        "Daubhathli",
+        "Sukulbhathli",
+        "Dhantarai",
+        "Daubhathli",
+        "Sukulbhathli"
+      ],
+      "Ghutkupali": [
+        "Ghutakupali",
+        "Kasaipali",
+        "Riyapali",
+        "Ghutakupali",
+        "Kasaipali",
+        "Riyapali",
+        "Ghutakupali",
+        "Kasaipali",
+        "Riyapali"
+      ],
+      "Badehardi": [
+        "Jhulanpali",
+        "Badehaldi",
+        "Jhulanpali",
+        "Badehaldi",
+        "Jhulanpali",
+        "Badehaldi"
+      ],
+      "Nawapara A": [
+        "Nawapara",
+        "Nawapara",
+        "Nawapara"
+      ],
+      "Malda": [
+        "Malda",
+        "Malda",
+        "Malda"
+      ],
+      "Saodakela": [
+        "Sodekela",
+        "Sodekela",
+        "Sodekela"
+      ],
+      "Ektal": [
+        "Ekatal",
+        "Dhanuhardera",
+        "Ekatal",
+        "Dhanuhardera",
+        "Ekatal",
+        "Dhanuhardera"
+      ],
+      "Rengalpali": [
+        "Thengapali",
+        "Badmal",
+        "Rengalpali",
+        "Thengapali",
+        "Badmal",
+        "Rengalpali",
+        "Thengapali",
+        "Badmal",
+        "Rengalpali"
+      ],
+      "Netnagar": [
+        "Netnagar",
+        "Netnagar",
+        "Netnagar"
+      ],
+      "Bhathenpali": [
+        "Bhathanpali",
+        "Bhathanpali",
+        "Bhathanpali"
+      ],
+      "Mahloi": [
+        "Aadmuda",
+        "Mahaloi",
+        "Aadmuda",
+        "Mahaloi",
+        "Aadmuda",
+        "Mahaloi"
+      ],
+      "Kandagarh": [
+        "Kandagarh",
+        "Bodajhariya",
+        "Kandagarh",
+        "Bodajhariya",
+        "Kandagarh",
+        "Bodajhariya"
+      ],
+      "Chhapora": [
+        "Chhapora",
+        "Chhapora",
+        "Chhapora"
+      ],
+      "Kathani": [
+        "Kathani",
+        "Kathani",
+        "Kathani"
+      ],
+      "Lohakhan": [
+        "Jhilagitar",
+        "Lohakhan",
+        "Jhilagitar",
+        "Lohakhan",
+        "Jhilagitar",
+        "Lohakhan"
+      ],
+      "Devalsurra": [
+        "Darripali",
+        "Deolsura",
+        "Darripali",
+        "Deolsura",
+        "Darripali",
+        "Deolsura"
+      ],
+      "Basanpali(East)": [
+        "Basanpali",
+        "Basanpali",
+        "Basanpali"
+      ],
+      "Ondekera": [
+        "Odekera",
+        "Saraipali",
+        "Odekera",
+        "Saraipali",
+        "Odekera",
+        "Saraipali"
+      ],
+      "Gudu": [
+        "Gudu",
+        "Gudu",
+        "Gudu"
+      ],
+      "Baghadola": [
+        "Baghadula",
+        "Baghadula",
+        "Baghadula"
+      ],
+      "Karrajor": [
+        "Karrajor",
+        "Jampali",
+        "Sarasmal",
+        "Karrajor",
+        "Jampali",
+        "Sarasmal",
+        "Karrajor",
+        "Jampali",
+        "Sarasmal"
+      ],
+      "Chhinch": [
+        "Chhinch",
+        "Suloni",
+        "Chhinch",
+        "Suloni",
+        "Chhinch",
+        "Suloni"
+      ],
+      "Tadola": [
+        "Tadola",
+        "Tadola",
+        "Tadola"
+      ],
+      "Nandeli": [
+        "Lankapali",
+        "Nandeli",
+        "Lankapali",
+        "Nandeli",
+        "Lankapali",
+        "Nandeli"
+      ],
+      "Kotasura": [
+        "Kotasura",
+        "Kotasura",
+        "Kotasura"
+      ],
+      "Siha": [
+        "Karichhapar",
+        "Siha",
+        "Karichhapar",
+        "Siha",
+        "Karichhapar",
+        "Siha"
+      ],
+      "Gotma": [
+        "Gotama",
+        "Kesapali",
+        "Thakurpali",
+        "Gotama",
+        "Kesapali",
+        "Thakurpali",
+        "Gotama",
+        "Kesapali",
+        "Thakurpali"
+      ],
+      "Kotmara": [
+        "Kotmara",
+        "Amalipali",
+        "Kotmara",
+        "Amalipali",
+        "Kotmara",
+        "Amalipali"
+      ],
+      "Chikhali": [
+        "Chikhali",
+        "Chikhali",
+        "Chikhali"
+      ],
+      "Tilagi": [
+        "Tilagi",
+        "Tilagi",
+        "Tilagi"
+      ],
+      "Barpali": [
+        "Barpali",
+        "Sarwani",
+        "Barpali",
+        "Sarwani",
+        "Barpali",
+        "Sarwani"
+      ],
+      "Raibar": [
+        "Raibar",
+        "Raibar",
+        "Raibar"
+      ],
+      "Supa": [
+        "Supa",
+        "Thengagudi",
+        "Supa",
+        "Thengagudi",
+        "Supa",
+        "Thengagudi"
+      ],
+      "Chhotebhandar": [
+        "Amalibhauna",
+        "Jewaridih",
+        "Chhote Bhandar",
+        "Amalibhauna",
+        "Jewaridih",
+        "Chhote Bhandar",
+        "Amalibhauna",
+        "Jewaridih",
+        "Chhote Bhandar"
+      ],
+      "Taparda": [
+        "Kathali",
+        "Taparada",
+        "Tupakdhar",
+        "Kathali",
+        "Taparada",
+        "Tupakdhar",
+        "Kathali",
+        "Taparada",
+        "Tupakdhar"
+      ],
+      "Badebhandar": [
+        "Bade Bhandar",
+        "Bade Bhandar",
+        "Bade Bhandar"
+      ],
+      "Nawapara B": [
+        "Khaprapali",
+        "Nawapara (Bade)",
+        "Raipali (Junadih)",
+        "Khaprapali",
+        "Nawapara (Bade)",
+        "Raipali (Junadih)",
+        "Khaprapali",
+        "Nawapara (Bade)",
+        "Raipali (Junadih)"
+      ],
+      "Bonda": [
+        "Jiladi",
+        "Bonda (Junadih)",
+        "Siladi",
+        "Jiladi",
+        "Bonda (Junadih)",
+        "Siladi",
+        "Jiladi",
+        "Bonda (Junadih)",
+        "Siladi"
+      ],
+      "Bunga": [
+        "Bunga",
+        "Bunga",
+        "Bunga"
+      ],
+      "Ranbhata": [
+        "Ranbhatha",
+        "Ranbhatha",
+        "Ranbhatha"
+      ],
+      "Parsapali": [
+        "Changhori",
+        "Parsapali",
+        "Changhori",
+        "Parsapali",
+        "Changhori",
+        "Parsapali"
+      ],
+      "Chhichhor Umariya": [
+        "Chhichhor Umaria",
+        "Chhichhor Umaria",
+        "Chhichhor Umaria"
+      ],
+      "Tinmini": [
+        "Tinmini",
+        "Tinmini",
+        "Tinmini"
+      ],
+      "Baradoli": [
+        "Baradoli",
+        "Singpuri",
+        "Baradoli",
+        "Singpuri",
+        "Baradoli",
+        "Singpuri"
+      ],
+      "Machida": [
+        "Kalmi",
+        "Machida",
+        "Kalmi",
+        "Machida",
+        "Kalmi",
+        "Machida"
+      ],
+      "Turanga": [
+        "Turanga",
+        "Turanga",
+        "Turanga"
+      ],
+      "Nawapali": [
+        "Nawapali",
+        "Sutupali",
+        "Surajgarh",
+        "Nawapali",
+        "Sutupali",
+        "Surajgarh",
+        "Nawapali",
+        "Sutupali",
+        "Surajgarh"
+      ],
+      "Padigaon": [
+        "Padigaon",
+        "Padigaon",
+        "Padigaon"
+      ],
+      "Tribauna": [
+        "Tribhona",
+        "Tribhona",
+        "Tribhona"
+      ],
+      "Chhote Hardi": [
+        "Kakaimohan",
+        "Chhote Haldi",
+        "Kakaimohan",
+        "Chhote Haldi",
+        "Kakaimohan",
+        "Chhote Haldi"
+      ],
+      "Kondapali": [
+        "Kodpali",
+        "Kodpali",
+        "Kodpali"
+      ],
+      "Tarda": [
+        "Tarda",
+        "Tarda",
+        "Tarda"
+      ],
+      "Lara": [
+        "Lara",
+        "Lara",
+        "Lara"
+      ]
+    },
+    "खरसिया": {
+      "Kawali": [
+        "Kataud",
+        "Kewali",
+        "Kataud",
+        "Kewali",
+        "Kataud",
+        "Kewali"
+      ],
+      "Khadgaon": [
+        "Khardgaon",
+        "Khardgaon",
+        "Khardgaon"
+      ],
+      "Gorpar": [
+        "Gorpar",
+        "Kasaipali",
+        "Gorpar",
+        "Kasaipali",
+        "Gorpar",
+        "Kasaipali"
+      ],
+      "Meengoan": [
+        "Mingaon",
+        "Mingaon",
+        "Mingaon"
+      ],
+      "Kurru": [
+        "Karauwadih",
+        "Kurru",
+        "Karauwadih",
+        "Kurru",
+        "Karauwadih",
+        "Kurru"
+      ],
+      "Kapharmar": [
+        "Kafarmar",
+        "Kafarmar",
+        "Kafarmar"
+      ],
+      "Jobi": [
+        "Jobi",
+        "Bagjhar",
+        "Jobi",
+        "Bagjhar",
+        "Jobi",
+        "Bagjhar"
+      ],
+      "Pharkanara": [
+        "Chitakatharra",
+        "Farkanara",
+        "Chitakatharra",
+        "Farkanara",
+        "Chitakatharra",
+        "Farkanara"
+      ],
+      "Nandgaon": [
+        "Deradih",
+        "Tumidih",
+        "Nandgaon",
+        "Deradih",
+        "Tumidih",
+        "Nandgaon",
+        "Deradih",
+        "Tumidih",
+        "Nandgaon"
+      ],
+      "Nagoi": [
+        "Nagoi",
+        "Nagoi",
+        "Nagoi"
+      ],
+      "Barra": [
+        "Barra",
+        "Barra",
+        "Barra"
+      ],
+      "Khamhar": [
+        "Kothikunda",
+        "Khamhar",
+        "Kothikunda",
+        "Khamhar",
+        "Kothikunda",
+        "Khamhar"
+      ],
+      "Gandapali": [
+        "Gandapali",
+        "Sajapali",
+        "Gandapali",
+        "Sajapali",
+        "Gandapali",
+        "Sajapali"
+      ],
+      "Puchhiyapali": [
+        "Puchhiyapali",
+        "Tandapara",
+        "Puchhiyapali",
+        "Tandapara",
+        "Puchhiyapali",
+        "Tandapara"
+      ],
+      "Chhotepandarmuda": [
+        "Agasmar",
+        "Chhirpani",
+        "Chhote Pandarmunda",
+        "Agasmar",
+        "Chhirpani",
+        "Chhote Pandarmunda",
+        "Agasmar",
+        "Chhirpani",
+        "Chhote Pandarmunda"
+      ],
+      "Barbhouna": [
+        "Kukricholi",
+        "Barbhauna",
+        "Kukricholi",
+        "Barbhauna",
+        "Kukricholi",
+        "Barbhauna"
+      ],
+      "Gurda": [
+        "Gurda",
+        "Karranara Alias Naurangpur",
+        "Gurda",
+        "Karranara Alias Naurangpur",
+        "Gurda",
+        "Karranara Alias Naurangpur"
+      ],
+      "Tendumudi": [
+        "Chhotejam Pali",
+        "Tendumudi",
+        "Chhotejam Pali",
+        "Tendumudi",
+        "Chhotejam Pali",
+        "Tendumudi"
+      ],
+      "Domnara": [
+        "Domnara",
+        "Domnara",
+        "Domnara"
+      ],
+      "Dehjari": [
+        "Dehjari",
+        "Bhalunara",
+        "Dehjari",
+        "Bhalunara",
+        "Dehjari",
+        "Bhalunara"
+      ],
+      "Nawagaon": [
+        "Adpathra",
+        "Nawagaon",
+        "Adpathra",
+        "Nawagaon",
+        "Adpathra",
+        "Nawagaon"
+      ],
+      "Chodha": [
+        "Chondha",
+        "Chondha",
+        "Chondha"
+      ],
+      "Bansmuda": [
+        "Jamjhor",
+        "Bansmuda",
+        "Jamjhor",
+        "Bansmuda",
+        "Jamjhor",
+        "Bansmuda"
+      ],
+      "Pamgarh": [
+        "Pamgarh",
+        "Pamgarh",
+        "Pamgarh"
+      ],
+      "Banipathar": [
+        "Banipathar",
+        "Banipathar",
+        "Banipathar"
+      ],
+      "Bhelwadih": [
+        "Bhelwadih",
+        "Bhelwadih",
+        "Bhelwadih"
+      ],
+      "Madanpur": [
+        "Madanpur",
+        "Madanpur",
+        "Madanpur"
+      ],
+      "Chote Devgoan": [
+        "Amadol",
+        "Chhote Deogaon",
+        "Amadol",
+        "Chhote Deogaon",
+        "Amadol",
+        "Chhote Deogaon"
+      ],
+      "Thusekela": [
+        "Thusekela",
+        "Thusekela",
+        "Thusekela"
+      ],
+      "Patrapali": [
+        "Patrapali",
+        "Ulda",
+        "Patrapali",
+        "Ulda",
+        "Patrapali",
+        "Ulda"
+      ],
+      "Parsapali": [
+        "Parsapali",
+        "Bhadripali",
+        "Parsapali",
+        "Bhadripali",
+        "Parsapali",
+        "Bhadripali"
+      ],
+      "Paraskol": [
+        "Paraskol",
+        "Paraskol",
+        "Paraskol"
+      ],
+      "Botalda": [
+        "Botalda",
+        "Botalda",
+        "Botalda"
+      ],
+      "Suti": [
+        "Sooti",
+        "Sooti",
+        "Sooti"
+      ],
+      "Dhimani": [
+        "Dhimani",
+        "Lodhiya",
+        "Dhimani",
+        "Lodhiya",
+        "Dhimani",
+        "Lodhiya"
+      ],
+      "Tiuor": [
+        "Tiuar",
+        "Tiuar",
+        "Tiuar"
+      ],
+      "Bargarh": [
+        "Palgarha",
+        "Bargarh",
+        "Palgarha",
+        "Bargarh",
+        "Palgarha",
+        "Bargarh"
+      ],
+      "Sarwani": [
+        "Sarwani",
+        "Sarwani",
+        "Sarwani"
+      ],
+      "Aourda": [
+        "Aurda",
+        "Aurda",
+        "Aurda"
+      ],
+      "Gadabordi": [
+        "Kalmipat",
+        "Ganda Bordi",
+        "Gondbordi",
+        "Kalmipat",
+        "Ganda Bordi",
+        "Gondbordi",
+        "Kalmipat",
+        "Ganda Bordi",
+        "Gondbordi"
+      ],
+      "Turekela": [
+        "Turekela",
+        "Turekela",
+        "Turekela"
+      ],
+      "Nawapara Est": [
+        "Nawapara",
+        "Bhagodih",
+        "Nawapara",
+        "Bhagodih",
+        "Nawapara",
+        "Bhagodih"
+      ],
+      "Bagdewa": [
+        "Bagdewa",
+        "Bakeli",
+        "Jharadih",
+        "Bagdewa",
+        "Bakeli",
+        "Jharadih",
+        "Bagdewa",
+        "Bakeli",
+        "Jharadih"
+      ],
+      "Ghaghara": [
+        "Ghaghara",
+        "Makri",
+        "Ghaghara",
+        "Makri",
+        "Ghaghara",
+        "Makri"
+      ],
+      "Purena": [
+        "Charpara",
+        "Puraina",
+        "Charpara",
+        "Puraina",
+        "Charpara",
+        "Puraina"
+      ],
+      "Halahuli": [
+        "Dumar Bhantha",
+        "Halahuli",
+        "Dumar Bhantha",
+        "Halahuli",
+        "Dumar Bhantha",
+        "Halahuli"
+      ],
+      "Badedevgaon": [
+        "Badedeogaon",
+        "Badedeogaon",
+        "Badedeogaon"
+      ],
+      "Anjoripali": [
+        "Anjoripali",
+        "Anjoripali",
+        "Anjoripali"
+      ],
+      "Ratanmahaka": [
+        "Gopi Mahka",
+        "Ratan Mahka",
+        "Gopi Mahka",
+        "Ratan Mahka",
+        "Gopi Mahka",
+        "Ratan Mahka"
+      ],
+      "Telikot": [
+        "Telikot",
+        "Telikot",
+        "Telikot"
+      ],
+      "Bamhanpali": [
+        "Bramhanpali",
+        "Bramhanpali",
+        "Bramhanpali"
+      ],
+      "Mouhapali": [
+        "Mauhapali",
+        "Mauhapali",
+        "Mauhapali"
+      ],
+      "Sonbarsa": [
+        "Adajhar",
+        "Sonbarsa",
+        "Adajhar",
+        "Sonbarsa",
+        "Adajhar",
+        "Sonbarsa"
+      ],
+      "Karumouha": [
+        "Karpipali",
+        "Karumauha",
+        "Karpipali",
+        "Karumauha",
+        "Karpipali",
+        "Karumauha"
+      ],
+      "Bhainapara": [
+        "Kalmi",
+        "Bhainapara",
+        "Kalmi",
+        "Bhainapara",
+        "Kalmi",
+        "Bhainapara"
+      ],
+      "Gidha": [
+        "Gidha",
+        "Gidha",
+        "Gidha"
+      ],
+      "Chhotemudpar": [
+        "Chhote Mudpar",
+        "Chhote Mudpar",
+        "Chhote Mudpar"
+      ],
+      "Kunkuni": [
+        "Kunkuni",
+        "Kunkuni",
+        "Kunkuni"
+      ],
+      "Khairpali": [
+        "Kukri Jhariya",
+        "Bendo Jhariya",
+        "Amapali",
+        "Khairpali",
+        "Kukri Jhariya",
+        "Bendo Jhariya",
+        "Amapali",
+        "Khairpali",
+        "Kukri Jhariya",
+        "Bendo Jhariya",
+        "Amapali",
+        "Khairpali"
+      ],
+      "Rajghata": [
+        "Chhote Dumarpali",
+        "Rajghata",
+        "Chhote Dumarpali",
+        "Rajghata",
+        "Chhote Dumarpali",
+        "Rajghata"
+      ],
+      "Badedumarpali": [
+        "Bade Dumarpali",
+        "Bade Dumarpali",
+        "Bade Dumarpali"
+      ],
+      "Basnajhar": [
+        "Basnajhar",
+        "Basnajhar",
+        "Basnajhar"
+      ],
+      "Ranisagar": [
+        "Bhaluchuwa",
+        "Ranisagar",
+        "Bhaluchuwa",
+        "Ranisagar",
+        "Bhaluchuwa",
+        "Ranisagar"
+      ],
+      "Badejampali": [
+        "Kurru Bhantha",
+        "Bade Jampali",
+        "Kurru Bhantha",
+        "Bade Jampali",
+        "Kurru Bhantha",
+        "Bade Jampali"
+      ],
+      "Darramuda": [
+        "Gindola",
+        "Darramuda",
+        "Gindola",
+        "Darramuda",
+        "Gindola",
+        "Darramuda"
+      ],
+      "Jabalpur": [
+        "Jabalpur",
+        "Jhinti Pali",
+        "Bhagoradih",
+        "Rasiyamuda",
+        "Jabalpur",
+        "Jhinti Pali",
+        "Bhagoradih",
+        "Rasiyamuda",
+        "Jabalpur",
+        "Jhinti Pali",
+        "Bhagoradih",
+        "Rasiyamuda"
+      ],
+      "Binjkot": [
+        "Binjkot",
+        "Binjkot",
+        "Binjkot"
+      ],
+      "Naharpali": [
+        "Naharpali",
+        "Singhanpur",
+        "Naharpali",
+        "Singhanpur",
+        "Naharpali",
+        "Singhanpur"
+      ],
+      "Chaple": [
+        "Chaple",
+        "Chaple",
+        "Chaple"
+      ],
+      "Temtema": [
+        "Sendripali",
+        "Temtema",
+        "Kanmura",
+        "Sendripali",
+        "Temtema",
+        "Kanmura",
+        "Sendripali",
+        "Temtema",
+        "Kanmura"
+      ],
+      "Raksapali": [
+        "Saliha Bhantha",
+        "Raksapali",
+        "Saliha Bhantha",
+        "Raksapali",
+        "Saliha Bhantha",
+        "Raksapali"
+      ],
+      "Mura": [
+        "Mura",
+        "Mura",
+        "Mura"
+      ],
+      "Lodhajhar": [
+        "Lodhajhar",
+        "Lodhajhar",
+        "Lodhajhar"
+      ],
+      "Nawapara": [
+        "Jaimuda",
+        "Nawapara",
+        "Jaimuda",
+        "Nawapara",
+        "Jaimuda",
+        "Nawapara"
+      ],
+      "Bhupdeopur": [
+        "Tilaipali",
+        "Bhupdeopur",
+        "Tilaipali",
+        "Bhupdeopur",
+        "Tilaipali",
+        "Bhupdeopur"
+      ],
+      "Darri": [
+        "Darri",
+        "Rajpur",
+        "Darri",
+        "Rajpur",
+        "Darri",
+        "Rajpur"
+      ],
+      "Bilaspur": [
+        "Bilaspur",
+        "Bilaspur",
+        "Bilaspur"
+      ],
+      "Kiritmal": [
+        "Kiritmal",
+        "Kiritmal",
+        "Kiritmal"
+      ],
+      "Pandripani": [
+        "Ful Bandhiya",
+        "Pandripani",
+        "Ful Bandhiya",
+        "Pandripani",
+        "Ful Bandhiya",
+        "Pandripani"
+      ],
+      "Sondka": [
+        "Basanpali",
+        "Sondka",
+        "Basanpali",
+        "Sondka",
+        "Basanpali",
+        "Sondka"
+      ],
+      "Jaimura": [
+        "Jaimura",
+        "Tayang",
+        "Jaimura",
+        "Tayang",
+        "Jaimura",
+        "Tayang"
+      ]
+    }
+  },
+  "statistics": {
+    "assembly_constituencies": 4,
+    "blocks": 7,
+    "ulbs": 7,
+    "gram_panchayats": 549,
+    "villages": 2726
+  }
+}

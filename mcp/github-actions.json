@@ -1,0 +1,28 @@
+{
+  "name": "github-actions",
+  "version": "1.0.0",
+  "description": "MCP endpoint for triggering and monitoring GitHub Actions",
+  "commands": {
+    "dispatch": {
+      "command": "gh workflow run {{workflow}} --repo {{repo}} --ref {{ref}}",
+      "args": [
+        { "name": "repo", "required": true },
+        { "name": "workflow", "required": true },
+        { "name": "ref", "required": true }
+      ]
+    },
+    "status": {
+      "command": "gh run list --repo {{repo}} --limit 5 --json name,status,conclusion",
+      "args": [
+        { "name": "repo", "required": true }
+      ]
+    },
+    "view": {
+      "command": "gh run view {{runId}} --repo {{repo}} --log",
+      "args": [
+        { "name": "repo", "required": true },
+        { "name": "runId", "required": true }
+      ]
+    }
+  }
+}

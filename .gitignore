@@ -8,3 +8,25 @@ audit.json
 .env*
 out
 dist
+trufflehog/
+
+# Web cache with sensitive data
+data/.web_cache/
+*.cache
+
+# Build artifacts and virtual environments
+tsconfig.tsbuildinfo
+.venv/
+venv/
+__pycache__/
+*.pyc
+k6-summary.json
+junit.xml
+.clinerules/byterover-rules.md
+.kilocode/rules/byterover-rules.md
+.roo/rules/byterover-rules.md
+.windsurf/rules/byterover-rules.md
+.cursor/rules/byterover-rules.mdc
+.kiro/steering/byterover-rules.md
+.qoder/rules/byterover-rules.md
+.augment/rules/byterover-rules.md

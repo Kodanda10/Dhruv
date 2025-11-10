@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-10-10T21:47:52.415435",
+  "sources_checked": [
+    "eci_main",
+    "cg_ceo",
+    "cg_state",
+    "census"
+  ],
+  "accessible_sources": [
+    "eci_main"
+  ],
+  "mapping_attempts": [
+    {
+      "endpoint": "https://ceo.cg.nic.in/api/constituencies",
+      "status": "error_HTTPSConnectionPool(host='ceo."
+    },
+    {
+      "endpoint": "https://ceo.cg.nic.in/data/assembly-constituencies",
+      "status": "error_HTTPSConnectionPool(host='ceo."
+    },
+    {
+      "endpoint": "https://cg.nic.in/election/constituencies",
+      "status": "error_HTTPSConnectionPool(host='cg.n"
+    },
+    {
+      "endpoint": "https://eci.gov.in/api/constituency-mapping",
+      "status": "success",
+      "content_type": "text/html; charset=UTF-8",
+      "content_length": 5895
+    }
+  ]
+}
