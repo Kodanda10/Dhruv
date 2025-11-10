@@ -478,12 +478,14 @@ export default function ReviewQueue() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 p-4">
+          <div className="space-y-4 pt-4 p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
             {/* Tweet Content */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
-              <p className="text-sm sm:text-base text-white leading-relaxed">{tweetText}</p>
+            <div className="bg-white/5 border border-white/10 p-4 rounded-lg max-h-[220px] overflow-y-auto">
+              <p className="text-sm sm:text-base text-white leading-relaxed whitespace-pre-wrap">{tweetText}</p>
             </div>
+          </div>
 
+          <div className="space-y-4 pt-4 p-4">
             {editMode ? (
               <>
                 {/* Edit Mode */}
@@ -642,46 +644,42 @@ export default function ReviewQueue() {
             ) : (
               <>
                 {/* View Mode */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div>
-                    <div className="text-xs font-medium text-secondary mb-1">🎯 घटना प्रकार</div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="font-medium text-secondary mb-1 review-label">🎯 घटना प्रकार</div>
+                    <div className="text-sm font-semibold text-white whitespace-normal break-words">
                       {getEventTypeHindi(currentTweet.parsed?.event_type)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-secondary mb-1">📍 स्थान</div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="font-medium text-secondary mb-1 review-label">📍 स्थान</div>
+                    <div className="flex flex-wrap gap-2">
                       {(currentTweet.parsed?.locations || []).map((loc: any, i: number) => (
-                        <Badge key={i} variant="info">{formatLocLabel(loc)}</Badge>
+                        <div key={i} className="tag-chip">{formatLocLabel(loc)}</div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-secondary mb-1">👥 लोग</div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="font-medium text-secondary mb-1 review-label">👥 लोग</div>
+                    <div className="flex flex-wrap gap-2">
                       {(currentTweet.parsed?.people_mentioned || currentTweet.parsed?.people || []).map((person: string, i: number) => (
-                        <Badge key={i}>{person}</Badge>
+                        <div key={i} className="tag-chip">{person}</div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-secondary mb-1">🏢 संगठन</div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="font-medium text-secondary mb-1 review-label">🏢 संगठन</div>
+                    <div className="flex flex-wrap gap-2">
                       {(currentTweet.parsed?.organizations || []).map((org: string, i: number) => (
-                        <Badge key={i}>{org}</Badge>
+                        <div key={i} className="tag-chip">{org}</div>
                       ))}
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <div className="text-xs font-medium text-secondary mb-1">🏷️ विषय (Topics/Tags)</div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="font-medium text-secondary mb-1 review-label">🏷️ विषय (Topics/Tags)</div>
+                    <div className="flex flex-wrap gap-2">
                       {(((currentTweet as any).parsed?.topics) || []).map((t: any, i: number) => (
-                        <TagBubble 
-                          key={i} 
-                          label={t?.label_hi || t?.label || String(t)} 
-                          selected={false}
-                        />
+                        <div key={i} className="tag-chip">{t?.label_hi || t?.label || String(t)}</div>
                       ))}
                     </div>
                   </div>
