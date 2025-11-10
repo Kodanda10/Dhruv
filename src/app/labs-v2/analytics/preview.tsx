@@ -173,7 +173,8 @@ export default function LabsAnalyticsPreview() {
         </header>
         <div className="grid gap-6 lg:grid-cols-2">
           <div className={cardClass}>
-            <GeoHierarchyMindmap data={mindmapData} />
+            {/* <GeoHierarchyMindmap data={mindmapData} /> */}
+            <p className="text-center text-white/50">Mindmap component temporarily disabled.</p>
           </div>
           <div className="space-y-4">
             <div className={cardClass}>

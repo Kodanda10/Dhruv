@@ -82,8 +82,8 @@ def update_constituency_data_from_aggregated(aggregated_filepath, constituencies
                 "block_names": aggregated_district_details.get("blocks", []),
                 "ulb_names": []
             }
-            # Use the normalized name from aggregated data as the key for the new entry
-            updated_districts[normalized_aggregated_district_name] = new_entry
+            # Use the raw name from aggregated data as the key for the new entry
+            updated_districts[aggregated_district_name_raw] = new_entry
 
     # Add any districts from existing_constituencies_data that are not in aggregated_data
     # This ensures no districts are accidentally removed if aggregated_data is incomplete
