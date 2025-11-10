@@ -2,52 +2,52 @@
 
 import { useState, useEffect } from 'react';
 
-interface EventSuggestion {
+interface EventTypeSuggestion {
   id: string;
-  name: string;
+  name_hindi: string;
+  name_english: string;
+  description_hindi?: string;
+  description_english?: string;
+  category?: string;
   score: number;
 }
 
 interface EventResolverProps {
   parsedEventType: string;
   tweetText: string;
+  tweetId: string; // Add tweetId prop
   onResolve: (resolvedEvent: string | null) => void;
 }
 
-export default function EventResolver({ parsedEventType, tweetText, onResolve }: EventResolverProps) {
-  const [suggestions, setSuggestions] = useState<EventSuggestion[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function EventResolver({ parsedEventType, tweetText, tweetId, onResolve }: EventResolverProps) {
+  const [suggestions, setSuggestions] = useState<EventTypeSuggestion[]>([]);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+  const [manualEntry, setManualEntry] = useState<string>('');
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<EventSuggestion | null>(null);
 
   useEffect(() => {
     async function fetchSuggestions() {
-      if (!tweetText) return;
-
+      if (!parsedEventType) { // Only fetch if parsedEventType is available
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
-        // The plan mentions a /suggest endpoint. We'll mock this for now.
-        // In a real scenario, this would be a POST request with the tweet text.
-        const response = await fetch(`/api/labs/event-types/suggest`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: tweetText }),
-        });
-
+        const response = await fetch(`/api/labs/event-types/suggest?parsedEventType=${encodeURIComponent(parsedEventType)}&tweetText=${encodeURIComponent(tweetText)}`);
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch event suggestions.');
+          throw new Error(errorData.error || 'Failed to fetch event type suggestions.');
         }
-        const data: EventSuggestion[] = await response.json();
+        const data: EventTypeSuggestion[] = await response.json();
         setSuggestions(data);
         if (data.length > 0) {
-          // Auto-select the suggestion that matches the parsed event type, if any
-          const matchingSuggestion = data.find(s => s.name === parsedEventType) || data[0];
-          setSelectedSuggestion(matchingSuggestion);
+          setSelectedSuggestion(data[0].name_english); // Auto-select the first suggestion
         }
       } catch (err: any) {
-        setError(err.message || 'An unknown error occurred.');
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -55,45 +55,137 @@ export default function EventResolver({ parsedEventType, tweetText, onResolve }:
     fetchSuggestions();
   }, [parsedEventType, tweetText]);
 
+  const handleConfirm = async () => {
+    let resolvedValue: string | null = null;
+    let resolvedId: string | null = null;
+    let reviewStatus: string = 'confirmed';
+
+    if (isManualMode) {
+      resolvedValue = manualEntry.trim();
+      reviewStatus = 'manual_entry';
+    } else {
+      resolvedValue = selectedSuggestion;
+      const selected = suggestions.find(s => s.name_english === selectedSuggestion);
+      resolvedId = selected ? selected.id : null;
+    }
+
+    if (resolvedValue === '') {
+      resolvedValue = null;
+    }
+
+    // Call the confirm API
+    try {
+      const response = await fetch('/api/labs/event-types/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parsedEventType,
+          resolvedEventTypeId: resolvedId,
+          reviewStatus,
+          manualEntryName: isManualMode ? resolvedValue : null,
+          reviewerId: 'human_reviewer_1', // Placeholder for actual reviewer ID
+          tweetId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to confirm event type.');
+      }
+      console.log('Event type confirmed:', resolvedValue);
+      onResolve(resolvedValue);
+    } catch (err: any) {
+      console.error('Error confirming event type:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleToggleMode = () => {
+    setIsManualMode(!isManualMode);
+    if (!isManualMode) { // Switching to manual mode
+      setSelectedSuggestion(null);
+    } else { // Switching back to suggestions
+      setManualEntry('');
+      if (suggestions.length > 0) {
+        setSelectedSuggestion(suggestions[0].name_english);
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="text-gray-500">Loading suggestions...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
+  }
+
   return (
-    <div className="p-4 bg-gray-100 rounded-md text-sm">
-      <h4 className="font-semibold mb-2">Parsed Event Type: <span className="text-blue-700">{parsedEventType || 'N/A'}</span></h4>
+    <div className="space-y-4">
+      <h4 className="font-semibold mb-2">Parsed Event Type: <span className="text-blue-700">{parsedEventType}</span></h4>
+      
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleToggleMode}
+          className={`px-4 py-2 rounded-md ${!isManualMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+        >
+          Suggestions
+        </button>
+        <button
+          onClick={handleToggleMode}
+          className={`px-4 py-2 rounded-md ${isManualMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+        >
+          Manual Entry
+        </button>
+      </div>
 
-      {loading && <p className="text-blue-600">Loading suggestions...</p>}
-      {error && <p className="text-red-600">Error: {error}</p>}
-
-      {!loading && !error && (
-        <>
-          {suggestions.length === 0 ? (
-            <p className="text-gray-500">No suggestions found.</p>
-          ) : (
-            <ul className="space-y-1 mb-3">
-              {suggestions.map((s) => (
-                <li key={s.id} className={`flex items-center ${selectedSuggestion?.id === s.id ? 'font-medium text-blue-700' : ''}`}>
-                  <input
-                    type="radio"
-                    id={`evt-${s.id}`}
-                    name="event-suggestion"
-                    value={s.id}
-                    checked={selectedSuggestion?.id === s.id}
-                    onChange={() => setSelectedSuggestion(s)}
-                    className="mr-2"
-                  />
-                  <label htmlFor={`evt-${s.id}`}>{s.name} (Score: {s.score.toFixed(2)})</label>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="mt-4 text-right">
-            <button
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              onClick={() => onResolve(selectedSuggestion?.name || null)}
-            >
-              Confirm Event
-            </button>
+      {isManualMode ? (
+        <div>
+          <input
+            type="text"
+            value={manualEntry}
+            onChange={(e) => setManualEntry(e.target.value)}
+            placeholder="Enter event type manually"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      ) : (
+        suggestions.length > 0 ? (
+          <div className="space-y-2">
+            {suggestions.map((suggestion) => (
+              <label key={suggestion.id} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="eventTypeSuggestion"
+                  value={suggestion.name_english}
+                  checked={selectedSuggestion === suggestion.name_english}
+                  onChange={(e) => setSelectedSuggestion(e.target.value)}
+                  className="form-radio text-blue-600"
+                />
+                <span>{suggestion.name_english} (Score: {suggestion.score.toFixed(2)})</span>
+              </label>
+            ))}
           </div>
-        </>
+        ) : (
+          <p className="text-gray-600">No suggestions found for "{parsedEventType}".</p>
+        )
       )}
+
+      <div className="flex space-x-2">
+        <button
+          onClick={handleConfirm}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+          disabled={isManualMode ? manualEntry.trim() === '' : !selectedSuggestion}
+        >
+          Confirm Event
+        </button>
+        <button
+          onClick={() => onResolve(null)}
+          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+        >
+          Clear Selection
+        </button>
+      </div>
     </div>
   );
 }

@@ -10,6 +10,8 @@ export interface AnalyticsData {
   thematic_analysis: Record<string, number>;
   raigarh_section: {
     coverage_percentage: number;
+    total_villages: number;
+    visited_villages: number;
     local_events: {
       date: string;
       location: string;

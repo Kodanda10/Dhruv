@@ -66,7 +66,15 @@ export default function LocationHierarchyPicker({
   };
 
   const formattedValue = useMemo(
-    () => value.map((path) => path.map((node) => formatNode(node)).join(' › ')),
+    () =>
+      (value || [])
+        .map((path) => {
+          if (!Array.isArray(path)) {
+            // Handle case where path is not an array, possibly log an error
+            return 'Invalid location data';
+          }
+          return path.map((node) => formatNode(node)).join(' › ');
+        }),
     [value],
   );
 

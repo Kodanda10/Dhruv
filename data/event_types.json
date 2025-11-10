@@ -1,0 +1,50 @@
+[
+  {
+    "id": "ET001",
+    "name_hindi": "राजनीतिक रैली",
+    "name_english": "Political Rally",
+    "description_hindi": "किसी राजनीतिक दल या नेता द्वारा आयोजित जनसभा।",
+    "description_english": "Public gathering organized by a political party or leader.",
+    "category": "Political"
+  },
+  {
+    "id": "ET002",
+    "name_hindi": "विरोध प्रदर्शन",
+    "name_english": "Protest",
+    "description_hindi": "किसी मुद्दे के खिलाफ सार्वजनिक विरोध प्रदर्शन।",
+    "description_english": "Public demonstration against an issue.",
+    "category": "Social"
+  },
+  {
+    "id": "ET003",
+    "name_hindi": "सरकारी योजना का शुभारंभ",
+    "name_english": "Government Scheme Launch",
+    "description_hindi": "सरकार द्वारा नई योजना का उद्घाटन।",
+    "description_english": "Inauguration of a new scheme by the government.",
+    "category": "Government"
+  },
+  {
+    "id": "ET004",
+    "name_hindi": "आपदा राहत",
+    "name_english": "Disaster Relief",
+    "description_hindi": "प्राकृतिक आपदा के बाद राहत कार्य।",
+    "description_english": "Relief efforts after a natural disaster.",
+    "category": "Humanitarian"
+  },
+  {
+    "id": "ET005",
+    "name_hindi": "चुनाव अभियान",
+    "name_english": "Election Campaign",
+    "description_hindi": "चुनाव से पहले राजनीतिक दलों द्वारा प्रचार।",
+    "description_english": "Campaigning by political parties before an election.",
+    "category": "Political"
+  },
+  {
+    "id": "ET006",
+    "name_hindi": "विकास परियोजना",
+    "name_english": "Development Project",
+    "description_hindi": "नई विकास परियोजना का उद्घाटन या घोषणा।",
+    "description_english": "Inauguration or announcement of a new development project.",
+    "category": "Government"
+  }
+]

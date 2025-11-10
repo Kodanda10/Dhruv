@@ -285,4 +285,76 @@ textarea::placeholder {
   font-weight: 750;
 }
 
+/* Legibility & Review Panel Fixes */
+.tag-chip {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.95);
+  margin: 4px;
+  font-size: 0.9rem;
+  white-space: normal;
+  word-break: break-word;
+  transition: background 0.2s ease-in-out;
+}
+
+.tag-chip:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.review-label {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.tweet-fulltext {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  background-color: rgba(17, 24, 39, 0.8); /* Slightly darker, more opaque background */
+  border: 1px solid #374151; /* gray-700 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-height: 300px; /* Or a suitable height */
+  overflow-y: auto;
+  color: #e5e7eb; /* gray-200 */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  position: sticky;
+  top: 1rem; /* Adjust as needed */
+  z-index: 10;
+}
+
+.review-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af; /* gray-400 */
+  margin-bottom: 0.25rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background-color: rgba(31, 41, 55, 0.7); /* gray-800 with opacity */
+  color: #d1d5db; /* gray-300 */
+  border: 1px solid #4b5563; /* gray-600 */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.2s ease-in-out;
+}
+
+.tag-chip:hover {
+  background-color: rgba(55, 65, 81, 0.9); /* gray-700 with opacity */
+  color: #f9fafb; /* gray-50 */
+  border-color: #6b7280; /* gray-500 */
+}
+
 /* Legacy theme classes removed - using Tailwind utilities instead */

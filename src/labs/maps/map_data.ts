@@ -28,7 +28,7 @@ export async function fetchMapEvents(): Promise<MapEvent[]> {
       JOIN raw_tweets rt ON rt.tweet_id = pe.tweet_id
       WHERE pe.review_status IN ('approved', 'edited')
         AND pe.locations IS NOT NULL
-        AND jsonb_array_length(pe.locations) > 0
+        AND cardinality(pe.locations) > 0
       ORDER BY rt.created_at DESC
       LIMIT 500
     `);

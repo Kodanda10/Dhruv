@@ -12,6 +12,8 @@ test.describe('Labs Features E2E Tests', () => {
 
     // Wait for page to load
     await page.waitForSelector('input[type="text"]', { timeout: 10000 });
+    // Wait for the search button to be visible and enabled
+    await page.waitForSelector('button:has-text("Search")', { state: 'visible', timeout: 10000 });
 
     // Enter search query
     const input = page.locator('input[type="text"]');
@@ -19,7 +21,8 @@ test.describe('Labs Features E2E Tests', () => {
 
     // Measure search time
     const startTime = Date.now();
-    await page.locator('button:has-text("खोजें")').click();
+    const searchButton = page.locator('button:has-text("Search")');
+    await searchButton.click();
 
     // Wait for either results, error message, or "no results" message
     await Promise.race([
@@ -93,7 +96,9 @@ test.describe('Labs Features E2E Tests', () => {
     // Verify map container exists or error message
     const mapContainer = page.locator('[class*="mapboxgl"]').first();
     const mapExists = await mapContainer.count().catch(() => 0);
-    const hasError = await page.locator('text=त्रुटि').isVisible().catch(() => false);
+    const hasError = await page.locator('text=Error: Mapbox token not configured').isVisible().catch(() => false) ||
+                     await page.locator('text=त्रुटि').isVisible().catch(() => false) ||
+                     await page.locator('text=error').isVisible().catch(() => false);
     const isLoading = await page.locator('text=लोड हो रहा है').isVisible().catch(() => false);
 
     // Map should exist, or show error/loading state

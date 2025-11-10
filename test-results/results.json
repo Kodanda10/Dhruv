@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 5
     },
     "preserveOutput": "always",
     "reporter": [
@@ -43,7 +43,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 5
         },
         "id": "chromium",
         "name": "chromium",
@@ -69,20 +69,20 @@
   },
   "suites": [
     {
-      "title": "e2e/labs-v2/review.spec.ts",
-      "file": "e2e/labs-v2/review.spec.ts",
+      "title": "labs/e2e/labs-features.spec.ts",
+      "file": "labs/e2e/labs-features.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Labs V2 Review UI",
-          "file": "e2e/labs-v2/review.spec.ts",
-          "line": 3,
+          "title": "Labs Features E2E Tests",
+          "file": "labs/e2e/labs-features.spec.ts",
+          "line": 9,
           "column": 6,
           "specs": [
             {
-              "title": "[V2R-4] should load the review page and display all components",
+              "title": "FAISS Search returns results for \"खरसिया\" within p95 < 400ms",
               "ok": true,
               "tags": [],
               "tests": [
@@ -97,12 +97,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1223,
+                      "duration": 12285,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-11-09T21:04:21.547Z",
+                      "startTime": "2025-11-10T07:39:00.207Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -110,9 +110,145 @@
                   "status": "expected"
                 }
               ],
-              "id": "8cbcab85085a447789da-7f3344a51b59a7116d22",
-              "file": "e2e/labs-v2/review.spec.ts",
-              "line": 25,
+              "id": "138f1cc308637889217a-7e8bbd6de98be912c1c9",
+              "file": "labs/e2e/labs-features.spec.ts",
+              "line": 10,
+              "column": 7
+            },
+            {
+              "title": "AI Assistant opens modal and receives suggestions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 5179,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-10T07:39:00.237Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "138f1cc308637889217a-7d9db98fa00a8b398efb",
+              "file": "labs/e2e/labs-features.spec.ts",
+              "line": 63,
+              "column": 7
+            },
+            {
+              "title": "Maps page renders map with clusters",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 5128,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-10T07:39:00.223Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "138f1cc308637889217a-d456d74a3f06d9845435",
+              "file": "labs/e2e/labs-features.spec.ts",
+              "line": 87,
+              "column": 7
+            },
+            {
+              "title": "Mindmap renders SVG with nodes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 7107,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-10T07:39:00.228Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "138f1cc308637889217a-0551d2a8a7f22d2e649a",
+              "file": "labs/e2e/labs-features.spec.ts",
+              "line": 108,
+              "column": 7
+            },
+            {
+              "title": "Learning job POST returns 200 and writes artifacts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 766,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-10T07:39:00.220Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "138f1cc308637889217a-3e40c7653d78a5098432",
+              "file": "labs/e2e/labs-features.spec.ts",
+              "line": 134,
               "column": 7
             }
           ]
@@ -122,9 +258,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-11-09T21:04:15.842Z",
-    "duration": 7235.374,
-    "expected": 1,
+    "startTime": "2025-11-10T07:38:54.628Z",
+    "duration": 18304.882,
+    "expected": 5,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

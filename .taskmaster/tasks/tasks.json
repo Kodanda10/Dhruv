@@ -3,7 +3,7 @@
     "metadata": {
       "description": "Default tasks context",
       "created": "2025-09-10T00:00:00.000Z",
-      "updated": "2025-09-19T20:18:39.539Z"
+      "updated": "2025-11-10T07:48:17.650Z"
     },
     "tasks": [
       {
@@ -67,7 +67,7 @@
         "description": "Expand data/constituencies.json to cover all districts, blocks, and ULBs with verified AC/PC mappings.",
         "details": "- Collate authoritative tables (SEC/Election Commission) for district/block/ULB → AC/PC.\\n- Normalize keys to match builder canon logic (lowercase, collapse whitespace).\\n- Add validation script ensuring 100% coverage for existing geography/urban datasets.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [],
         "priority": "high",
         "subtasks": []

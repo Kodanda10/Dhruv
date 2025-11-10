@@ -136,41 +136,44 @@ export default function ReviewClientPage() {
 
         {/* Right-hand Workspace Column */}
         <div className="bg-white p-6 rounded-lg shadow space-y-8">
-          <PinnedSummary
-            location={resolvedLocation || 'N/A'}
-            eventType={resolvedEvent || 'N/A'}
-            peopleCount={resolvedPeople.length}
-            schemesCount={resolvedSchemes.length}
-          />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Location Resolver</h3>
-            <LocationResolver
-              parsedLocation={state.event.parsed.location}
-              onResolve={handleLocationResolve}
-            />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Event Resolver</h3>
-            <EventResolver
-              parsedEventType={state.event.parsed.eventType}
-              tweetText={state.event.tweetText}
-              onResolve={handleEventResolve}
-            />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">People Resolver</h3>
-            <PeopleResolver
-              parsedPeople={state.event.parsed.people}
-              onResolve={handlePeopleResolve}
-            />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Scheme Resolver</h3>
-            <SchemeResolver
-              parsedSchemes={state.event.parsed.schemes}
-              onResolve={handleSchemeResolve}
-            />
-          </div>
+          {state.event && (
+            <>
+              <PinnedSummary
+                location={resolvedLocation || 'N/A'}
+                eventType={resolvedEvent || 'N/A'}
+                peopleCount={resolvedPeople.length}
+                schemesCount={resolvedSchemes.length}
+              />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Location Resolver</h3>
+                <LocationResolver
+                  event={state.event}
+                  onResolve={handleLocationResolve}
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Event Resolver</h3>
+                <EventResolver
+                  event={state.event}
+                  onResolve={handleEventResolve}
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">People Resolver</h3>
+                <PeopleResolver
+                  parsedPeople={state.event.parsed.people}
+                  onResolve={handlePeopleResolve}
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Scheme Resolver</h3>
+                <SchemeResolver
+                  parsedSchemes={state.event.parsed.schemes}
+                  onResolve={handleSchemeResolve}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

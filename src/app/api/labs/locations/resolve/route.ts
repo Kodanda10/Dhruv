@@ -1,30 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { resolveLocation } from '@/labs/locations/resolver';
-import { LocationResolveInput } from '@/labs/locations/types';
 
-export const dynamic = 'force-dynamic';
-
-export async function POST(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const payload = (await request.json()) as LocationResolveInput;
-    if (!payload?.detected_place) {
-      return NextResponse.json(
-        { success: false, error: 'detected_place is required' },
-        { status: 400 },
-      );
+    const { searchParams } = new URL(request.url);
+    const parsedLocation = searchParams.get('parsedLocation');
+
+    if (!parsedLocation) {
+      return NextResponse.json({ error: 'Missing parsedLocation query parameter.' }, { status: 400 });
     }
 
-    const result = await resolveLocation(payload);
-
-    return NextResponse.json({
-      success: true,
-      result,
-    });
+    const suggestions = await resolveLocation(parsedLocation);
+    return NextResponse.json(suggestions);
   } catch (error: any) {
-    console.error('[labs.locations.resolve]', error);
-    return NextResponse.json(
-      { success: false, error: error?.message || 'resolution failed' },
-      { status: 500 },
-    );
+    console.error('API Error resolving location:', error);
+    return NextResponse.json({ error: error.message || 'Failed to resolve location.' }, { status: 500 });
   }
 }

@@ -38,6 +38,7 @@ export default function LocationResolver({ parsedLocation, onResolve }: Location
           throw new Error(errorData.error || 'Failed to fetch location suggestions.');
         }
         const data: LocationSuggestion[] = await response.json();
+        console.log('Location suggestions data:', data);
         setSuggestions(data);
         if (data.length > 0) {
           setSelectedSuggestion(data[0]); // Auto-select the first suggestion

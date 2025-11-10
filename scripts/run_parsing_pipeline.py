@@ -21,10 +21,11 @@ import google.generativeai as genai
 # --- Constants ---
 GEMINI_REQUEST_DELAY_SECONDS = 2
 OLLAMA_REQUEST_DELAY_SECONDS = 0
+BACKUP_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'parsed_events_backup.jsonl')
 
 COMPREHENSIVE_PROMPT = """
-Analyze the following tweet text from India, which is likely in Hindi or a mix of Hindi and English.
-Extract the specified entities and provide the output as a single, clean JSON object.
+Analyze the following tweet text from India, which is likely in Hindi or a mix of Hindi and English (Hinglish).
+Your goal is to extract key information with high accuracy. Adhere strictly to the JSON schema and instructions.
 
 **JSON Schema to follow:**
 {{
@@ -35,12 +36,28 @@ Extract the specified entities and provide the output as a single, clean JSON ob
   "schemes_mentioned": ["string"]
 }}
 
-**Instructions:**
-1.  **event_type**: Classify the main event. Must be one of: 'Protest', 'Rally', 'Meeting', 'Public Address', 'Cultural Event', 'Inauguration', 'Condolence', 'Birthday Wishes', 'Scheme Announcement', 'Inspection', 'Other'. If uncertain, use 'Unknown'.
-2.  **locations**: Extract all city, district, or state names. Return as a JSON list of strings. If none, return an empty list [].
-3.  **people_mentioned**: Extract all names of people, often preceded by titles like 'श्री', 'श्रीमती', or 'माननीय'. Return as a JSON list of strings. If none, return an empty list [].
-4.  **organizations**: Extract names of political parties, government bodies, or companies (e.g., 'भारतीय जनता पार्टी', 'कांग्रेस', 'सरकार'). Return as a JSON list of strings. If none, return an empty list [].
-5.  **schemes_mentioned**: Extract names of government schemes (e.g., 'प्रधानमंत्री आवास योजना'). Return as a JSON list of strings. If none, return an empty list [].
+**Detailed Instructions:**
+1.  **event_type**: Classify the main event described. You MUST choose one of the following values. Do not invent new types.
+    - **Allowed Values**: 'meeting', 'review_meeting', 'inauguration', 'condolence', 'meet_greet', 'tour', 'public_event', 'ceremony', 'scheme_announcement', 'inspection', 'rally', 'press_conference', 'award_ceremony', 'foundation_stone', 'groundbreaking', 'completion_ceremony', 'anniversary', 'festival_celebration', 'cultural_event', 'sports_event', 'educational_event', 'health_camp', 'blood_donation', 'tree_plantation', 'cleanliness_drive', 'awareness_program', 'workshop', 'training_program', 'seminar', 'conference', 'exhibition', 'fair', 'market_visit', 'factory_visit', 'hospital_visit', 'school_visit', 'college_visit', 'village_visit', 'relief_distribution', 'compensation_distribution', 'grant_distribution', 'certificate_distribution', 'kit_distribution', 'ration_distribution', 'blanket_distribution', 'medicine_distribution', 'book_distribution', 'seed_distribution', 'equipment_distribution', 'bicycle_distribution', 'laptop_distribution', 'mobile_distribution', 'solar_light_distribution', 'pump_distribution', 'toilet_distribution', 'house_distribution', 'land_distribution', 'loan_distribution', 'subsidy_distribution', 'pension_distribution', 'scholarship_distribution', 'stipend_distribution', 'other'.
+    - If the event is ambiguous or not on the list, use 'other'.
+
+2.  **locations**: Extract all specific geographical locations mentioned, such as villages, cities, districts, or states.
+    - Be precise. Extract "Raipur" not "Raipur district".
+    - Exclude generic terms like 'village', 'district', 'state' unless they are part of a proper name.
+    - If no location is mentioned, return an empty list [].
+
+3.  **people_mentioned**: Extract the full names of all individuals.
+    - Names are often preceded by titles like 'श्री', 'श्रीमती', 'माननीय', 'मुख्यमंत्री', 'विधायक'. Include the name, not the title.
+    - **CRITICAL**: Do NOT extract Twitter handles (e.g., @PMOIndia) as people.
+    - If no people are named, return an empty list [].
+
+4.  **organizations**: Extract names of political parties, government bodies, NGOs, or private companies.
+    - Examples: 'भारतीय जनता पार्टी', 'कांग्रेस', 'छत्तीसगढ़ सरकार', 'पुलिस विभाग'.
+    - If no organization is mentioned, return an empty list [].
+
+5.  **schemes_mentioned**: Extract the specific names of government schemes or programs.
+    - Example: 'प्रधानमंत्री आवास योजना'.
+    - If no scheme is mentioned, return an empty list [].
 
 **Tweet Text:**
 "{text}"
@@ -64,6 +81,17 @@ def initialize_parsers():
     except Exception as e:
         logger.error(f"Failed to initialize Gemini parser: {e}")
         gemini_model = None
+
+def backup_parsed_event(parsed_data):
+    """Appends a single parsed event to the backup JSONL file."""
+    try:
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(BACKUP_FILE_PATH), exist_ok=True)
+        with open(BACKUP_FILE_PATH, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(parsed_data, ensure_ascii=False) + '\n')
+        logger.info(f"Backed up parsed event for tweet_id: {parsed_data['tweet_id']}")
+    except Exception as e:
+        logger.error(f"Failed to back up parsed event for tweet_id {parsed_data.get('tweet_id')}: {e}")
 
 def parse_with_gemini(text):
     """Layer 1: Parses text using the Gemini API with a comprehensive prompt."""
@@ -93,6 +121,22 @@ def get_db_connection():
     if not database_url:
         raise ValueError("DATABASE_URL environment variable not set.")
     return psycopg2.connect(database_url)
+
+def reset_in_progress_tweets(conn):
+    """Resets the status of any tweets that were 'in_progress' back to 'pending'."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            UPDATE raw_tweets
+            SET processing_status = 'pending'
+            WHERE processing_status = 'in_progress';
+        """)
+        count = cur.rowcount
+        conn.commit()
+        if count > 0:
+            logger.info(f"Reset {count} 'in_progress' tweets back to 'pending' for reprocessing.")
+        else:
+            logger.info("No 'in_progress' tweets to reset.")
+
 
 def create_parsed_events_table(conn):
     """
@@ -173,8 +217,10 @@ def save_parsed_event(conn, parsed_data):
                 people_mentioned,
                 organizations,
                 schemes_mentioned,
-                parsed_by
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                parsed_by,
+                needs_review,
+                review_status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (tweet_id) DO UPDATE SET
                 event_type = EXCLUDED.event_type,
                 locations = EXCLUDED.locations,
@@ -183,7 +229,8 @@ def save_parsed_event(conn, parsed_data):
                 schemes_mentioned = EXCLUDED.schemes_mentioned,
                 parsed_at = CURRENT_TIMESTAMP,
                 parsed_by = EXCLUDED.parsed_by,
-                review_status = 'pending';
+                needs_review = EXCLUDED.needs_review,
+                review_status = EXCLUDED.review_status;
         """, (
             parsed_data['tweet_id'],
             parsed_data.get('event_type'),
@@ -191,7 +238,9 @@ def save_parsed_event(conn, parsed_data):
             parsed_data.get('people_mentioned', []),
             parsed_data.get('organizations', []),
             parsed_data.get('schemes_mentioned', []),
-            'parsing_pipeline_v2'  # Version bump
+            'parsing_pipeline_v3',  # Version bump
+            True,  # needs_review
+            'pending'  # review_status
         ))
     conn.commit()
     logger.info(f"Saved parsed event for tweet_id: {parsed_data['tweet_id']}")
@@ -292,9 +341,9 @@ def parse_with_regex(text):
 
 def get_consensus(results):
     """
-    Takes a list of parsing results and finds a consensus.
+    Takes a list of parsing results, finds a consensus, and deduplicates list values.
     - For string values, it requires a 2/3 majority.
-    - For list values, it combines all unique items from all parsers.
+    - For list values, it combines all unique, lowercased, and stripped items.
     """
     consensus_result = {}
     if not results:
@@ -309,13 +358,23 @@ def get_consensus(results):
 
         # Check if the values are lists (e.g., for locations, people)
         if isinstance(values[0], list):
-            # For lists, combine all unique items from all parsers
-            combined_list = set()
+            # For lists, combine all unique items from all parsers, case-insensitively
+            combined_set = set()
             for v_list in values:
                 if isinstance(v_list, list):
                     for item in v_list:
-                        combined_list.add(item)
-            consensus_result[key] = list(combined_list)
+                        if isinstance(item, str):
+                            combined_set.add(item.strip().lower())
+            # Convert back to a list of original-case items (first occurrence)
+            # This is a simple way to preserve casing from one of the sources
+            final_list = []
+            temp_set_for_casing = set()
+            all_items_original_case = [item for v_list in values if isinstance(v_list, list) for item in v_list if isinstance(item, str)]
+            for item in all_items_original_case:
+                if item.strip().lower() not in temp_set_for_casing:
+                    final_list.append(item.strip())
+                    temp_set_for_casing.add(item.strip().lower())
+            consensus_result[key] = final_list
         else:
             # For string values (like event_type), find the most common
             value_counts = Counter(values)
@@ -325,7 +384,8 @@ def get_consensus(results):
             if most_common[1] >= 2:
                 consensus_result[key] = most_common[0]
             else:
-                consensus_result[key] = "Uncertain"
+                # Fallback to the first parser's result if no consensus
+                consensus_result[key] = values[0] if values else "Uncertain"
             
     return consensus_result
 
@@ -343,7 +403,11 @@ def run_pipeline(test_mode=False):
     
     try:
         conn = get_db_connection()
-        create_parsed_events_table(conn)
+        
+        # This should only be run in a controlled setup, not a real production env
+        # where migrations are managed separately.
+        if test_mode:
+            create_parsed_events_table(conn)
 
         batch_size = 3 if test_mode else 20
         
@@ -369,11 +433,23 @@ def run_pipeline(test_mode=False):
                     
                     parsed_data = {"tweet_id": tweet_id, **final_result}
                     
-                    save_parsed_event(conn, parsed_data)
-                    update_tweet_status(conn, tweet_id, 'processed')
-                    
-                    logger.info(f"Successfully processed and saved tweet_id: {tweet_id}")
-                    total_processed_count += 1
+                    # --- Transactional Backup and Save ---
+                    backup_successful = False
+                    try:
+                        backup_parsed_event(parsed_data)
+                        backup_successful = True
+                    except Exception as backup_e:
+                        logger.error(f"CRITICAL: Backup failed for tweet {tweet_id}. Aborting database save. Error: {backup_e}")
+                        update_tweet_status(conn, tweet_id, 'failed')
+                        total_failed_count += 1
+                        continue # Skip to the next tweet
+
+                    if backup_successful:
+                        save_parsed_event(conn, parsed_data)
+                        update_tweet_status(conn, tweet_id, 'processed')
+                        logger.info(f"Successfully backed up and saved tweet_id: {tweet_id}")
+                        total_processed_count += 1
+                    # -----------------------------------------
 
                 except Exception as e:
                     logger.error(f"Error processing tweet {tweet_id}: {e}")

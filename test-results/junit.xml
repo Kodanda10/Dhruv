@@ -1,6 +1,14 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="7.235374">
-<testsuite name="e2e/labs-v2/review.spec.ts" timestamp="2025-11-09T21:04:21.229Z" hostname="chromium" tests="1" failures="0" skipped="0" time="1.223" errors="0">
-<testcase name="Labs V2 Review UI › [V2R-4] should load the review page and display all components" classname="e2e/labs-v2/review.spec.ts" time="1.223">
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="18.304882000000003">
+<testsuite name="labs/e2e/labs-features.spec.ts" timestamp="2025-11-10T07:38:59.727Z" hostname="chromium" tests="5" failures="0" skipped="0" time="30.465" errors="0">
+<testcase name="Labs Features E2E Tests › FAISS Search returns results for &quot;खरसिया&quot; within p95 &lt; 400ms" classname="labs/e2e/labs-features.spec.ts" time="12.285">
+</testcase>
+<testcase name="Labs Features E2E Tests › AI Assistant opens modal and receives suggestions" classname="labs/e2e/labs-features.spec.ts" time="5.179">
+</testcase>
+<testcase name="Labs Features E2E Tests › Maps page renders map with clusters" classname="labs/e2e/labs-features.spec.ts" time="5.128">
+</testcase>
+<testcase name="Labs Features E2E Tests › Mindmap renders SVG with nodes" classname="labs/e2e/labs-features.spec.ts" time="7.107">
+</testcase>
+<testcase name="Labs Features E2E Tests › Learning job POST returns 200 and writes artifacts" classname="labs/e2e/labs-features.spec.ts" time="0.766">
 </testcase>
 </testsuite>
 </testsuites>

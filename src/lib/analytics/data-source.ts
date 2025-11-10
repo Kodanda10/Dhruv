@@ -1,5 +1,5 @@
 import { QueryResult } from 'pg';
-import { db } from '../db';
+import db from '../db';
 import { AnalyticsData, AnalyticsFilters, RaigarhEventRow, TagRow } from '../types';
 import { buildFilterClause, deriveTagInsights, HINDI_DAYS, RAIGARH_TARGET_TOTAL, normalizeVillage, summarizeText, rowsToMap, COMMUNITY_KEYWORDS, TARGET_GROUPS, THEME_KEYWORDS } from './utils';
 
@@ -16,7 +16,7 @@ interface DayRow {
 export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promise<AnalyticsData> {
   const { whereClause, values } = buildFilterClause(filters);
   const filteredCTE = `WITH filtered AS (
-    SELECT pe.*, COALESCE(pe.event_date, DATE(pe.parsed_at)) AS resolved_date
+    SELECT DISTINCT ON (pe.tweet_id) pe.*, COALESCE(pe.event_date, DATE(pe.parsed_at)) AS resolved_date
     FROM parsed_events pe
     ${whereClause}
   )`;
@@ -54,7 +54,7 @@ export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promis
         `${filteredCTE}
          SELECT LOWER(scheme) AS key, COUNT(*)::INT AS count
          FROM filtered
-         CROSS JOIN LATERAL unnest(COALESCE(filtered.schemes_mentioned, ARRAY[]::text[])) scheme
+         CROSS JOIN LATERAL unnest(COALESCE(schemes_mentioned, ARRAY[]::text[])) scheme
          GROUP BY key
          ORDER BY count DESC
          LIMIT 50`,

@@ -95,18 +95,18 @@ export default function BatchReviewCard({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {/* Tweet Content */}
-        <div className="bg-gray-50 p-3 rounded text-xs text-gray-900 leading-relaxed">
-          {truncatedText}
+        <div className="tweet-fulltext sticky top-0 bg-opacity-50 backdrop-blur-lg z-10">
+          {tweetText}
         </div>
 
         {/* Parsed Data */}
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           {/* Event Type */}
           <div>
-            <div className="text-xs font-medium text-gray-500 mb-1">🎯 Event Type</div>
-            <div className="text-xs font-semibold text-gray-900">
+            <div className="review-label mb-1">🎯 घटना प्रकार</div>
+            <div className="font-semibold text-white">
               {tweet.parsed?.event_type || 'N/A'}
             </div>
           </div>
@@ -114,18 +114,13 @@ export default function BatchReviewCard({
           {/* Locations */}
           {tweet.parsed?.locations && tweet.parsed.locations.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-gray-500 mb-1">📍 Locations</div>
+              <div className="review-label mb-1">📍 स्थान</div>
               <div className="flex flex-wrap gap-1">
-                {tweet.parsed.locations.slice(0, 2).map((loc: any, i: number) => (
-                  <Badge key={i} variant="info" className="text-xs">
+                {tweet.parsed.locations.map((loc: any, i: number) => (
+                  <div key={i} className="tag-chip">
                     {formatLocLabel(loc)}
-                  </Badge>
+                  </div>
                 ))}
-                {tweet.parsed.locations.length > 2 && (
-                  <Badge variant="info" className="text-xs">
-                    +{tweet.parsed.locations.length - 2} more
-                  </Badge>
-                )}
               </div>
             </div>
           )}
@@ -133,16 +128,35 @@ export default function BatchReviewCard({
           {/* People */}
           {tweet.parsed?.people_mentioned && tweet.parsed.people_mentioned.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-gray-500 mb-1">👥 People</div>
+              <div className="review-label mb-1">👥 लोग</div>
               <div className="flex flex-wrap gap-1">
-                {tweet.parsed.people_mentioned.slice(0, 2).map((person: string, i: number) => (
-                  <Badge key={i} className="text-xs">{person}</Badge>
+                {tweet.parsed.people_mentioned.map((person: string, i: number) => (
+                  <div key={i} className="tag-chip">{person}</div>
                 ))}
-                {tweet.parsed.people_mentioned.length > 2 && (
-                  <Badge className="text-xs">
-                    +{tweet.parsed.people_mentioned.length - 2} more
-                  </Badge>
-                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Organizations */}
+          {tweet.parsed?.organizations && tweet.parsed.organizations.length > 0 && (
+            <div>
+              <div className="review-label mb-1">🏢 संगठन</div>
+              <div className="flex flex-wrap gap-1">
+                {tweet.parsed.organizations.map((org: string, i: number) => (
+                  <div key={i} className="tag-chip">{org}</div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Schemes */}
+          {tweet.parsed?.schemes_mentioned && tweet.parsed.schemes_mentioned.length > 0 && (
+            <div>
+              <div className="review-label mb-1">🏷️ विषय (Topics/Tags)</div>
+              <div className="flex flex-wrap gap-1">
+                {tweet.parsed.schemes_mentioned.map((scheme: string, i: number) => (
+                  <div key={i} className="tag-chip">{scheme}</div>
+                ))}
               </div>
             </div>
           )}
