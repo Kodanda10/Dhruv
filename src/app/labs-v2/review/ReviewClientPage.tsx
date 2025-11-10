@@ -147,7 +147,7 @@ export default function ReviewClientPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Location Resolver</h3>
                 <LocationResolver
-                  event={state.event}
+                  parsedLocation={state.event.parsed.location}
                   onResolve={handleLocationResolve}
                 />
               </div>
