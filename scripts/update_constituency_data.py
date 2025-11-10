@@ -32,10 +32,10 @@ def load_json_data(filepath):
         print(f"Error: Could not decode JSON from {filepath}. Details: {e}")
         return None
     except Exception as e:
-        print(f"An unexpected error occurred while reading/parsing {filepath}: {e}")
+        print(f"An unexpected error occurred while reading/parsing {filepath}: {filepath}: {e}")
         return None
 
-def update_constituency_data_from_aggregated(aggregated_filepath, constituencies_filepath, name_map_filepath):
+def update_constituency_data_from_aggregated(aggregated_filepath, constituencies_filepath):
     """
     Updates constituencies.json using data from an aggregated .ndjson file.
     Merges new block data while preserving existing assembly, parliamentary, and ULB data.
@@ -48,43 +48,33 @@ def update_constituency_data_from_aggregated(aggregated_filepath, constituencies
     if not existing_constituencies_data:
         return
 
-    district_name_map = load_json_data(name_map_filepath)
-    if not district_name_map:
-        print("Warning: District name map not loaded. Proceeding without canonical mapping for existing data.")
-        district_name_map = {}
-
     updated_districts = {}
 
     # Create a map for existing districts with normalized keys for easier lookup
-    existing_districts_canonical_map = {}
-    for k, v in existing_constituencies_data.get("districts", {}).items():
-        canonical_k = district_name_map.get(normalize_key(k), normalize_key(k)) # Use map for existing keys
-        existing_districts_canonical_map[canonical_k] = (k, v) # Store original key and value
+    existing_districts_normalized_map = {normalize_key(k): k for k in existing_constituencies_data.get("districts", {}).keys()}
 
     for aggregated_district_name_raw, aggregated_district_details in aggregated_data.items():
-        # The aggregated_district_name_raw is already canonical Hindi name from aggregate_ndjson_data.py
-        canonical_aggregated_district_name = aggregated_district_name_raw
-        normalized_aggregated_district_name = normalize_key(canonical_aggregated_district_name)
+        # Normalize the aggregated district name for comparison
+        normalized_aggregated_district_name = normalize_key(aggregated_district_name_raw)
         
-        # Find the actual key in existing_constituencies_data using the canonical name
-        match_found = False
-        for existing_original_name, existing_original_details in existing_constituencies_data["districts"].items():
-            if normalize_key(existing_original_name) == normalized_aggregated_district_name:
-                # District exists, merge data
-                updated_district_details = {
-                    "assembly": existing_original_details.get("assembly"),
-                    "parliamentary": existing_original_details.get("parliamentary"),
-                    "assemblies": existing_original_details.get("assemblies", []),
-                    "block_names": aggregated_district_details.get("blocks", []), # Update from aggregated data
-                    "ulb_names": existing_original_details.get("ulb_names", [])
-                }
-                updated_districts[existing_original_name] = updated_district_details
-                match_found = True
-                break
-        
-        if not match_found:
+        # Find the actual key in existing_constituencies_data
+        actual_existing_district_name = existing_districts_normalized_map.get(normalized_aggregated_district_name)
+
+        if actual_existing_district_name:
+            # District exists, merge data
+            existing_district_details = existing_constituencies_data["districts"][actual_existing_district_name]
+            
+            updated_district_details = {
+                "assembly": existing_district_details.get("assembly"),
+                "parliamentary": existing_district_details.get("parliamentary"),
+                "assemblies": existing_district_details.get("assemblies", []),
+                "block_names": aggregated_district_details.get("blocks", []), # Update from aggregated data
+                "ulb_names": existing_district_details.get("ulb_names", [])
+            }
+            updated_districts[actual_existing_district_name] = updated_district_details
+        else:
             # District from aggregated data is new, create a new entry
-            print(f"Warning: District '{canonical_aggregated_district_name}' from aggregated data not found in existing constituencies.json. Adding new entry.")
+            print(f"Warning: District '{aggregated_district_name_raw}' from aggregated data not found in existing constituencies.json. Adding new entry.")
             new_entry = {
                 "assembly": None,
                 "parliamentary": None,
@@ -93,14 +83,15 @@ def update_constituency_data_from_aggregated(aggregated_filepath, constituencies
                 "ulb_names": []
             }
             # Use the raw name from aggregated data as the key for the new entry
-            updated_districts[canonical_aggregated_district_name] = new_entry
+            updated_districts[aggregated_district_name_raw] = new_entry
 
     # Add any districts from existing_constituencies_data that are not in aggregated_data
     # This ensures no districts are accidentally removed if aggregated_data is incomplete
     aggregated_district_names_normalized = {normalize_key(k) for k in aggregated_data.keys()}
-    for existing_original_name, existing_original_details in existing_constituencies_data["districts"].items():
-        if normalize_key(existing_original_name) not in aggregated_district_names_normalized:
-            updated_districts[existing_original_name] = existing_original_details
+    for existing_district_name_raw, existing_district_details in existing_constituencies_data["districts"].items():
+        normalized_existing_district_name = normalize_key(existing_district_name_raw)
+        if normalized_existing_district_name not in aggregated_district_names_normalized:
+            updated_districts[existing_district_name_raw] = existing_district_details
 
 
     existing_constituencies_data["districts"] = updated_districts
@@ -115,6 +106,5 @@ def update_constituency_data_from_aggregated(aggregated_filepath, constituencies
 if __name__ == "__main__":
     aggregated_filepath = 'data/aggregated_constituency_data.json'
     constituencies_filepath = 'data/constituencies.json'
-    name_map_filepath = 'data/district_name_map.json'
     
-    update_constituency_data_from_aggregated(aggregated_filepath, constituencies_filepath, name_map_filepath)
+    update_constituency_data_from_aggregated(aggregated_filepath, constituencies_filepath)
