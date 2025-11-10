@@ -41,10 +41,10 @@ export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promis
       ),
       db.query(
         `${filteredCTE}
-         SELECT COALESCE(NULLIF(TRIM(loc->>'district'), ''), NULLIF(TRIM(loc->>'name'), ''), 'अनिर्दिष्ट') AS key,
+         SELECT COALESCE(NULLIF(TRIM(loc), ''), 'अनिर्दिष्ट') AS key,
                 COUNT(*)::INT AS count
          FROM filtered
-         CROSS JOIN LATERAL jsonb_array_elements(COALESCE(filtered.locations, '[]'::jsonb)) loc
+         CROSS JOIN LATERAL unnest(COALESCE(filtered.locations, ARRAY[]::text[])) loc
          GROUP BY key
          ORDER BY count DESC
          LIMIT 50`,
@@ -88,8 +88,8 @@ export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promis
                 loc->>'district' AS district
          FROM filtered
          JOIN raw_tweets rt ON rt.tweet_id = filtered.tweet_id
-         CROSS JOIN LATERAL jsonb_array_elements(COALESCE(filtered.locations, '[]'::jsonb)) loc
-         WHERE (COALESCE(loc->>'district', '') ILIKE '%रायगढ़%' OR COALESCE(loc->>'name', '') ILIKE '%रायगढ़%')
+         CROSS JOIN LATERAL unnest(COALESCE(filtered.locations, ARRAY[]::text[])) loc
+         WHERE (COALESCE(loc, '') ILIKE '%रायगढ़%')
          ORDER BY filtered.resolved_date DESC NULLS LAST, filtered.parsed_at DESC
          LIMIT 50`,
         values,

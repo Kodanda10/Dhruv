@@ -207,43 +207,84 @@ def fetch_unprocessed_tweets(conn, batch_size=20):
         return tweets
 
 def save_parsed_event(conn, parsed_data):
-    """Saves a single parsed event to the parsed_events table, including new fields."""
-    with conn.cursor() as cur:
-        cur.execute("""
+    """Saves the parsed event data to the database."""
+    cursor = conn.cursor()
+    tweet_id = parsed_data.get('tweet_id') # Define tweet_id outside of try block
+    if not tweet_id:
+        logging.error("Cannot save event without a tweet_id.")
+        return False
+        
+    try:
+        # Data validation and sanitization
+        people = parsed_data.get('people_mentioned', [])
+        if not isinstance(people, list):
+            people = [people] if people else []
+
+        organizations = parsed_data.get('organizations', [])
+        if not isinstance(organizations, list):
+            organizations = [organizations] if organizations else []
+
+        schemes = parsed_data.get('schemes_mentioned', [])
+        if not isinstance(schemes, list):
+            schemes = [schemes] if schemes else []
+            
+        locations = parsed_data.get('locations', [])
+        if not isinstance(locations, list):
+            locations = [locations] if locations else []
+        
+        # The 'locations' column in the database is of type TEXT[], not JSONB.
+        # The values should be passed as a list of strings.
+
+        sql = """
             INSERT INTO parsed_events (
-                tweet_id,
-                event_type,
-                locations,
-                people_mentioned,
-                organizations,
-                schemes_mentioned,
-                parsed_by,
-                needs_review,
-                review_status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                tweet_id, event_type, locations, people_mentioned, organizations, 
+                schemes_mentioned, event_date, needs_review, review_status
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (tweet_id) DO UPDATE SET
                 event_type = EXCLUDED.event_type,
                 locations = EXCLUDED.locations,
                 people_mentioned = EXCLUDED.people_mentioned,
                 organizations = EXCLUDED.organizations,
                 schemes_mentioned = EXCLUDED.schemes_mentioned,
-                parsed_at = CURRENT_TIMESTAMP,
-                parsed_by = EXCLUDED.parsed_by,
+                event_date = EXCLUDED.event_date,
+                parsed_at = NOW(),
                 needs_review = EXCLUDED.needs_review,
                 review_status = EXCLUDED.review_status;
-        """, (
-            parsed_data['tweet_id'],
+        """
+        
+        event_date = parsed_data.get('event_date')
+        # The event_date from parser might not be a valid date, handle it gracefully
+        if event_date:
+            try:
+                # Attempt to parse if it's a string, otherwise assume it's a date object or None
+                if isinstance(event_date, str):
+                    event_date = datetime.fromisoformat(event_date.replace('Z', '+00:00')).date()
+            except (ValueError, TypeError):
+                event_date = None
+        
+        values = (
+            tweet_id,
             parsed_data.get('event_type'),
-            parsed_data.get('locations', []),
-            parsed_data.get('people_mentioned', []),
-            parsed_data.get('organizations', []),
-            parsed_data.get('schemes_mentioned', []),
-            'parsing_pipeline_v3',  # Version bump
-            True,  # needs_review
-            'pending'  # review_status
-        ))
-    conn.commit()
-    logger.info(f"Saved parsed event for tweet_id: {parsed_data['tweet_id']}")
+            locations, # Pass the list of strings directly
+            people,
+            organizations,
+            schemes,
+            event_date,
+            True,
+            'pending'
+        )
+        
+        cursor.execute(sql, values)
+        logging.info(f"Saved parsed event for tweet_id: {tweet_id}")
+        return True
+    except Exception as e:
+        logging.error(f"Error saving parsed event for tweet_id {tweet_id}: {e}")
+        # We don't rollback the whole connection, just this tweet failed
+        # The main loop will commit successful ones.
+        return False
+    finally:
+        cursor.close()
 
 def update_tweet_status(conn, tweet_id, status):
     """Updates the processing status of a raw tweet."""
@@ -265,15 +306,23 @@ def parse_with_gemini(text):
     return {"event_type": "Protest", "location": "Raipur"}
 
 def parse_with_ollama(text):
-    """Layer 2: Parses text using a local Ollama model with a comprehensive prompt."""
-    logger.info("Parsing with Ollama...")
+    """Layer 2: Parses text using an Ollama model, if available."""
+    ollama_host = os.getenv('OLLAMA_HOST')
+    if not ollama_host:
+        logger.info("OLLAMA_HOST environment variable not set. Skipping Ollama parsing.")
+        return {}
+
+    logger.info(f"Parsing with Ollama at host: {ollama_host}...")
     time.sleep(OLLAMA_REQUEST_DELAY_SECONDS)
     
     prompt = COMPREHENSIVE_PROMPT.format(text=text)
+    
+    # Construct the full URL for the Ollama API endpoint
+    ollama_url = f"{ollama_host.rstrip('/')}/api/generate"
 
     try:
         response = requests.post(
-            "http://localhost:11434/api/generate",
+            ollama_url,
             json={
                 "model": "gemma2:2b",
                 "prompt": prompt,
