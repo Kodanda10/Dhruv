@@ -1,0 +1,31 @@
+name: Manual Tweet Parsing Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  parse-tweets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: feature/labs-prod-ready
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run parsing pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OLLAMA_HOST: ${{ secrets.OLLAMA_HOST }}
+        run: |
+          python scripts/run_parsing_pipeline.py
