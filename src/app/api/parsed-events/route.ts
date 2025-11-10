@@ -22,56 +22,40 @@ export async function GET(request: NextRequest) {
       let query = `
         SELECT 
           pe.id,
-          pe.tweet_id,
-          rt.text as tweet_text,
-          rt.created_at as tweet_created_at,
-          COALESCE(rt.author_handle, 'unknown') as author_username,
-          pe.event_type,
-          pe.event_type_confidence,
-          pe.event_date,
-          pe.date_confidence,
-          pe.locations,
-          pe.people_mentioned,
-          pe.organizations,
-          pe.schemes_mentioned,
-          pe.overall_confidence,
-          pe.needs_review,
-          pe.review_status,
-          pe.reviewed_at,
-          pe.reviewed_by,
-          pe.parsed_at,
+// ...existing code...
           pe.parsed_by
         FROM parsed_events pe
-        JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
-        WHERE rt.author_handle = 'OPChoudhary_Ind'
+        LEFT JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
       `;
 
       const params: any[] = [];
       let paramIndex = 1;
 
+      let whereClauses = [];
+
       if (status) {
-        query += ` AND pe.review_status = $${paramIndex}`;
+        whereClauses.push(`pe.review_status = $${paramIndex}`);
         params.push(status);
         paramIndex++;
       }
 
       if (needsReview === 'true') {
-        query += ` AND pe.needs_review = true`;
+        whereClauses.push(`pe.needs_review = true`);
       } else if (needsReview === 'false') {
-        query += ` AND pe.needs_review = false`;
+        whereClauses.push(`pe.needs_review = false`);
       }
 
-      // Filter by author if provided (allows override of default OP Choudhary filter)
-      // Note: Default filter is already applied above (WHERE rt.author_handle = 'OPChoudhary_Ind')
-      // If authorFilter is provided, it replaces the default filter
       if (authorFilter) {
-        // Replace the WHERE clause with custom author filter
-        query = query.replace(
-          `WHERE rt.author_handle = 'OPChoudhary_Ind'`,
-          `WHERE (rt.author_handle ILIKE $${paramIndex} OR rt.author_handle ILIKE $${paramIndex + 1})`
-        );
+        whereClauses.push(`(rt.author_handle ILIKE $${paramIndex} OR rt.author_handle ILIKE $${paramIndex + 1})`);
         params.push(`%${authorFilter}%`, `%${authorFilter.replace(/\s+/g, '')}%`);
         paramIndex += 2;
+      } else {
+        // Default filter if no author is specified
+        whereClauses.push(`rt.author_handle = 'OPChoudhary_Ind'`);
+      }
+
+      if (whereClauses.length > 0) {
+        query += ` WHERE ` + whereClauses.join(' AND ');
       }
 
       query += ` ORDER BY rt.created_at DESC`;
