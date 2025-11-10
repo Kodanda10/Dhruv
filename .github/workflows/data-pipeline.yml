@@ -1,4 +1,4 @@
-name: Automated Tweet Pipeline
+name: Data Pipeline
 
 on:
   schedule:
