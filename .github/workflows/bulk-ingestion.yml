@@ -1,0 +1,130 @@
+name: Manual Bulk Tweet Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of tweets to process per run'
+        required: true
+        default: '250'
+        type: string
+      start_offset:
+        description: 'Starting offset for tweet processing'
+        required: true
+        default: '0'
+        type: string
+      total_tweets:
+        description: 'Total number of tweets to process'
+        required: true
+        default: '2600'
+        type: string
+      dry_run:
+        description: 'Run in dry-run mode (no database writes)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  bulk-parse-and-ingest:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Bulk Parsing and Ingestion
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+        X_CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
+        X_CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
+        X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+        X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        MAPMYINDIA_CLIENT_ID: ${{ secrets.MAPMYINDIA_CLIENT_ID }}
+        MAPMYINDIA_CLIENT_SECRET: ${{ secrets.MAPMYINDIA_CLIENT_SECRET }}
+        NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN }}
+        REDIS_URL: ${{ secrets.REDIS_URL }}
+        UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+        UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        API_BASE: ${{ secrets.API_BASE_URL || 'http://localhost:3000' }}
+        DRY_RUN: ${{ github.event.inputs.dry_run }}
+      run: |
+        # Start Next.js server in background
+        npm run build
+        npm run start &
+        SERVER_PID=$!
+        echo "Server started with PID $SERVER_PID"
+
+        # Wait for server to be ready
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          if curl -s --fail http://localhost:3000/api/health > /dev/null; then
+            echo "✅ Server is ready!"
+            break
+          fi
+          echo "Attempt $i: Server not ready, waiting 2s..."
+          sleep 2
+        done
+
+        # Loop through batches
+        current_offset=${{ github.event.inputs.start_offset }}
+        batch_size=${{ github.event.inputs.batch_size }}
+        total_tweets=${{ github.event.inputs.total_tweets }}
+
+        while [ $current_offset -lt $total_tweets ]; do
+          echo "=================================================="
+          echo "Processing batch starting at offset: $current_offset"
+          echo "=================================================="
+
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "Running in DRY RUN mode..."
+            API_BASE=http://localhost:3000 node scripts/parse_tweets.js --batch=$batch_size --start=$current_offset --dry
+          else
+            echo "Running production parsing pipeline..."
+            API_BASE=http://localhost:3000 node scripts/parse_tweets.js --batch=$batch_size --start=$current_offset
+          fi
+
+          # Check exit code of the script
+          if [ $? -ne 0 ]; then
+            echo "❌ Batch failed at offset $current_offset. Stopping workflow."
+            exit 1
+          fi
+
+          current_offset=$((current_offset + batch_size))
+          echo "Batch complete. Next offset: $current_offset"
+          echo "Pausing for 15 seconds before next batch to respect rate limits..."
+          sleep 15
+        done
+
+        echo "✅ All batches processed successfully."
+
+        # Cleanup
+        kill $SERVER_PID 2>/dev/null || true
+        echo "Server stopped."
+
+    - name: Upload All Parsing Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bulk-parsing-reports
+        path: .workflow/reports/
+        retention-days: 30
+
+    - name: Upload All Backup Data
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bulk-parsed-backups
+        path: data/backups/
+        retention-days: 7
