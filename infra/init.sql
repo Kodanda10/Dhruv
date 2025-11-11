@@ -1,6 +1,45 @@
 -- Project Dhruv Postgres Schema Initialization
 -- This script sets up the database schema for SOTA datasets
 
+-- Create schemas first to ensure they exist before use
+CREATE SCHEMA IF NOT EXISTS dims;
+CREATE SCHEMA IF NOT EXISTS facts;
+CREATE SCHEMA IF NOT EXISTS bridges;
+
+-- Raw Tweets table to store fetched data
+CREATE TABLE IF NOT EXISTS raw_tweets (
+    id SERIAL PRIMARY KEY,
+    tweet_id VARCHAR(255) UNIQUE NOT NULL,
+    tweet_text TEXT,
+    author_id VARCHAR(255),
+    author_handle VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE,
+    source VARCHAR(255),
+    lang VARCHAR(10),
+    tweet_url VARCHAR(255),
+    raw_json JSONB,
+    processing_status VARCHAR(50) DEFAULT 'pending',
+    created_at_db TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at_db TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Parsed Events table
+CREATE TABLE IF NOT EXISTS parsed_events (
+    id SERIAL PRIMARY KEY,
+    tweet_id VARCHAR(255) REFERENCES raw_tweets(tweet_id),
+    content TEXT,
+    parsed_json JSONB,
+    event_date TIMESTAMP,
+    location VARCHAR(255),
+    district VARCHAR(255),
+    state VARCHAR(255),
+    actors TEXT[],
+    category VARCHAR(255),
+    source_of_truth VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create schema for dims
 CREATE SCHEMA IF NOT EXISTS dims;
 
@@ -106,10 +145,5 @@ CREATE TABLE IF NOT EXISTS bridges.bridge_event_geography (
 CREATE INDEX IF NOT EXISTS idx_dim_geography_state ON dims.dim_geography(state);
 CREATE INDEX IF NOT EXISTS idx_dim_geography_district ON dims.dim_geography(district);
 CREATE INDEX IF NOT EXISTS idx_dim_poi_type ON dims.dim_poi(type);
-CREATE INDEX IF NOT EXISTS idx_fact_event_created_at ON facts.fact_event(created_at);
-CREATE INDEX IF NOT EXISTS idx_bridge_event_geography_event ON bridges.bridge_event_geography(event_id);
-CREATE INDEX IF NOT EXISTS idx_bridge_event_geography_geo ON bridges.bridge_event_geography(geography_id);
-
--- Create facts schema if not exists
-CREATE SCHEMA IF NOT EXISTS facts;
-CREATE SCHEMA IF NOT EXISTS bridges;
+CREATE INDEX IF NOT EXISTS idx_raw_tweets_status ON raw_tweets(processing_status);
+CREATE INDEX IF NOT EXISTS idx_parsed_events_tweet_id ON parsed_events(tweet_id);
