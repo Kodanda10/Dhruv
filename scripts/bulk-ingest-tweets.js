@@ -50,7 +50,7 @@ if (!fs.existsSync(dataDir)) {
 
 // Find tweet data files
 const tweetFiles = fs.readdirSync(dataDir)
-  .filter(file => file.startsWith('parsed_tweets') && file.endsWith('.json'))
+  .filter(file => (file.startsWith('parsed_tweets') || file.startsWith('parsed_events')) && file.includes('.json'))
   .sort();
 
 if (tweetFiles.length === 0) {
@@ -72,8 +72,15 @@ for (const file of tweetFiles) {
   console.log(`📖 Processing file: ${file}`);
 
   try {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    const tweets = data.tweets || data;
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    let tweets;
+
+    if (file.endsWith('.jsonl')) {
+      tweets = fileContent.split('\n').filter(line => line.trim() !== '').map(line => JSON.parse(line));
+    } else {
+      const data = JSON.parse(fileContent);
+      tweets = data.tweets || data;
+    }
 
     if (!Array.isArray(tweets)) {
       console.error(`❌ Invalid tweet data format in ${file}`);
