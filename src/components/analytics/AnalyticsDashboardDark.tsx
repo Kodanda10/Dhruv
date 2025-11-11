@@ -384,7 +384,11 @@ export default function AnalyticsDashboardDark() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ label, value }) => `${label}\n${value}`}
+                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                        if (index === undefined || !analyticsData.eventTypeData[index]) return '';
+                        const entry = analyticsData.eventTypeData[index];
+                        return `${entry.label}\n${entry.value}`;
+                      }}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -492,7 +496,11 @@ export default function AnalyticsDashboardDark() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="count"
-                    label={({ scheme, value }) => `${scheme} (${value})`}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                      if (index === undefined || !analyticsData.schemeData[index]) return '';
+                      const entry = analyticsData.schemeData[index];
+                      return `${entry.scheme} (${entry.count})`;
+                    }}
                   >
                     {analyticsData.schemeData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={`hsl(${index * 60}, 70%, 50%)`} />
