@@ -1,0 +1,148 @@
+name: Test Setup and Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run unit and integration tests'
+        required: false
+        default: true
+        type: boolean
+      run_health_check:
+        description: 'Run application health check'
+        required: false
+        default: true
+        type: boolean
+      validate_secrets:
+        description: 'Validate that required secrets are configured'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  test-setup:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup environment
+      if: inputs.validate_secrets == true
+      run: |
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env.local
+        echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.local
+        echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env.local
+        echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.local
+        echo "OLLAMA_BASE_URL=${{ secrets.OLLAMA_BASE_URL }}" >> .env.local
+        echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.local
+
+    - name: Validate secrets configuration
+      if: inputs.validate_secrets == true
+      run: |
+        echo "🔍 Validating secrets configuration..."
+        REQUIRED_SECRETS=("DATABASE_URL" "NEXTAUTH_SECRET" "NEXTAUTH_URL" "GEMINI_API_KEY")
+        MISSING_SECRETS=()
+
+        for secret in "${REQUIRED_SECRETS[@]}"; do
+          if [ -z "${!secret}" ]; then
+            MISSING_SECRETS+=("$secret")
+          fi
+        done
+
+        if [ ${#MISSING_SECRETS[@]} -ne 0 ]; then
+          echo "❌ Missing required secrets:"
+          printf '  - %s\n' "${MISSING_SECRETS[@]}"
+          exit 1
+        else
+          echo "✅ All required secrets are configured"
+        fi
+
+    - name: Run tests
+      if: inputs.run_tests == true
+      run: |
+        echo "🧪 Running test suite..."
+        npm test -- --coverage --watchAll=false --passWithNoTests
+
+    - name: Build application
+      run: |
+        echo "🔨 Building application..."
+        npm run build
+
+    - name: Health check
+      if: inputs.run_health_check == true
+      run: |
+        echo "🏥 Starting health check..."
+        npm run start &
+        SERVER_PID=$!
+        echo "Server started with PID $SERVER_PID"
+
+        # Wait for server to be ready
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          echo "Health check attempt $i/30..."
+          if curl -s --fail http://localhost:3000/api/health > health_response.json 2>&1; then
+            echo "✅ Server health check passed!"
+            echo "Health response:"
+            cat health_response.json
+            break
+          else
+            echo "❌ Health check failed (attempt $i/30)"
+            echo "Response:"
+            cat health_response.json 2>/dev/null || echo "No response received"
+            if [ $i -eq 30 ]; then
+              echo "❌ Server failed to become healthy after 30 attempts"
+              kill $SERVER_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 2
+          fi
+        done
+
+        # Cleanup
+        kill $SERVER_PID 2>/dev/null || true
+        echo "Server stopped."
+
+    - name: Generate test report
+      if: always()
+      run: |
+        echo "## Test Setup Validation Report" > test-report.md
+        echo "- **Tests Run**: ${{ inputs.run_tests }}" >> test-report.md
+        echo "- **Health Check**: ${{ inputs.run_health_check }}" >> test-report.md
+        echo "- **Secrets Validation**: ${{ inputs.validate_secrets }}" >> test-report.md
+        echo "- **Status**: $([ $? -eq 0 ] && echo "✅ Success" || echo "❌ Failed")" >> test-report.md
+        echo "" >> test-report.md
+        echo "### Test Results" >> test-report.md
+        if [ -f "coverage/lcov-report/index.html" ]; then
+          echo "- Coverage report generated" >> test-report.md
+        fi
+        cat test-report.md
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          test-report.md
+          coverage/
+          health_response.json
+        retention-days: 7
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: coverage/lcov-report/
+        retention-days: 30

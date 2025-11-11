@@ -1,0 +1,85 @@
+name: Bulk Tweet Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of tweets to process per batch'
+        required: false
+        default: '50'
+        type: number
+      max_batches:
+        description: 'Maximum number of batches to process (0 = unlimited)'
+        required: false
+        default: '0'
+        type: number
+      skip_processed:
+        description: 'Skip tweets that have already been processed'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  bulk-ingestion:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup environment
+      run: |
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env.local
+        echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.local
+        echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env.local
+        echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env.local
+        echo "OLLAMA_BASE_URL=${{ secrets.OLLAMA_BASE_URL }}" >> .env.local
+        echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.local
+
+    - name: Health check
+      run: npm run health-check || echo "Health check failed, continuing..."
+
+    - name: Run bulk ingestion
+      run: |
+        node scripts/bulk-ingest-tweets.js \
+          --batch-size ${{ inputs.batch_size }} \
+          --max-batches ${{ inputs.max_batches }} \
+          --skip-processed ${{ inputs.skip_processed }}
+
+    - name: Upload processing results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bulk-ingestion-results
+        path: |
+          bulk-ingestion-*.log
+          processing-summary.json
+        retention-days: 7
+
+    - name: Generate summary report
+      if: always()
+      run: |
+        echo "## Bulk Ingestion Summary" > summary.md
+        echo "- **Batch Size**: ${{ inputs.batch_size }}" >> summary.md
+        echo "- **Max Batches**: ${{ inputs.max_batches }}" >> summary.md
+        echo "- **Skip Processed**: ${{ inputs.skip_processed }}" >> summary.md
+        echo "- **Status**: $([ $? -eq 0 ] && echo "✅ Success" || echo "❌ Failed")" >> summary.md
+        cat summary.md
+
+    - name: Upload summary
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bulk-ingestion-summary
+        path: summary.md
+        retention-days: 30
