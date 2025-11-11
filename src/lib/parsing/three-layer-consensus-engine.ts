@@ -132,19 +132,17 @@ export class ThreeLayerConsensusEngine {
 
     try {
       // Dynamic import to avoid issues if not installed
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(this.geminiApiKey);
-      const model = genAI.getGenerativeModel({
-        model: this.config.geminiModel || 'gemini-1.5-flash'
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey: this.geminiApiKey });
+
+      const response = await ai.models.generateContent({
+        model: this.config.geminiModel || 'gemini-2.5-flash',
+        contents: this.buildGeminiPrompt(tweetText)
       });
 
-      const prompt = this.buildGeminiPrompt(tweetText);
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      console.log(`Gemini response for ${tweetId}: ${response.text?.substring(0, 100)}...`);
 
-      console.log(`Gemini response for ${tweetId}: ${response.substring(0, 100)}...`);
-
-      return this.parseGeminiResponse(response, tweetText);
+      return this.parseGeminiResponse(response.text || '', tweetText);
     } catch (error: any) {
       console.error(`Gemini API error for ${tweetId}:`, error.message);
       throw error;
@@ -409,7 +407,9 @@ Be accurate and specific.`;
    */
   private parseGeminiResponse(response: string, tweetText: string): LayerResult {
     try {
-      const parsed = JSON.parse(response.trim());
+      // Clean markdown code blocks and extract JSON
+      const cleanedResponse = response.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleanedResponse);
       return {
         layer: 'gemini',
         event_type: parsed.event_type || 'other',

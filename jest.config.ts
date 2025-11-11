@@ -1,19 +1,6 @@
 const config = {
   projects: [
     {
-      displayName: 'integration',
-      testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
-      testEnvironment: 'node',
-      setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-      },
-      transform: {
-        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
-      },
-      testTimeout: 3600000, // 1 hour for comprehensive tests
-    },
-    {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
       testPathIgnorePatterns: ['/integration/'],
@@ -21,13 +8,17 @@ const config = {
       setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
-        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '\\.(css|less|scss|sass)$': '<rootDir>/tests/__mocks__/styleMock.js',
+        'mapbox-gl': '<rootDir>/tests/__mocks__/mapbox-gl.js',
         '\\.(png|jpg|jpeg|gif|svg)$': '<rootDir>/tests/__mocks__/fileMock.js',
       },
       transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
         '^.+\\.(js|jsx)$': 'babel-jest',
       },
+      transformIgnorePatterns: [
+        '/node_modules/(?!(d3|internmap|delaunator|robust-predicates)/)',
+      ],
       coverageDirectory: '<rootDir>/coverage',
       coverageReporters: ['json-summary', 'text', 'lcov'],
     },

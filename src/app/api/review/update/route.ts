@@ -18,6 +18,22 @@ type ReviewPayload = {
   action?: string;
 };
 
+// Event emission helper
+async function emitReviewEvent(eventType: string, data: any) {
+  try {
+    // In a real implementation, this would emit to an event bus or queue
+    console.log(`[REVIEW_EVENT] ${eventType}:`, JSON.stringify(data, null, 2));
+
+    // For now, we'll just log the event. In production, this would:
+    // - Send to event queue (Redis/SQS/Kafka)
+    // - Trigger downstream processing
+    // - Update monitoring dashboards
+  } catch (error) {
+    console.error('Failed to emit review event:', error);
+    // Don't fail the request if event emission fails
+  }
+}
+
 export async function POST(request: Request) {
   let body: ReviewPayload;
   try {
@@ -104,15 +120,33 @@ function buildLocations(body: ReviewPayload): string[] | null {
 async function handleDecision(action: 'approve' | 'reject', tweetId: string, notes: string | null) {
   const reviewedAt = new Date().toISOString();
   const pool = getDbPool();
+
+  // Use atomic transaction
+  const client = await pool.connect();
   try {
-    const { rowCount } = await pool.query(
+    await client.query('BEGIN');
+
+    const { rowCount } = await client.query(
       `UPDATE parsed_events SET review_status = $1, needs_review = false, review_notes = COALESCE($2, review_notes), reviewed_at = $3 WHERE tweet_id = $4`,
       [action === 'approve' ? 'approved' : 'rejected', notes, reviewedAt, tweetId],
     );
 
     if (!rowCount) {
+      await client.query('ROLLBACK');
       return NextResponse.json({ success: false, error: 'ट्वीट नहीं मिला' }, { status: 404 });
     }
+
+    // Emit review event
+    await emitReviewEvent('review.decision', {
+      tweetId,
+      action,
+      decision: action === 'approve' ? 'approved' : 'rejected',
+      notes,
+      reviewedAt,
+      reviewerId: 'system', // In production, get from auth context
+    });
+
+    await client.query('COMMIT');
 
     console.log(`Review action: ${action}`, { tweetId, action, notes });
     return NextResponse.json({
@@ -120,7 +154,10 @@ async function handleDecision(action: 'approve' | 'reject', tweetId: string, not
       message: action === 'approve' ? 'ट्वीट मंजूरी दे दी गई' : 'ट्वीट अस्वीकार कर दिया गया',
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     return handleDbError(error);
+  } finally {
+    client.release();
   }
 }
 
@@ -205,12 +242,35 @@ async function handleUpdate(tweetId: string, body: ReviewPayload) {
   const query = `UPDATE parsed_events SET ${setClauses.join(', ')} WHERE tweet_id = $${index}`;
   params.push(tweetId);
 
+  const pool = getDbPool();
+  const client = await pool.connect();
+
   try {
-    const pool = getDbPool();
-    const { rowCount } = await pool.query(query, params);
+    await client.query('BEGIN');
+
+    const { rowCount } = await client.query(query, params);
     if (!rowCount) {
+      await client.query('ROLLBACK');
       return NextResponse.json({ success: false, error: 'ट्वीट नहीं मिला' }, { status: 404 });
     }
+
+    // Emit review event for updates
+    await emitReviewEvent('review.updated', {
+      tweetId,
+      changes: {
+        event_type: eventType,
+        event_type_hi: eventTypeHi,
+        review_notes: reviewNotes,
+        locations: body.locations || body.locationsPaths,
+        people_mentioned: body.people_mentioned,
+        organizations: body.organizations,
+        schemes_mentioned: body.schemes_mentioned,
+      },
+      reviewedAt,
+      reviewerId: 'system', // In production, get from auth context
+    });
+
+    await client.query('COMMIT');
 
     console.log('Review edit', {
       tweetId,
@@ -222,7 +282,10 @@ async function handleUpdate(tweetId: string, body: ReviewPayload) {
 
     return NextResponse.json({ success: true, message: 'समीक्षा अपडेट हो गई' });
   } catch (error) {
+    await client.query('ROLLBACK');
     return handleDbError(error);
+  } finally {
+    client.release();
   }
 }
 

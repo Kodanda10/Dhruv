@@ -95,7 +95,7 @@ describe('System Health Checks', () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: async () => ({ models: [{ name: 'gemini-1.5-flash' }, { name: 'gemini-pro' }] }),
+        json: async () => ({ models: [{ name: 'gemini-pro' }, { name: 'gemini-pro-vision' }] }),
       });
 
       const result = await checkGemini();

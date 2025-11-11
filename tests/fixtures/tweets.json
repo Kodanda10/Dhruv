@@ -1,0 +1,17 @@
+[
+  {
+    "id": "demo-1",
+    "tweet_id": "111",
+    "tweet_created_at": "2025-09-01T10:00:00Z",
+    "tweet_text": "रायगढ़ विकास यात्रा का प्रथम पड़ाव #समारोह @PMOIndia",
+    "event_type": "tour",
+    "event_type_confidence": 0.92,
+    "locations": [{ "name": "रायगढ़", "district": "रायगढ़" }],
+    "people_mentioned": ["@PMOIndia", "ओपी चौधरी"],
+    "organizations": ["टीम विकास", "समारोह कोर टीम"],
+    "schemes_mentioned": ["समारोह उत्थान मिशन"],
+    "overall_confidence": 0.9,
+    "needs_review": false,
+    "review_status": "approved"
+  }
+]

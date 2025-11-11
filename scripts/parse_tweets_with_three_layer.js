@@ -138,7 +138,7 @@ async function initializeParsingEngine() {
     consensusThreshold: 0.6,
     enableFallback: true,
     logLevel: 'info',
-    geminiModel: 'gemini-1.5-flash',
+    geminiModel: 'gemini-pro',
     ollamaModel: 'gemma2:2b'
   });
 

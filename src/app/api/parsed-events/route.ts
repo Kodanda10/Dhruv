@@ -22,7 +22,24 @@ export async function GET(request: NextRequest) {
       let query = `
         SELECT 
           pe.id,
-// ...existing code...
+          pe.tweet_id,
+          rt.text as tweet_text,
+          rt.created_at as tweet_created_at,
+          rt.author_handle as author_handle,
+          pe.event_type,
+          pe.event_type_confidence,
+          pe.event_date,
+          pe.date_confidence,
+          pe.locations,
+          pe.people_mentioned,
+          pe.organizations,
+          pe.schemes_mentioned,
+          pe.overall_confidence,
+          pe.needs_review,
+          pe.review_status,
+          pe.reviewed_at,
+          pe.reviewed_by,
+          pe.parsed_at,
           pe.parsed_by
         FROM parsed_events pe
         LEFT JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
@@ -99,7 +116,7 @@ export async function GET(request: NextRequest) {
           tweet_id: row.tweet_id,
           tweet_text: row.tweet_text,
           tweet_created_at: row.tweet_created_at,
-          author_username: row.author_username,
+          author_username: row.author_handle,
           event_type: row.event_type,
           event_type_confidence: row.event_type_confidence,
           event_type_hi: eventTypeHi, // Hindi translation

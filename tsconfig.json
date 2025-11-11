@@ -44,7 +44,6 @@
   "exclude": [
     "node_modules",
     "scripts",
-    "test-results",
-    "tests"
+    "test-results"
   ]
 }

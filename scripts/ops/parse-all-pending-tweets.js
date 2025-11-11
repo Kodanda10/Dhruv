@@ -68,7 +68,7 @@ async function getPendingTweetsBatch(limit = 25) {
 async function updateTweetStatus(tweetId, status) {
   await pool.query(`
     UPDATE raw_tweets
-    SET processing_status = $1, processed_at = NOW()
+    SET processing_status = $1, fetched_at = NOW()
     WHERE tweet_id = $2
   `, [status, tweetId]);
 }
@@ -76,6 +76,12 @@ async function updateTweetStatus(tweetId, status) {
 async function saveParsedEvent(parsedResult) {
   const { getEventTypeInHindi } = await import('../../src/lib/i18n/event-types-hi.ts');
 
+  // First delete any existing parsed event for this tweet
+  await pool.query(`
+    DELETE FROM parsed_events WHERE tweet_id = $1
+  `, [parsedResult.tweet_id]);
+
+  // Then insert the new one
   await pool.query(`
     INSERT INTO parsed_events (
       tweet_id, event_type, event_type_hi, event_type_confidence,
@@ -83,21 +89,6 @@ async function saveParsedEvent(parsedResult) {
       organizations, schemes_mentioned, overall_confidence,
       needs_review, review_status, parsed_at, parsed_by
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    ON CONFLICT (tweet_id) DO UPDATE SET
-      event_type = EXCLUDED.event_type,
-      event_type_hi = EXCLUDED.event_type_hi,
-      event_type_confidence = EXCLUDED.event_type_confidence,
-      event_date = EXCLUDED.event_date,
-      date_confidence = EXCLUDED.date_confidence,
-      locations = EXCLUDED.locations,
-      people_mentioned = EXCLUDED.people_mentioned,
-      organizations = EXCLUDED.organizations,
-      schemes_mentioned = EXCLUDED.schemes_mentioned,
-      overall_confidence = EXCLUDED.overall_confidence,
-      needs_review = EXCLUDED.needs_review,
-      review_status = EXCLUDED.review_status,
-      parsed_at = EXCLUDED.parsed_at,
-      parsed_by = EXCLUDED.parsed_by
   `, [
     parsedResult.tweet_id,
     parsedResult.event_type,
@@ -132,7 +123,7 @@ async function initializeParsingEngine() {
     consensusThreshold: 0.6,
     enableFallback: true,
     logLevel: 'info',
-    geminiModel: 'gemini-1.5-flash',
+    geminiModel: 'gemini-2.5-flash',
     ollamaModel: 'gemma2:2b'
   });
 

@@ -246,10 +246,15 @@ export class LangGraphAIAssistant {
     }
     `;
 
-      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt
+      });
+
+      const text = response.text || '';
       
       // Clean and parse JSON response
       const cleanedText = text.replace(/```json|```/g, '').trim();

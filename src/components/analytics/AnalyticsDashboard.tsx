@@ -24,6 +24,11 @@ import {
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { formatHindiDate } from '@/utils/parse';
+import FaissSearchCard from './FaissSearchCard';
+import AIAssistantCard from './AIAssistantCard';
+import DynamicLearningCard from './DynamicLearningCard';
+import MapboxCard from './MapboxCard';
+import D3MindmapCard from './D3MindmapCard';
 
 interface AnalyticsData {
   total_tweets: number;
@@ -431,20 +436,16 @@ export default function AnalyticsDashboard() {
               <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                 {Object.entries(data.event_distribution)
                   .sort(([, a], [, b]) => b - a)
-                  .map(([event, count]) => {
-                    const total = Object.values(data.event_distribution).reduce((sum, val) => sum + val, 0);
-                    const percentage = total > 0 ? ((count / total) * 100).toFixed(0) : '0';
-                    return (
-                      <div key={event} className="flex justify-between items-center p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/20">
-                        <span className="text-base font-medium text-white">{event}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-base font-bold text-mint-green">{count}</span>
-                          <span className="text-sm text-white/70">({percentage}%)</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  .map(([event, count]) => (
+                    <div key={event} className="flex justify-between items-center p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/20">
+                      <span className="text-base text-white">{event}</span>
+                      <span className="text-base font-bold text-mint-green bg-white/10 px-3 py-1 rounded">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
               </div>
+
               <div className="mt-4 p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/20">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-white">कुल इवेंट:</span>
@@ -463,8 +464,11 @@ export default function AnalyticsDashboard() {
           <p className="text-base text-white/90 mb-6 font-medium">
             छत्तीसगढ़ → जिला → ब्लॉक → ग्राम पंचायत / वार्ड
           </p>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <MapboxCard />
+             <D3MindmapCard />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             {/* Geographic Hierarchy */}
             <div>
               <h4 className="text-lg font-semibold mb-4 text-white">

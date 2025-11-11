@@ -41,10 +41,10 @@ export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promis
       ),
       db.query(
         `${filteredCTE}
-         SELECT COALESCE(NULLIF(TRIM(loc), ''), 'अनिर्दिष्ट') AS key,
+         SELECT COALESCE(NULLIF(TRIM((loc->>'name')::text), ''), 'अनिर्दिष्ट') AS key,
                 COUNT(*)::INT AS count
          FROM filtered
-         CROSS JOIN LATERAL unnest(COALESCE(filtered.locations, ARRAY[]::text[])) loc
+         CROSS JOIN LATERAL jsonb_array_elements(COALESCE(filtered.locations, '[]'::jsonb)) AS loc
          GROUP BY key
          ORDER BY count DESC
          LIMIT 50`,
@@ -80,19 +80,20 @@ export async function fetchAnalyticsData(filters: AnalyticsFilters = {}): Promis
       ),
       queryTags(filteredCTE, values),
       db.query<RaigarhEventRow>(
-        `${filteredCTE}
-         SELECT COALESCE(filtered.resolved_date::TEXT, '') AS event_date,
-                COALESCE(filtered.event_type, 'अनिर्दिष्ट') AS event_type,
-                rt.text,
-                loc->>'name' AS location_name,
-                loc->>'district' AS district
-         FROM filtered
-         JOIN raw_tweets rt ON rt.tweet_id = filtered.tweet_id
-         CROSS JOIN LATERAL unnest(COALESCE(filtered.locations, ARRAY[]::text[])) loc
-         WHERE (COALESCE(loc, '') ILIKE '%रायगढ़%')
-         ORDER BY filtered.resolved_date DESC NULLS LAST, filtered.parsed_at DESC
-         LIMIT 50`,
-        values,
+   `${filteredCTE}
+    SELECT COALESCE(filtered.resolved_date::TEXT, '') AS event_date,
+      COALESCE(filtered.event_type, 'अनिर्दिष्ट') AS event_type,
+      rt.text,
+      loc->>'name' AS location_name,
+      loc->>'district' AS district
+    FROM filtered
+    JOIN raw_tweets rt ON rt.tweet_id = filtered.tweet_id
+    CROSS JOIN LATERAL jsonb_array_elements(COALESCE(filtered.locations, '[]'::jsonb)) AS loc
+    WHERE (COALESCE(loc->>'district', '') ILIKE '%रायगढ़%'
+      OR COALESCE(loc->>'name', '') ILIKE '%रायगढ़%')
+    ORDER BY filtered.resolved_date DESC NULLS LAST, filtered.parsed_at DESC
+    LIMIT 50`,
+   values,
       ),
       queryRaigarhCommunity(filteredCTE, values),
       db.query(

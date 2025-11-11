@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [83.38, 22.17] },
+      "properties": { "name": "Raigarh", "event_type": "tour" }
+    }
+  ]
+}

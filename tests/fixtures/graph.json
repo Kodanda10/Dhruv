@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    { "id": "person-1", "group": "person", "name": "ओ.पी. चौधरी" },
+    { "id": "event-1", "group": "event", "name": "जनसभा" }
+  ],
+  "links": [
+    { "source": "person-1", "target": "event-1", "value": 1 }
+  ]
+}
