@@ -35,6 +35,8 @@ const batchSize = parseInt(options['batch-size'] || '50');
 const maxBatches = parseInt(options['max-batches'] || '0'); // 0 = unlimited
 const skipProcessed = options['skip-processed'] !== 'false';
 
+const FAILED_TWEETS_LOG = path.join(__dirname, '..', 'failed_tweets.jsonl');
+
 console.log('🚀 Starting Bulk Tweet Ingestion');
 console.log(`📊 Batch Size: ${batchSize}`);
 console.log(`🔢 Max Batches: ${maxBatches === 0 ? 'unlimited' : maxBatches}`);
@@ -65,6 +67,7 @@ console.log('');
 // Process each file
 let totalProcessed = 0;
 let totalSkipped = 0;
+let totalFailed = 0;
 let batchesProcessed = 0;
 
 for (const file of tweetFiles) {
@@ -97,16 +100,18 @@ for (const file of tweetFiles) {
       }
 
       const batch = tweets.slice(i, i + batchSize);
-      console.log(`🔄 Processing batch ${batchesProcessed + 1} (tweets ${i + 1}-${Math.min(i + batchSize, tweets.length)})`);
+      const batchNumber = batchesProcessed + 1;
+      console.log(`🔄 Processing batch ${batchNumber} (tweets ${i + 1}-${Math.min(i + batchSize, tweets.length)} of ${tweets.length})`);
 
       // Process batch
       const results = await processBatch(batch, skipProcessed);
 
       totalProcessed += results.processed;
       totalSkipped += results.skipped;
+      totalFailed += results.failed;
       batchesProcessed++;
 
-      console.log(`✅ Batch ${batchesProcessed} complete: ${results.processed} processed, ${results.skipped} skipped`);
+      console.log(`✅ Batch ${batchNumber} complete: ${results.processed} processed, ${results.skipped} skipped, ${results.failed} failed`);
 
       // Rate limiting pause
       if (i + batchSize < tweets.length) {
@@ -133,6 +138,7 @@ const summary = {
   skipProcessed,
   totalProcessed,
   totalSkipped,
+  totalFailed,
   batchesProcessed,
   filesProcessed: tweetFiles.length
 };
@@ -146,11 +152,16 @@ console.log(`  - Files processed: ${tweetFiles.length}`);
 console.log(`  - Batches processed: ${batchesProcessed}`);
 console.log(`  - Tweets processed: ${totalProcessed}`);
 console.log(`  - Tweets skipped: ${totalSkipped}`);
+console.log(`  - Tweets failed: ${totalFailed}`);
 console.log(`📄 Summary saved to: ${summaryPath}`);
+if (totalFailed > 0) {
+  console.log(`🔴 ${totalFailed} failed tweets logged to: ${FAILED_TWEETS_LOG}`);
+}
 
 async function processBatch(tweets, skipProcessed) {
   let processed = 0;
   let skipped = 0;
+  let failed = 0;
 
   for (const tweet of tweets) {
     try {
@@ -161,16 +172,23 @@ async function processBatch(tweets, skipProcessed) {
       }
 
       // Process tweet through parsing pipeline
-      await processTweet(tweet);
-      processed++;
+      const result = await processTweet(tweet);
+      if (result) {
+        processed++;
+      } else {
+        failed++;
+        fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
+      }
 
     } catch (error) {
       console.error(`❌ Error processing tweet ${tweet.id}:`, error.message);
+      failed++;
+      fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
       // Continue with next tweet
     }
   }
 
-  return { processed, skipped };
+  return { processed, skipped, failed };
 }
 
 async function isTweetProcessed(tweetId) {
@@ -206,14 +224,14 @@ async function processTweet(tweet) {
     const result = await response.json();
 
     if (result.success) {
-      console.log(`  ✅ Processed tweet ${tweet.id || tweet.tweet_id}: "${tweet.text?.substring(0, 50)}..."`);
+      console.log(`  ✅ Processed tweet ${tweet.id || tweet.tweet_id}: "${(tweet.content || tweet.text)?.substring(0, 50)}..."`);
       return result;
     } else {
-      throw new Error(`Parsing failed: ${result.error}`);
+      throw new Error(`Parsing failed: ${result.error || 'Unknown API error'}`);
     }
   } catch (error) {
-    console.error(`  ❌ Error processing tweet ${tweet.id || tweet.tweet_id}:`, error.message);
-    throw error;
+    console.error(`  ❌ Error in processTweet for ${tweet.id || tweet.tweet_id}:`, error.message);
+    return null; // Return null on failure
   }
 }
 

@@ -82,7 +82,7 @@ export class ThreeLayerConsensusEngine {
       layerResults.push({ ...geminiResult, layer: 'gemini' });
     } catch (err: any) {
       console.warn(`Gemini layer failed for ${tweetId}:`, err.message);
-      layerResults.push({ ...this.fallbackRegexResult(tweetText, 'gemini'), layer: 'gemini' });
+      // Do not add a fallback result; let other layers handle it.
     }
     
     // Small delay before Ollama to avoid hitting rate limits
@@ -94,7 +94,7 @@ export class ThreeLayerConsensusEngine {
       layerResults.push({ ...ollamaResult, layer: 'ollama' });
     } catch (err: any) {
       console.warn(`Ollama layer failed for ${tweetId}:`, err.message);
-      layerResults.push({ ...this.fallbackRegexResult(tweetText, 'ollama'), layer: 'ollama' });
+      // Do not add a fallback result; let other layers handle it.
     }
     
     // Regex is always available (no rate limits)
@@ -453,12 +453,13 @@ Be accurate and specific.`;
   /**
    * Fallback regex result when AI parsing fails
    */
-  private fallbackRegexResult(tweetText: string, layer: string): LayerResult {
+  private fallbackRegexResult(tweetText: string, layer: 'gemini' | 'ollama'): LayerResult {
     const regexResult = this.parseWithRegex(tweetText);
     return {
       ...regexResult,
-      layer: layer as any,
-      confidence: regexResult.confidence * 0.5 // Reduce confidence for fallback
+      layer: layer,
+      confidence: regexResult.confidence * 0.5, // Reduce confidence for fallback
+      error: `AI layer ${layer} failed, used regex fallback.`
     };
   }
 
