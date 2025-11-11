@@ -49,6 +49,13 @@ jobs:
     - name: Health check
       run: npm run health-check || echo "Health check failed, continuing..."
 
+    - name: Start Next.js server
+      run: |
+        npm run build
+        npm start &
+        sleep 10
+        curl -f http://localhost:3000/api/health || (echo "Server failed to start" && exit 1)
+
     - name: Run bulk ingestion
       run: |
         node scripts/bulk-ingest-tweets.js \
