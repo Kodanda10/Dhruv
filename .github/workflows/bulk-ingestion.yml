@@ -88,9 +88,9 @@ jobs:
         done
 
         # Loop through batches
-        current_offset=${{ github.event.inputs.start_offset }}
-        batch_size=${{ github.event.inputs.batch_size }}
-        total_tweets=${{ github.event.inputs.total_tweets }}
+        current_offset="${{ github.event.inputs.start_offset }}"
+        batch_size="${{ github.event.inputs.batch_size }}"
+        total_tweets="${{ github.event.inputs.total_tweets }}"
 
         while [ $current_offset -lt $total_tweets ]; do
           echo "=================================================="
