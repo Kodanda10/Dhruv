@@ -185,8 +185,8 @@ async function processTweet(tweet) {
       },
       body: JSON.stringify({
         tweet_id: tweet.id || tweet.tweet_id,
-        tweet_text: tweet.text,
-        created_at: tweet.created_at,
+        tweet_text: tweet.content || tweet.text,
+        created_at: tweet.timestamp || tweet.created_at,
         author_handle: tweet.author_handle || tweet.user?.screen_name,
       }),
     });
