@@ -20,8 +20,6 @@ require('ts-node').register({
   project: require('path').join(__dirname, '../tsconfig.scripts.json'),
 });
 const { Pool } = require('pg');
-const { ThreeLayerConsensusEngine } = require('../../src/lib/parsing/three-layer-consensus-engine');
-const { RateLimiter } = require('../../src/lib/parsing/rate-limiter');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env.local') });
 
@@ -109,13 +107,17 @@ async function saveParsedEvent(parsedResult) {
 }
 
 async function initializeParsingEngine() {
+  const { RateLimiter } = await import('../../src/lib/parsing/rate-limiter.ts');
+  const { ThreeLayerConsensusEngine } = await import('../../src/lib/parsing/three-layer-consensus-engine.ts');
   // Very conservative rate limits to respect API limits
   // Gemini free tier: ~2-3 requests per minute
   // Ollama local: can handle more, but be conservative
   const rateLimiter = new RateLimiter({
-    geminiRequestsPerMinute: 2, // Very conservative: 2 RPM = 1 request every 30 seconds
-    ollamaRequestsPerMinute: 30, // Conservative: 30 RPM = 1 request every 2 seconds
-    regexRequestsPerMinute: 1000 // Regex has no limits
+    geminiRPM: 2, // Very conservative: 2 RPM = 1 request every 30 seconds
+    ollamaRPM: 30, // Conservative: 30 RPM = 1 request every 2 seconds
+    maxRetries: 3,
+    backoffMultiplier: 2,
+    initialBackoffMs: 5000,
   });
 
   const engine = new ThreeLayerConsensusEngine({
@@ -123,7 +125,7 @@ async function initializeParsingEngine() {
     consensusThreshold: 0.6,
     enableFallback: true,
     logLevel: 'info',
-    geminiModel: 'gemini-2.5-flash',
+    geminiModel: 'gemini-1.5-flash',
     ollamaModel: 'gemma2:2b'
   });
 
