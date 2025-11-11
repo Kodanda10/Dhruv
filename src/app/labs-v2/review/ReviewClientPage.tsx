@@ -154,7 +154,9 @@ export default function ReviewClientPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Event Resolver</h3>
                 <EventResolver
-                  event={state.event}
+                  parsedEventType={state.event.parsed.eventType}
+                  tweetText={state.event.tweetText}
+                  tweetId={state.event.id}
                   onResolve={handleEventResolve}
                 />
               </div>
