@@ -69,12 +69,22 @@ jobs:
         # Wait for server to be ready
         echo "Waiting for server to start..."
         for i in {1..30}; do
-          if curl -s --fail http://localhost:3000/api/health > /dev/null; then
-            echo "✅ Server is ready!"
+          echo "Health check attempt $i/30..."
+          if curl -s --fail http://localhost:3000/api/health > health_response.json 2>&1; then
+            echo "✅ Server health check passed!"
+            echo "Health response:"
+            cat health_response.json
             break
+          else
+            echo "❌ Health check failed (attempt $i/30)"
+            echo "Response:"
+            cat health_response.json 2>/dev/null || echo "No response received"
+            if [ $i -eq 30 ]; then
+              echo "❌ Server failed to become healthy after 30 attempts"
+              exit 1
+            fi
+            sleep 2
           fi
-          echo "Attempt $i: Server not ready, waiting 2s..."
-          sleep 2
         done
 
         # Loop through batches
