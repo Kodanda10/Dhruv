@@ -1,0 +1,40 @@
+name: Manual Tweet Parsing Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of tweets to parse'
+        required: true
+        default: '5'
+
+jobs:
+  parse-tweets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        run: cd backend && npm install
+
+      - name: Start backend server
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OLLAMA_BASE_URL: 'http://127.0.0.1:11434' # Standard for self-hosted runners, adjust if needed
+        run: (cd backend && node app.js &)
+
+      - name: Wait for Server
+        run: sleep 5 # Give the server a moment to start
+
+      - name: Run parsing script
+        env:
+          API_BASE: http://127.0.0.1:3001
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node scripts/parse_tweets.js --batch=${{ github.event.inputs.batch_size }} --start=0
