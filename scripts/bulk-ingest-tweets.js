@@ -169,12 +169,41 @@ async function isTweetProcessed(tweetId) {
 }
 
 async function processTweet(tweet) {
-  // This would call the parsing pipeline API
-  // For now, we'll simulate processing
-  console.log(`  📝 Processing tweet ${tweet.id}: "${tweet.text?.substring(0, 50)}..."`);
+  // Call the three-layer consensus parsing API
+  const apiUrl = process.env.API_BASE || 'http://localhost:3000';
+  const endpoint = `${apiUrl}/api/parsing/three-layer-consensus`;
 
-  // Simulate API call delay
-  await sleep(100);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tweet_id: tweet.id || tweet.tweet_id,
+        tweet_text: tweet.text,
+        created_at: tweet.created_at,
+        author_handle: tweet.author_handle || tweet.user?.screen_name,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorData.error || 'Unknown error'}`);
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log(`  ✅ Processed tweet ${tweet.id || tweet.tweet_id}: "${tweet.text?.substring(0, 50)}..."`);
+      return result;
+    } else {
+      throw new Error(`Parsing failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error(`  ❌ Error processing tweet ${tweet.id || tweet.tweet_id}:`, error.message);
+    throw error;
+  }
 }
 
 function sleep(ms) {
