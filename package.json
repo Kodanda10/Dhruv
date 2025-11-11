@@ -1,5 +1,5 @@
 {
-  "name": "project-dhruv",
+  "name": "dhruv-dashboard",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -32,7 +32,7 @@
     "ops:commandview": "node scripts/ops/commandview-metrics.js",
     "ops:pipeline-health": "node scripts/ops/pipeline-health.js",
     "ops:watchdog": "node scripts/ops/parser-watchdog.js",
-    "ops:parse-all-pending": "node scripts/ops/parse-all-pending-tweets.js",
+    "ops:parse-all-pending": "node scripts/ops/parse-all-pending-tweets.cjs",
     "ops:run-full-pipeline": "bash scripts/ops/run-full-pipeline.sh",
     "ops:monitor": "node scripts/ops/pipeline-monitor.js",
     "ops:fix-all": "bash scripts/ops/fix-all-issues.sh",
