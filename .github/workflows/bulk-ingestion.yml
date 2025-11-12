@@ -50,6 +50,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Load tweets into database
+        env:
+          DATABASE_URL: "postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db"
+        run: |
+          echo "📥 Loading tweets from data files into database..."
+          node scripts/bulk-ingest-tweets.js --batch-size 100 --max-batches 50
+
       - name: Run bulk ingestion script
         env:
           DATABASE_URL: "postgresql://dhruv_user:dhruv_pass@localhost:5432/dhruv_db"
