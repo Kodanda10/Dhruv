@@ -68,6 +68,7 @@ console.log('');
 let totalProcessed = 0;
 let totalSkipped = 0;
 let totalFailed = 0;
+let totalDuplicates = 0;
 let batchesProcessed = 0;
 
 for (const file of tweetFiles) {
@@ -109,9 +110,10 @@ for (const file of tweetFiles) {
       totalProcessed += results.processed;
       totalSkipped += results.skipped;
       totalFailed += results.failed;
+      totalDuplicates += results.duplicates;
       batchesProcessed++;
 
-      console.log(`✅ Batch ${batchNumber} complete: ${results.processed} processed, ${results.skipped} skipped, ${results.failed} failed`);
+      console.log(`✅ Batch ${batchNumber} complete: ${results.processed} processed, ${results.skipped} skipped, ${results.failed} failed, ${results.duplicates} duplicates`);
 
       // Rate limiting pause
       if (i + batchSize < tweets.length) {
@@ -139,6 +141,7 @@ const summary = {
   totalProcessed,
   totalSkipped,
   totalFailed,
+  totalDuplicates,
   batchesProcessed,
   filesProcessed: tweetFiles.length,
   retryQueueSize: totalFailed // Tweets added to retry queue
@@ -155,21 +158,36 @@ console.log(`  - Tweets processed: ${totalProcessed}`);
 console.log(`  - Tweets skipped: ${totalSkipped}`);
 console.log(`  - Tweets failed: ${totalFailed}`);
 console.log(`  - Tweets re-queued: ${totalFailed}`);
+console.log(`  - Duplicates prevented: ${totalDuplicates}`);
 console.log(`📄 Summary saved to: ${summaryPath}`);
 if (totalFailed > 0) {
   console.log(`🔴 ${totalFailed} failed tweets logged to: ${FAILED_TWEETS_LOG}`);
   console.log(`🔄 ${totalFailed} tweets re-queued to: data/retry_tweets.jsonl`);
+}
+if (totalDuplicates > 0) {
+  console.log(`🚫 ${totalDuplicates} duplicate tweets were prevented from ingestion`);
 }
 
 async function processBatch(tweets, skipProcessed) {
   let processed = 0;
   let skipped = 0;
   let failed = 0;
+  let duplicates = 0;
 
   for (const tweet of tweets) {
     try {
+      const tweetId = tweet.id || tweet.tweet_id;
+
+      // Check for duplicates first
+      const duplicateCheck = await checkForDuplicates(tweetId);
+      if (duplicateCheck.isDuplicate) {
+        duplicates++;
+        console.log(`  ⏭️ Skipped duplicate tweet ${tweetId} (${duplicateCheck.reason})`);
+        continue;
+      }
+
       // Check if tweet was already processed (if skipProcessed is enabled)
-      if (skipProcessed && await isTweetProcessed(tweet.id)) {
+      if (skipProcessed && await isTweetProcessed(tweetId)) {
         skipped++;
         continue;
       }
@@ -177,27 +195,57 @@ async function processBatch(tweets, skipProcessed) {
       // Process tweet through parsing pipeline
       const result = await processTweet(tweet);
       if (result) {
-        processed++;
+        if (result.duplicate) {
+          duplicates++;
+          console.log(`  🚫 Duplicate tweet ${tweetId} detected by API - skipping`);
+        } else {
+          processed++;
+        }
       } else {
         failed++;
         fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
       }
 
     } catch (error) {
-      console.error(`❌ Error processing tweet ${tweet.id}:`, error.message);
+      console.error(`❌ Error processing tweet ${tweet.id || tweet.tweet_id}:`, error.message);
       failed++;
       fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
       // Continue with next tweet
     }
   }
 
-  return { processed, skipped, failed };
+  return { processed, skipped, failed, duplicates };
 }
 
-async function isTweetProcessed(tweetId) {
-  // This would check the database to see if the tweet has already been processed
-  // For now, we'll assume all tweets need processing
-  return false;
+async function checkForDuplicates(tweetId) {
+  // Check if tweet already exists in raw_tweets or parsed_events tables
+  const apiUrl = process.env.API_BASE || 'http://localhost:3000';
+
+  try {
+    // Check raw_tweets table
+    const rawTweetsResponse = await fetch(`${apiUrl}/api/tweets/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`);
+    if (rawTweetsResponse.ok) {
+      const rawTweetsResult = await rawTweetsResponse.json();
+      if (rawTweetsResult.exists) {
+        return { isDuplicate: true, reason: 'already in raw_tweets' };
+      }
+    }
+
+    // Check parsed_events table
+    const parsedEventsResponse = await fetch(`${apiUrl}/api/parsed-events/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`);
+    if (parsedEventsResponse.ok) {
+      const parsedEventsResult = await parsedEventsResponse.json();
+      if (parsedEventsResult.exists) {
+        return { isDuplicate: true, reason: 'already in parsed_events' };
+      }
+    }
+
+    return { isDuplicate: false };
+  } catch (error) {
+    console.warn(`⚠️ Could not check duplicates for tweet ${tweetId}:`, error.message);
+    // If we can't check, assume it's not a duplicate to be safe
+    return { isDuplicate: false };
+  }
 }
 
 async function processTweet(tweet) {
@@ -221,6 +269,14 @@ async function processTweet(tweet) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle duplicate detection at API level
+      if (response.status === 409 && errorData.duplicate) {
+        console.log(`  🚫 API detected duplicate tweet ${tweet.id || tweet.tweet_id} - skipping`);
+        // Return a special result indicating duplicate
+        return { duplicate: true, tweet_id: tweet.id || tweet.tweet_id };
+      }
+
       throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorData.error || 'Unknown error'}`);
     }
 

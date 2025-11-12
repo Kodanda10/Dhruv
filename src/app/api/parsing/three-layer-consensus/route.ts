@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ThreeLayerConsensusEngine } from '@/lib/parsing/three-layer-consensus-engine';
 import { RateLimiter } from '@/lib/parsing/rate-limiter';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +18,23 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Tweet text is required'
       }, { status: 400 });
+    }
+
+    // Check for duplicates in parsed_events table
+    if (tweet_id) {
+      const duplicateCheck = await pool.query(
+        'SELECT tweet_id FROM parsed_events WHERE tweet_id = $1 LIMIT 1',
+        [tweet_id]
+      );
+
+      if (duplicateCheck.rows.length > 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Tweet already parsed',
+          duplicate: true,
+          tweet_id: tweet_id
+        }, { status: 409 }); // 409 Conflict
+      }
     }
 
     // Initialize rate limiter and consensus engine

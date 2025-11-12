@@ -13,7 +13,6 @@ interface ConsensusConfig {
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   geminiModel?: string;
   ollamaModel?: string;
-  skipOllamaLayer?: boolean; // New flag to skip Ollama when not available
 }
 
 interface ParsingResult {
@@ -91,8 +90,8 @@ export class ThreeLayerConsensusEngine {
       errors.push(errorMsg);
     }
 
-    // Layer 2: Ollama AI (Secondary) - Skip if not available or disabled
-    if (errors.length === 0 && !this.config.skipOllamaLayer) {
+    // Layer 2: Ollama AI (Secondary) - MUST succeed
+    if (errors.length === 0) {
       try {
         console.log(`🔄 Executing Ollama layer for ${tweetId}`);
         await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limiting
@@ -104,8 +103,6 @@ export class ThreeLayerConsensusEngine {
         console.error(`❌ Ollama layer failed for ${tweetId}:`, errorMsg);
         errors.push(errorMsg);
       }
-    } else if (this.config.skipOllamaLayer) {
-      console.log(`⏭️ Skipping Ollama layer for ${tweetId} (disabled)`);
     }
 
     // Layer 3: Regex + FAISS validation - MUST succeed
@@ -341,8 +338,10 @@ export class ThreeLayerConsensusEngine {
     const consensusBonus = eventTypeAgreement >= this.config.consensusThreshold ? 0.15 : 0;
     const overallConfidence = Math.min(1.0, avgConfidence + consensusBonus);
 
-    // Determine if review is needed (force review for all items for now)
-    const needsReview = true;
+    // Determine if review is needed
+    const needsReview = overallConfidence < 0.65 ||
+                       eventTypeAgreement < this.config.consensusThreshold ||
+                       winningEventType === 'other';
 
     return {
       event_type: winningEventType,
@@ -504,12 +503,6 @@ Be accurate and specific.`;
         try {
           const searchResults = await this.searchFAISS(location);
 
-          // If no results (API unavailable), skip validation but don't fail
-          if (searchResults.length === 0) {
-            console.log(`  ⏭️ FAISS validation skipped for "${location}" (API unavailable)`);
-            continue;
-          }
-
           // Check if we got valid matches with reasonable similarity scores
           const validMatches = searchResults.filter(result =>
             result.score > 0.7 && // Similarity threshold
@@ -527,13 +520,12 @@ Be accurate and specific.`;
         }
       }
 
-      // If API was unavailable for all locations, return a neutral result
       const geoVerified = validatedLocations.length > 0;
 
       return {
         layer: 'faiss',
         event_type: 'geo_validation', // Not used in consensus, just for tracking
-        confidence: geoVerified ? 0.9 : 0.5, // Neutral confidence when API unavailable
+        confidence: geoVerified ? 0.9 : 0.1,
         locations: validatedLocations,
         people_mentioned: [],
         organizations: [],
@@ -546,7 +538,7 @@ Be accurate and specific.`;
       return {
         layer: 'faiss',
         event_type: 'geo_validation',
-        confidence: 0.5, // Neutral confidence on error
+        confidence: 0,
         locations: [],
         people_mentioned: [],
         organizations: [],
@@ -561,25 +553,14 @@ Be accurate and specific.`;
    * Search FAISS for location validation
    */
   private async searchFAISS(query: string): Promise<any[]> {
-    try {
-      const apiUrl = process.env.API_BASE || 'http://localhost:3000';
-      const response = await fetch(`${apiUrl}/api/labs/faiss/search?q=${encodeURIComponent(query)}&limit=3`);
+    const apiUrl = process.env.API_BASE || 'http://localhost:3000';
+    const response = await fetch(`${apiUrl}/api/labs/faiss/search?q=${encodeURIComponent(query)}&limit=3`);
 
-      if (!response.ok) {
-        // If API is not available (e.g., in CI), return empty results
-        if (response.status === 404 || response.status >= 500) {
-          console.warn(`FAISS API not available at ${apiUrl}, skipping validation`);
-          return [];
-        }
-        throw new Error(`FAISS API returned ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error: any) {
-      // If network error or API unavailable, skip FAISS validation
-      console.warn(`FAISS search failed, skipping validation: ${error.message}`);
-      return [];
+    if (!response.ok) {
+      throw new Error(`FAISS API returned ${response.status}`);
     }
+
+    return await response.json();
   }
 
   /**

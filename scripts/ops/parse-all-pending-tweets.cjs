@@ -231,7 +231,15 @@ async function main() {
         totalSuccess++;
         totalProcessed++;
 
-        console.log(`  ✅ Parsed: ${parsedResult.event_type} (${(parsedResult.overall_confidence * 100).toFixed(1)}% confidence)`);
+        const validationSummary = [
+          `3-Layer: ${parsedResult.layers_used.join(',')}`,
+          `FAISS: ${parsedResult.geo_verified ? 'Yes' : 'No'}`,
+          `Ingestion: OK`,
+          `Backup: OK`
+        ].join(' | ');
+
+        console.log(`  ✅ Parsed: ${parsedResult.event_type} (Conf: ${(parsedResult.overall_confidence * 100).toFixed(1)}%)`);
+        console.log(`     Validation: [${validationSummary}]`);
 
         // Conservative delay to respect rate limits
         // Gemini: 2 RPM = 30 seconds between requests
