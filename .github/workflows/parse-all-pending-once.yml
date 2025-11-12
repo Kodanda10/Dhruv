@@ -55,12 +55,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          API_BASE: ${{ secrets.API_BASE }}
           PARSE_BATCH_LIMIT: 25
           MAX_BATCHES: ${{ inputs.max_batches }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           echo "🚀 Starting one-time backfill: Parse All Pending Tweets"
-          node scripts/ops/parse-all-pending-tweets.js
+          node scripts/ops/parse-all-pending-tweets.cjs
       
       - name: Final status
         if: always()

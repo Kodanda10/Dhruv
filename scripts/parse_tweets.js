@@ -309,7 +309,7 @@ function buildConsensus(results, tweetText) {
     schemes_mentioned: agreedSchemes,
     overall_confidence: Math.min(1, 0.5 + (votedType.count / Math.max(1, votedType.total)) * 0.5),
     needs_review: !consensusOk,
-    review_status: consensusOk ? 'auto_accepted' : 'needs_human_review',
+    review_status: consensusOk ? 'approved' : 'pending',
     reasoning: `layers=${layers.join(',')}; typeVote=${JSON.stringify(votedType)}`
   };
 

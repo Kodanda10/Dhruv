@@ -140,7 +140,8 @@ const summary = {
   totalSkipped,
   totalFailed,
   batchesProcessed,
-  filesProcessed: tweetFiles.length
+  filesProcessed: tweetFiles.length,
+  retryQueueSize: totalFailed // Tweets added to retry queue
 };
 
 const summaryPath = path.join(__dirname, '..', 'bulk-ingestion-summary.json');
@@ -153,9 +154,11 @@ console.log(`  - Batches processed: ${batchesProcessed}`);
 console.log(`  - Tweets processed: ${totalProcessed}`);
 console.log(`  - Tweets skipped: ${totalSkipped}`);
 console.log(`  - Tweets failed: ${totalFailed}`);
+console.log(`  - Tweets re-queued: ${totalFailed}`);
 console.log(`📄 Summary saved to: ${summaryPath}`);
 if (totalFailed > 0) {
   console.log(`🔴 ${totalFailed} failed tweets logged to: ${FAILED_TWEETS_LOG}`);
+  console.log(`🔄 ${totalFailed} tweets re-queued to: data/retry_tweets.jsonl`);
 }
 
 async function processBatch(tweets, skipProcessed) {
@@ -231,6 +234,37 @@ async function processTweet(tweet) {
     }
   } catch (error) {
     console.error(`  ❌ Error in processTweet for ${tweet.id || tweet.tweet_id}:`, error.message);
+
+    // Extract specific failure reason from error message
+    let failureReason = 'unknown_error';
+    if (error.message.includes('PARSING_FAILED:')) {
+      const match = error.message.match(/PARSING_FAILED:\s*(.+)/);
+      if (match) {
+        failureReason = match[1].split(';')[0].trim(); // Take first error code
+      }
+    } else if (error.message.includes('API call failed')) {
+      failureReason = 'api_error';
+    }
+
+    // Log failed tweet with reason code
+    const failedTweetData = {
+      ...tweet,
+      failure_reason: failureReason,
+      failure_timestamp: new Date().toISOString(),
+      error_message: error.message
+    };
+
+    fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(failedTweetData) + '\n');
+
+    // Re-queue the tweet for later retry (append to a retry file)
+    const retryFile = path.join(__dirname, '..', 'data', 'retry_tweets.jsonl');
+    fs.appendFileSync(retryFile, JSON.stringify({
+      ...tweet,
+      retry_count: (tweet.retry_count || 0) + 1,
+      last_failure: failureReason,
+      queued_at: new Date().toISOString()
+    }) + '\n');
+
     return null; // Return null on failure
   }
 }

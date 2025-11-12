@@ -9,7 +9,7 @@ export function useLiveInvalidate() {
   useEffect(() => {
     const channel = redis.subscribe("events:review-updated");
 
-    channel.on("message", (channel, message) => {
+    channel.on("message", (message: any) => {
       const data = JSON.parse(message);
       if (data.include_in_analytics) {
         mutate(HOME_KEY);
@@ -19,7 +19,7 @@ export function useLiveInvalidate() {
     });
 
     return () => {
-      redis.unsubscribe("events:review-updated");
+      channel.unsubscribe();
     };
   }, []);
 }

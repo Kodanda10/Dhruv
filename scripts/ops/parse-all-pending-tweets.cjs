@@ -28,6 +28,20 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
+async function checkOllamaAvailability() {
+  try {
+    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    const response = await fetch(`${ollamaBaseUrl}/api/tags`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000) // 5 second timeout
+    });
+    return response.ok;
+  } catch (error) {
+    console.log(`Ollama check failed: ${error.message}`);
+    return false;
+  }
+}
+
 async function getPendingTweetsCount() {
   const result = await pool.query(`
     SELECT COUNT(*) as count
@@ -72,8 +86,6 @@ async function updateTweetStatus(tweetId, status) {
 }
 
 async function saveParsedEvent(parsedResult) {
-  const { getEventTypeInHindi } = await import('../../src/lib/i18n/event-types-hi.ts');
-
   // First delete any existing parsed event for this tweet
   await pool.query(`
     DELETE FROM parsed_events WHERE tweet_id = $1
@@ -90,7 +102,7 @@ async function saveParsedEvent(parsedResult) {
   `, [
     parsedResult.tweet_id,
     parsedResult.event_type,
-    parsedResult.event_type_hi || getEventTypeInHindi(parsedResult.event_type),
+    parsedResult.event_type_hi, // Provided by the engine
     parsedResult.event_type_confidence,
     parsedResult.event_date,
     parsedResult.date_confidence,
@@ -109,12 +121,17 @@ async function saveParsedEvent(parsedResult) {
 async function initializeParsingEngine() {
   const { RateLimiter } = await import('../../src/lib/parsing/rate-limiter.ts');
   const { ThreeLayerConsensusEngine } = await import('../../src/lib/parsing/three-layer-consensus-engine.ts');
+  
+  // Check if Ollama is available (for CI/CD environments)
+  const ollamaAvailable = await checkOllamaAvailability();
+  console.log(`🔍 Ollama availability: ${ollamaAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
+  
   // Very conservative rate limits to respect API limits
   // Gemini free tier: ~2-3 requests per minute
   // Ollama local: can handle more, but be conservative
   const rateLimiter = new RateLimiter({
     geminiRPM: 2, // Very conservative: 2 RPM = 1 request every 30 seconds
-    ollamaRPM: 30, // Conservative: 30 RPM = 1 request every 2 seconds
+    ollamaRPM: ollamaAvailable ? 30 : 0, // Disable Ollama if not available
     maxRetries: 3,
     backoffMultiplier: 2,
     initialBackoffMs: 5000,
@@ -122,11 +139,12 @@ async function initializeParsingEngine() {
 
   const engine = new ThreeLayerConsensusEngine({
     rateLimiter,
-    consensusThreshold: 0.6,
+    consensusThreshold: ollamaAvailable ? 0.6 : 0.5, // Lower threshold if Ollama unavailable
     enableFallback: true,
     logLevel: 'info',
     geminiModel: 'gemini-1.5-flash',
-    ollamaModel: 'gemma2:2b'
+    ollamaModel: ollamaAvailable ? 'gemma2:2b' : undefined, // Don't set if unavailable
+    skipOllamaLayer: !ollamaAvailable, // Custom flag to skip Ollama
   });
 
   return engine;

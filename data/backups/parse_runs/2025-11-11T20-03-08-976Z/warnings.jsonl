@@ -1,0 +1,1 @@
+{"tweetId":"1890378865639407799","warning":"Consensus not satisfied (require_all=true)","merged":{"event_type":null,"locations":[],"schemes_mentioned":[],"overall_confidence":0.5,"needs_review":true,"review_status":"pending","reasoning":"layers=gemini,ollama,faiss; typeVote={\"value\":null,\"count\":0,\"total\":0}"}}

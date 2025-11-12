@@ -13,6 +13,7 @@ interface ConsensusConfig {
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   geminiModel?: string;
   ollamaModel?: string;
+  skipOllamaLayer?: boolean; // New flag to skip Ollama when not available
 }
 
 interface ParsingResult {
@@ -33,10 +34,11 @@ interface ParsingResult {
   consensus_score: number;
   reasoning?: string;
   error_details?: string;
+  geo_verified?: boolean; // New field for FAISS geo validation
 }
 
 interface LayerResult {
-  layer: 'gemini' | 'ollama' | 'regex';
+  layer: 'gemini' | 'ollama' | 'regex' | 'faiss';
   event_type: string;
   confidence: number;
   locations: string[];
@@ -44,6 +46,7 @@ interface LayerResult {
   organizations: string[];
   schemes_mentioned: string[];
   error?: string;
+  geo_verified?: boolean;
 }
 
 export class ThreeLayerConsensusEngine {
@@ -58,7 +61,8 @@ export class ThreeLayerConsensusEngine {
   }
 
   /**
-   * Parse a tweet using three-layer consensus
+   * Parse a tweet using three-layer consensus with strict requirements
+   * ALL layers must succeed for the tweet to be accepted
    */
   async parseTweet(
     tweetText: string,
@@ -66,56 +70,95 @@ export class ThreeLayerConsensusEngine {
     tweetDate: Date
   ): Promise<ParsingResult> {
     const startTime = Date.now();
-    console.log(`Starting three-layer parsing for tweet ${tweetId}`);
+    console.log(`Starting strict three-layer parsing for tweet ${tweetId}`);
 
     if (!tweetText || !tweetText.trim()) {
-      return this.createEmptyResult(tweetId);
+      throw new Error('Empty or invalid tweet text');
     }
 
-    // Execute layers sequentially to respect rate limits
-    // Gemini first (most accurate), then Ollama, then regex fallback
     const layerResults: LayerResult[] = [];
-    
-    // Try Gemini first (with rate limiting)
+    const errors: string[] = [];
+
+    // Layer 1: Gemini AI (Primary) - MUST succeed
     try {
+      console.log(`🔄 Executing Gemini layer for ${tweetId}`);
       const geminiResult = await this.callGeminiLayer(tweetText, tweetId);
       layerResults.push({ ...geminiResult, layer: 'gemini' });
+      console.log(`✅ Gemini layer succeeded for ${tweetId}`);
     } catch (err: any) {
-      console.warn(`Gemini layer failed for ${tweetId}:`, err.message);
-      // Do not add a fallback result; let other layers handle it.
+      const errorMsg = `gemini_timeout: ${err.message}`;
+      console.error(`❌ Gemini layer failed for ${tweetId}:`, errorMsg);
+      errors.push(errorMsg);
     }
-    
-    // Small delay before Ollama to avoid hitting rate limits
-    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-    
-    // Try Ollama second (with rate limiting)
-    try {
-      const ollamaResult = await this.callOllamaLayer(tweetText, tweetId);
-      layerResults.push({ ...ollamaResult, layer: 'ollama' });
-    } catch (err: any) {
-      console.warn(`Ollama layer failed for ${tweetId}:`, err.message);
-      // Do not add a fallback result; let other layers handle it.
-    }
-    
-    // Regex is always available (no rate limits)
-    layerResults.push({ ...this.parseWithRegex(tweetText), layer: 'regex' });
-    
-    // Use the layerResults directly (already have layer property set)
-    const successfulResults: LayerResult[] = layerResults;
 
-    // Apply consensus voting
-    const consensusResult = this.applyConsensusVoting(successfulResults, tweetText, tweetDate);
+    // Layer 2: Ollama AI (Secondary) - Skip if not available or disabled
+    if (errors.length === 0 && !this.config.skipOllamaLayer) {
+      try {
+        console.log(`🔄 Executing Ollama layer for ${tweetId}`);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limiting
+        const ollamaResult = await this.callOllamaLayer(tweetText, tweetId);
+        layerResults.push({ ...ollamaResult, layer: 'ollama' });
+        console.log(`✅ Ollama layer succeeded for ${tweetId}`);
+      } catch (err: any) {
+        const errorMsg = `ollama_conflict: ${err.message}`;
+        console.error(`❌ Ollama layer failed for ${tweetId}:`, errorMsg);
+        errors.push(errorMsg);
+      }
+    } else if (this.config.skipOllamaLayer) {
+      console.log(`⏭️ Skipping Ollama layer for ${tweetId} (disabled)`);
+    }
+
+    // Layer 3: Regex + FAISS validation - MUST succeed
+    if (errors.length === 0) {
+      try {
+        console.log(`🔄 Executing Regex+FAISS layer for ${tweetId}`);
+        const regexResult = this.parseWithRegex(tweetText);
+        layerResults.push({ ...regexResult, layer: 'regex' });
+
+        // Check if regex found locations - if so, FAISS validation is required
+        if (regexResult.locations.length > 0) {
+          console.log(`🔄 Executing FAISS geo validation for ${tweetId} (locations found: ${regexResult.locations.join(', ')})`);
+          const faissResult = await this.validateWithFAISS(regexResult.locations, tweetId);
+          layerResults.push(faissResult);
+
+          if (!faissResult.geo_verified) {
+            throw new Error(`faiss_no_match: No valid geospatial matches found for locations: ${regexResult.locations.join(', ')}`);
+          }
+          console.log(`✅ FAISS geo validation succeeded for ${tweetId}`);
+        } else {
+          console.log(`⏭️ Skipping FAISS validation for ${tweetId} (no locations found)`);
+        }
+
+        console.log(`✅ Regex layer succeeded for ${tweetId}`);
+      } catch (err: any) {
+        const errorMsg = err.message.startsWith('faiss_no_match') ? err.message : `regex_mismatch: ${err.message}`;
+        console.error(`❌ Regex/FAISS layer failed for ${tweetId}:`, errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+
+    // If any layer failed, throw an error with all failure reasons
+    if (errors.length > 0) {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      console.log(`❌ Strict three-layer parsing failed for ${tweetId} in ${duration}ms. Errors: ${errors.join('; ')}`);
+      throw new Error(`PARSING_FAILED: ${errors.join('; ')}`);
+    }
+
+    // All layers succeeded - apply consensus voting
+    const consensusResult = this.applyConsensusVoting(layerResults, tweetText, tweetDate);
 
     const endTime = Date.now();
     const duration = endTime - startTime;
 
-    console.log(`Three-layer parsing completed for ${tweetId} in ${duration}ms: ${consensusResult.event_type} (confidence: ${(consensusResult.overall_confidence * 100).toFixed(1)}%)`);
+    console.log(`✅ Strict three-layer parsing completed for ${tweetId} in ${duration}ms: ${consensusResult.event_type} (confidence: ${(consensusResult.overall_confidence * 100).toFixed(1)}%)`);
 
     return {
       tweet_id: tweetId,
       ...consensusResult,
-      parsed_by: 'three-layer-consensus',
-      layers_used: successfulResults.map(r => r.layer)
+      parsed_by: 'three-layer-consensus-strict',
+      layers_used: layerResults.map(r => r.layer),
+      geo_verified: layerResults.some(r => r.layer === 'faiss' && r.geo_verified)
     };
   }
 
@@ -232,8 +275,8 @@ export class ThreeLayerConsensusEngine {
     let totalWeight = 0;
     let workingLayers = 0;
 
-    // Weight layers (Gemini > Ollama > Regex) and count working layers
-    const layerWeights = { gemini: 3, ollama: 2, regex: 1 };
+    // Weight layers (Gemini > Ollama > Regex > FAISS) and count working layers
+    const layerWeights = { gemini: 3, ollama: 2, regex: 1, faiss: 1 };
 
     layerResults.forEach(result => {
       const weight = layerWeights[result.layer];
@@ -298,10 +341,8 @@ export class ThreeLayerConsensusEngine {
     const consensusBonus = eventTypeAgreement >= this.config.consensusThreshold ? 0.15 : 0;
     const overallConfidence = Math.min(1.0, avgConfidence + consensusBonus);
 
-    // Determine if review is needed
-    const needsReview = overallConfidence < 0.65 ||
-                       eventTypeAgreement < this.config.consensusThreshold ||
-                       winningEventType === 'other';
+    // Determine if review is needed (force review for all items for now)
+    const needsReview = true;
 
     return {
       event_type: winningEventType,
@@ -419,9 +460,9 @@ Be accurate and specific.`;
         organizations: Array.isArray(parsed.organizations) ? parsed.organizations : [],
         schemes_mentioned: Array.isArray(parsed.schemes_mentioned) ? parsed.schemes_mentioned : []
       };
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Failed to parse Gemini response:', response);
-      return this.fallbackRegexResult(tweetText, 'gemini');
+      throw new Error(`Gemini parsing failed: ${error.message}`);
     }
   }
 
@@ -444,23 +485,101 @@ Be accurate and specific.`;
         organizations: Array.isArray(parsed.organizations) ? parsed.organizations : [],
         schemes_mentioned: Array.isArray(parsed.schemes_mentioned) ? parsed.schemes_mentioned : []
       };
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Failed to parse Ollama response:', response);
-      return this.fallbackRegexResult(tweetText, 'ollama');
+      throw new Error(`Ollama parsing failed: ${error.message}`);
     }
   }
 
   /**
-   * Fallback regex result when AI parsing fails
+   * Validate locations using FAISS geo embeddings
+   * Only called when regex layer finds locations
    */
-  private fallbackRegexResult(tweetText: string, layer: 'gemini' | 'ollama'): LayerResult {
-    const regexResult = this.parseWithRegex(tweetText);
-    return {
-      ...regexResult,
-      layer: layer,
-      confidence: regexResult.confidence * 0.5, // Reduce confidence for fallback
-      error: `AI layer ${layer} failed, used regex fallback.`
-    };
+  private async validateWithFAISS(locations: string[], tweetId: string): Promise<LayerResult> {
+    try {
+      // Call FAISS search API for each location
+      const validatedLocations: string[] = [];
+
+      for (const location of locations) {
+        try {
+          const searchResults = await this.searchFAISS(location);
+
+          // If no results (API unavailable), skip validation but don't fail
+          if (searchResults.length === 0) {
+            console.log(`  ⏭️ FAISS validation skipped for "${location}" (API unavailable)`);
+            continue;
+          }
+
+          // Check if we got valid matches with reasonable similarity scores
+          const validMatches = searchResults.filter(result =>
+            result.score > 0.7 && // Similarity threshold
+            result.match_type === 'exact' || result.match_type === 'fuzzy'
+          );
+
+          if (validMatches.length > 0) {
+            validatedLocations.push(location);
+            console.log(`  ✅ FAISS validated location "${location}" for tweet ${tweetId}`);
+          } else {
+            console.warn(`  ⚠️ FAISS found no valid matches for "${location}" in tweet ${tweetId}`);
+          }
+        } catch (searchError: any) {
+          console.warn(`  ⚠️ FAISS search failed for "${location}" in tweet ${tweetId}:`, searchError.message);
+        }
+      }
+
+      // If API was unavailable for all locations, return a neutral result
+      const geoVerified = validatedLocations.length > 0;
+
+      return {
+        layer: 'faiss',
+        event_type: 'geo_validation', // Not used in consensus, just for tracking
+        confidence: geoVerified ? 0.9 : 0.5, // Neutral confidence when API unavailable
+        locations: validatedLocations,
+        people_mentioned: [],
+        organizations: [],
+        schemes_mentioned: [],
+        geo_verified: geoVerified
+      };
+
+    } catch (error: any) {
+      console.error(`FAISS validation failed for tweet ${tweetId}:`, error.message);
+      return {
+        layer: 'faiss',
+        event_type: 'geo_validation',
+        confidence: 0.5, // Neutral confidence on error
+        locations: [],
+        people_mentioned: [],
+        organizations: [],
+        schemes_mentioned: [],
+        geo_verified: false,
+        error: `FAISS validation error: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Search FAISS for location validation
+   */
+  private async searchFAISS(query: string): Promise<any[]> {
+    try {
+      const apiUrl = process.env.API_BASE || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/labs/faiss/search?q=${encodeURIComponent(query)}&limit=3`);
+
+      if (!response.ok) {
+        // If API is not available (e.g., in CI), return empty results
+        if (response.status === 404 || response.status >= 500) {
+          console.warn(`FAISS API not available at ${apiUrl}, skipping validation`);
+          return [];
+        }
+        throw new Error(`FAISS API returned ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      // If network error or API unavailable, skip FAISS validation
+      console.warn(`FAISS search failed, skipping validation: ${error.message}`);
+      return [];
+    }
   }
 
   /**

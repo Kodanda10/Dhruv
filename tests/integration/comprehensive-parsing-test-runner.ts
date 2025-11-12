@@ -302,7 +302,7 @@ export class ComprehensiveParsingTestRunner {
    */
   async runComprehensiveTests(): Promise<TestReport> {
     console.log('🚀 Starting Comprehensive Parsing Test Suite (1500+ scenarios)');
-    console.log('=' * 80);
+    console.log('='.repeat(80));
 
     this.startTime = Date.now();
     const testCases = await this.loadTestCases();
@@ -364,7 +364,8 @@ export class ComprehensiveParsingTestRunner {
         schemes: this.calculateAccuracy(result.schemes_mentioned || [], testCase.expectedSchemes || [])
       };
 
-      const overallAccuracy = Object.values(accuracy).reduce((sum, acc) => sum + acc, 0) / Object.values(accuracy).length;
+      const accuracyValues = [accuracy.eventType ? 1 : 0, accuracy.locations, accuracy.people, accuracy.organizations, accuracy.schemes];
+      const overallAccuracy = accuracyValues.reduce((sum, acc) => sum + acc, 0) / accuracyValues.length;
       const success = overallAccuracy > 0.6; // 60% accuracy threshold
 
       return {
@@ -442,7 +443,11 @@ export class ComprehensiveParsingTestRunner {
       const categoryResults = this.testResults.filter(r => r.testCase.category === category);
       if (categoryResults.length > 0) {
         const passed = categoryResults.filter(r => r.success).length;
-        const accuracy = categoryResults.reduce((sum, r) => sum + (Object.values(r.accuracy).reduce((s, a) => s + a, 0) / Object.values(r.accuracy).length), 0) / categoryResults.length;
+        const accuracyValues = categoryResults.map(r => {
+          const acc = r.accuracy;
+          return [acc.eventType ? 1 : 0, acc.locations, acc.people, acc.organizations, acc.schemes];
+        });
+        const accuracy = accuracyValues.reduce((sum, values) => sum + (values.reduce((s, a) => s + a, 0) / values.length), 0) / categoryResults.length;
 
         categoryBreakdown[category] = {
           total: categoryResults.length,
@@ -494,4 +499,4 @@ export class ComprehensiveParsingTestRunner {
 }
 
 // Export for use in tests
-export { ComprehensiveParsingTestRunner, TestCase, TestResult, TestReport };
+export type { TestCase, TestResult, TestReport };

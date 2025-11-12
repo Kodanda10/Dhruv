@@ -1,4 +1,4 @@
-import { AnalyticsData } from '@/lib/analytics/data-source';
+import { AnalyticsData } from '@/lib/types';
 
 export const sampleAnalyticsData: AnalyticsData = {
   total_tweets: 2504,
@@ -40,6 +40,8 @@ export const sampleAnalyticsData: AnalyticsData = {
   },
   raigarh_section: {
     coverage_percentage: 36,
+    total_villages: 1200,
+    visited_villages: 432,
     local_events: [
       {
         date: '2025-10-09',

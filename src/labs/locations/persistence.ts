@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import db from '@/lib/db';
 import { FinalChoice, LocationResolveInput } from './types';
 import { normalizePlaceName, buildPlaceKey } from './normalize';
 
