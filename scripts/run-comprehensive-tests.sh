@@ -68,6 +68,7 @@ fi
 echo
 echo "🎯 Starting Comprehensive Test Suite..."
 echo "========================================"
+echo "   • Suite file: archive/tests/integration/comprehensive-1500-scenarios.legacy.test.ts"
 
 # Set environment variables for conservative rate limiting
 export GEMINI_RPM=5
@@ -81,8 +82,9 @@ echo
 
 START_TIME=$(date +%s)
 
-# Run Jest tests with comprehensive suite
-if npm test -- --testPathPattern=comprehensive-1500-scenarios.test.ts --verbose --runInBand --detectOpenHandles; then
+# Run archived Vitest suite
+LEGACY_SUITE="archive/tests/integration/comprehensive-1500-scenarios.legacy.test.ts"
+if npm test -- "$LEGACY_SUITE"; then
     TEST_EXIT_CODE=0
     echo -e "\n${GREEN}✅ Test suite completed successfully${NC}"
 else

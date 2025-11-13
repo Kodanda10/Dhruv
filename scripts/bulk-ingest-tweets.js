@@ -1,13 +1,24 @@
 #!/usr/bin/env node
 
 /**
- * Bulk Tweet Ingestion Script
+ * Fixture-aware bulk ingestion CLI with FAISS/Milvus validation hooks.
  *
- * Processes tweets in batches for bulk ingestion into the review system.
- * All tweets are sent to manual review regardless of parsing consensus.
+ * Features:
+ *  - Health checks before hitting ingestion APIs (skip with --skip-health-check)
+ *  - Dry-run mode for fixtures (no API writes, still exercises batching)
+ *  - Concurrency limiting so FAISS/Gemini/Ollama usage stays predictable
+ *  - .taskmaster/backups snapshots for every batch + failure log
  *
- * Usage:
- *   node scripts/bulk-ingest-tweets.js --batch-size 50 --max-batches 10 --skip-processed true
+ * Supported flags:
+ *   --batch-size <number>        (default: 25)
+ *   --max-batches <number>       (default: 0 => unlimited)
+ *   --concurrency <number>       (default: 4)
+ *   --api-base <url>             (default: env.API_BASE or http://localhost:3000)
+ *   --source-file <path>         (default: autodetect parsed_tweets*.json in data/)
+ *   --dry-run                    (default: false)
+ *   --skip-health-check          (default: false)
+ *   --skip-processed             (default: true; relies on duplicate API)
+ *   --allow-vector-failures      (default: false; skip FAISS/Milvus health guardrail)
  */
 
 import fs from 'fs';
@@ -17,314 +28,388 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Parse command line arguments
-const args = process.argv.slice(2);
-const options = {};
+const BACKUP_DIR = path.join(__dirname, '..', '.taskmaster', 'backups');
+const FAILED_TWEETS_LOG = path.join(BACKUP_DIR, 'failed_tweets.jsonl');
+const SUMMARY_PATH = path.join(BACKUP_DIR, 'bulk-ingestion-summary.json');
+const RETRY_QUEUE_PATH = path.join(__dirname, '..', 'data', 'retry_tweets.jsonl');
 
-for (let i = 0; i < args.length; i++) {
-  const arg = args[i];
-  if (arg.startsWith('--')) {
-    const key = arg.slice(2);
-    const value = args[i + 1];
-    options[key] = value;
-    i++; // Skip next arg as it's the value
+const cliOptions = parseArgs(process.argv.slice(2));
+const config = {
+  batchSize: parseInt(cliOptions['batch-size'] ?? '25', 10),
+  maxBatches: parseInt(cliOptions['max-batches'] ?? '0', 10),
+  concurrency: Math.max(1, parseInt(cliOptions['concurrency'] ?? '4', 10)),
+  apiBase: cliOptions['api-base'] ?? process.env.API_BASE ?? 'http://localhost:3000',
+  sourceFile: cliOptions['source-file'],
+  dryRun: parseBoolean(cliOptions['dry-run']),
+  skipHealthCheck: parseBoolean(cliOptions['skip-health-check']),
+  skipProcessed: parseBoolean(cliOptions['skip-processed'], true),
+  allowVectorFailures: parseBoolean(cliOptions['allow-vector-failures']),
+};
+
+run()
+  .catch(error => {
+    console.error('❌ Bulk ingestion failed:', error.message);
+    process.exit(1);
+  });
+
+async function run() {
+  ensureBackupFolder();
+  logConfig();
+
+  if (!config.skipHealthCheck && !config.dryRun) {
+    await assertServicesHealthy(config.apiBase);
   }
-}
 
-const batchSize = parseInt(options['batch-size'] || '50');
-const maxBatches = parseInt(options['max-batches'] || '0'); // 0 = unlimited
-const skipProcessed = options['skip-processed'] !== 'false';
+  if (!config.allowVectorFailures) {
+    await assertVectorSearchHealthy(config.apiBase);
+  }
 
-const FAILED_TWEETS_LOG = path.join(__dirname, '..', 'failed_tweets.jsonl');
+  const sourceFiles = resolveSourceFiles(config.sourceFile);
+  if (sourceFiles.length === 0) {
+    console.error('❌ No parsed tweet fixtures found. Provide --source-file or add files to data/.');
+    process.exit(1);
+  }
 
-console.log('🚀 Starting Bulk Tweet Ingestion');
-console.log(`📊 Batch Size: ${batchSize}`);
-console.log(`🔢 Max Batches: ${maxBatches === 0 ? 'unlimited' : maxBatches}`);
-console.log(`⏭️  Skip Processed: ${skipProcessed}`);
-console.log('');
+  const summary = {
+    timestamp: new Date().toISOString(),
+    ...config,
+    batchesProcessed: 0,
+    totalProcessed: 0,
+    totalSkipped: 0,
+    totalFailed: 0,
+    totalDuplicates: 0,
+    filesProcessed: 0,
+  };
 
-// Check if data directory exists
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) {
-  console.error('❌ Data directory not found:', dataDir);
-  process.exit(1);
-}
+  for (const filePath of sourceFiles) {
+    const tweets = loadTweetFile(filePath);
+    if (tweets.length === 0) continue;
 
-// Find tweet data files
-const tweetFiles = fs.readdirSync(dataDir)
-  .filter(file => (file.startsWith('parsed_tweets') || file.startsWith('parsed_events')) && file.includes('.json'))
-  .sort();
+    summary.filesProcessed += 1;
+    console.log(`\n📁 Source: ${path.relative(process.cwd(), filePath)} (${tweets.length} tweets)`);
 
-if (tweetFiles.length === 0) {
-  console.error('❌ No parsed tweet files found in data directory');
-  process.exit(1);
-}
-
-console.log(`📁 Found ${tweetFiles.length} tweet data files:`);
-tweetFiles.forEach(file => console.log(`  - ${file}`));
-console.log('');
-
-// Process each file
-let totalProcessed = 0;
-let totalSkipped = 0;
-let totalFailed = 0;
-let totalDuplicates = 0;
-let batchesProcessed = 0;
-
-for (const file of tweetFiles) {
-  const filePath = path.join(dataDir, file);
-  console.log(`📖 Processing file: ${file}`);
-
-  try {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    let tweets;
-
-    if (file.endsWith('.jsonl')) {
-      tweets = fileContent.split('\n').filter(line => line.trim() !== '').map(line => JSON.parse(line));
-    } else {
-      const data = JSON.parse(fileContent);
-      tweets = data.tweets || data;
-    }
-
-    if (!Array.isArray(tweets)) {
-      console.error(`❌ Invalid tweet data format in ${file}`);
-      continue;
-    }
-
-    console.log(`📊 Found ${tweets.length} tweets in ${file}`);
-
-    // Process tweets in batches
-    for (let i = 0; i < tweets.length; i += batchSize) {
-      if (maxBatches > 0 && batchesProcessed >= maxBatches) {
-        console.log(`🛑 Reached maximum batch limit (${maxBatches})`);
+    for (const batch of chunk(tweets, config.batchSize)) {
+      if (config.maxBatches > 0 && summary.batchesProcessed >= config.maxBatches) {
+        console.log('🛑 Max batches reached. Stopping early.');
         break;
       }
 
-      const batch = tweets.slice(i, i + batchSize);
-      const batchNumber = batchesProcessed + 1;
-      console.log(`🔄 Processing batch ${batchNumber} (tweets ${i + 1}-${Math.min(i + batchSize, tweets.length)} of ${tweets.length})`);
+      const ordinal = summary.batchesProcessed + 1;
+      console.log(`\n🔄 Batch ${ordinal} (${batch.length} tweets)`);
+      writeBatchBackup(batch, { ordinal, source: filePath });
 
-      // Process batch
-      const results = await processBatch(batch, skipProcessed);
+      const results = await processBatch(batch, { ...config, source: filePath });
+      summary.totalProcessed += results.processed;
+      summary.totalSkipped += results.skipped;
+      summary.totalFailed += results.failed;
+      summary.totalDuplicates += results.duplicates;
+      summary.batchesProcessed += 1;
 
-      totalProcessed += results.processed;
-      totalSkipped += results.skipped;
-      totalFailed += results.failed;
-      totalDuplicates += results.duplicates;
-      batchesProcessed++;
+      console.log(`✅ Batch ${ordinal} finished (processed=${results.processed}, duplicates=${results.duplicates}, skipped=${results.skipped}, failed=${results.failed})`);
 
-      console.log(`✅ Batch ${batchNumber} complete: ${results.processed} processed, ${results.skipped} skipped, ${results.failed} failed, ${results.duplicates} duplicates`);
-
-      // Rate limiting pause
-      if (i + batchSize < tweets.length) {
-        console.log('⏳ Pausing for rate limiting...');
-        await sleep(2000); // 2 second pause between batches
+      if (config.maxBatches > 0 && summary.batchesProcessed >= config.maxBatches) {
+        break;
       }
     }
-
-  } catch (error) {
-    console.error(`❌ Error processing ${file}:`, error.message);
   }
 
-  // Check if we've hit the batch limit
-  if (maxBatches > 0 && batchesProcessed >= maxBatches) {
-    break;
-  }
+  fs.writeFileSync(SUMMARY_PATH, JSON.stringify(summary, null, 2));
+  console.log('\n🎉 Bulk ingestion complete.');
+  console.log(`📄 Summary written to ${path.relative(process.cwd(), SUMMARY_PATH)}`);
+  console.log(`📊 Totals: processed=${summary.totalProcessed}, duplicates=${summary.totalDuplicates}, skipped=${summary.totalSkipped}, failed=${summary.totalFailed}`);
 }
 
-// Generate summary report
-const summary = {
-  timestamp: new Date().toISOString(),
-  batchSize,
-  maxBatches: maxBatches === 0 ? 'unlimited' : maxBatches,
-  skipProcessed,
-  totalProcessed,
-  totalSkipped,
-  totalFailed,
-  totalDuplicates,
-  batchesProcessed,
-  filesProcessed: tweetFiles.length,
-  retryQueueSize: totalFailed // Tweets added to retry queue
-};
+function parseArgs(argv) {
+  const options = {};
 
-const summaryPath = path.join(__dirname, '..', 'bulk-ingestion-summary.json');
-fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
+  for (let i = 0; i < argv.length; i++) {
+    const token = argv[i];
+    if (!token.startsWith('--')) continue;
 
-console.log('\n🎉 Bulk ingestion complete!');
-console.log(`📊 Summary:`);
-console.log(`  - Files processed: ${tweetFiles.length}`);
-console.log(`  - Batches processed: ${batchesProcessed}`);
-console.log(`  - Tweets processed: ${totalProcessed}`);
-console.log(`  - Tweets skipped: ${totalSkipped}`);
-console.log(`  - Tweets failed: ${totalFailed}`);
-console.log(`  - Tweets re-queued: ${totalFailed}`);
-console.log(`  - Duplicates prevented: ${totalDuplicates}`);
-console.log(`📄 Summary saved to: ${summaryPath}`);
-if (totalFailed > 0) {
-  console.log(`🔴 ${totalFailed} failed tweets logged to: ${FAILED_TWEETS_LOG}`);
-  console.log(`🔄 ${totalFailed} tweets re-queued to: data/retry_tweets.jsonl`);
-}
-if (totalDuplicates > 0) {
-  console.log(`🚫 ${totalDuplicates} duplicate tweets were prevented from ingestion`);
-}
-
-async function processBatch(tweets, skipProcessed) {
-  let processed = 0;
-  let skipped = 0;
-  let failed = 0;
-  let duplicates = 0;
-
-  for (const tweet of tweets) {
-    try {
-      const tweetId = tweet.id || tweet.tweet_id;
-
-      // Check for duplicates first
-      const duplicateCheck = await checkForDuplicates(tweetId);
-      if (duplicateCheck.isDuplicate) {
-        duplicates++;
-        console.log(`  ⏭️ Skipped duplicate tweet ${tweetId} (${duplicateCheck.reason})`);
-        continue;
-      }
-
-      // Check if tweet was already processed (if skipProcessed is enabled)
-      if (skipProcessed && await isTweetProcessed(tweetId)) {
-        skipped++;
-        continue;
-      }
-
-      // Process tweet through parsing pipeline
-      const result = await processTweet(tweet);
-      if (result) {
-        if (result.duplicate) {
-          duplicates++;
-          console.log(`  🚫 Duplicate tweet ${tweetId} detected by API - skipping`);
-        } else {
-          processed++;
-        }
-      } else {
-        failed++;
-        fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
-      }
-
-    } catch (error) {
-      console.error(`❌ Error processing tweet ${tweet.id || tweet.tweet_id}:`, error.message);
-      failed++;
-      fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(tweet) + '\n');
-      // Continue with next tweet
+    const key = token.slice(2);
+    const next = argv[i + 1];
+    if (!next || next.startsWith('--')) {
+      options[key] = true;
+    } else {
+      options[key] = next;
+      i++;
     }
   }
 
-  return { processed, skipped, failed, duplicates };
+  return options;
 }
 
-async function checkForDuplicates(tweetId) {
-  // Check if tweet already exists in raw_tweets or parsed_events tables
-  const apiUrl = process.env.API_BASE || 'http://localhost:3000';
+function parseBoolean(value, defaultValue = false) {
+  if (value === undefined) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  const normalized = String(value).toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === '';
+}
 
+function ensureBackupFolder() {
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+}
+
+function logConfig() {
+  console.log('🚀 Bulk Tweet Ingestion');
+  console.log(`📊 Batch size: ${config.batchSize}`);
+  console.log(`🔢 Max batches: ${config.maxBatches === 0 ? 'unlimited' : config.maxBatches}`);
+  console.log(`⚙️  Concurrency: ${config.concurrency}`);
+  console.log(`🌐 API base: ${config.apiBase}`);
+  console.log(`🧪 Dry run: ${config.dryRun ? 'yes' : 'no'}`);
+  console.log(`🩺 Health check: ${config.skipHealthCheck ? 'skipped' : 'enabled'}`);
+  console.log(`🛰️  Vector guardrail: ${config.allowVectorFailures ? 'disabled' : 'enabled'}`);
+  if (config.sourceFile) {
+    console.log(`📦 Source file: ${config.sourceFile}`);
+  }
+  console.log('');
+}
+
+async function assertServicesHealthy(apiBase) {
+  const healthUrl = `${apiBase.replace(/\/$/, '')}/api/health`;
+  console.log(`🔍 Health check: ${healthUrl}`);
+  const response = await fetch(healthUrl);
+  if (!response.ok) {
+    throw new Error(`Health check failed with status ${response.status}`);
+  }
+  const payload = await response.json().catch(() => ({}));
+  if (payload.status !== 'ok') {
+    throw new Error(`Health check responded with payload: ${JSON.stringify(payload)}`);
+  }
+  console.log('✅ API health verified.');
+}
+
+async function assertVectorSearchHealthy(apiBase) {
+  const base = apiBase.replace(/\/$/, '');
+  const probe = encodeURIComponent('रायपुर');
+  const url = `${base}/api/labs/faiss/search?q=${probe}&limit=1`;
+
+  console.log(`🛰️  Vector health check: ${url}`);
   try {
-    // Check raw_tweets table
-    const rawTweetsResponse = await fetch(`${apiUrl}/api/tweets/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`);
-    if (rawTweetsResponse.ok) {
-      const rawTweetsResult = await rawTweetsResponse.json();
-      if (rawTweetsResult.exists) {
-        return { isDuplicate: true, reason: 'already in raw_tweets' };
-      }
-    }
-
-    // Check parsed_events table
-    const parsedEventsResponse = await fetch(`${apiUrl}/api/parsed-events/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`);
-    if (parsedEventsResponse.ok) {
-      const parsedEventsResult = await parsedEventsResponse.json();
-      if (parsedEventsResult.exists) {
-        return { isDuplicate: true, reason: 'already in parsed_events' };
-      }
-    }
-
-    return { isDuplicate: false };
-  } catch (error) {
-    console.warn(`⚠️ Could not check duplicates for tweet ${tweetId}:`, error.message);
-    // If we can't check, assume it's not a duplicate to be safe
-    return { isDuplicate: false };
-  }
-}
-
-async function processTweet(tweet) {
-  // Call the three-layer consensus parsing API
-  const apiUrl = process.env.API_BASE || 'http://localhost:3000';
-  const endpoint = `${apiUrl}/api/parsing/three-layer-consensus`;
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        tweet_id: tweet.id || tweet.tweet_id,
-        tweet_text: tweet.content || tweet.text,
-        created_at: tweet.timestamp || tweet.created_at,
-        author_handle: tweet.author_handle || tweet.user?.screen_name,
-      }),
-    });
+    const response = await fetch(url);
+    const payload = await response.json().catch(() => undefined);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-
-      // Handle duplicate detection at API level
-      if (response.status === 409 && errorData.duplicate) {
-        console.log(`  🚫 API detected duplicate tweet ${tweet.id || tweet.tweet_id} - skipping`);
-        // Return a special result indicating duplicate
-        return { duplicate: true, tweet_id: tweet.id || tweet.tweet_id };
-      }
-
-      throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorData.error || 'Unknown error'}`);
+      const detail = typeof payload === 'object' && payload ? payload.error : response.statusText;
+      throw new Error(detail || `FAISS endpoint returned ${response.status}`);
     }
 
-    const result = await response.json();
-
-    if (result.success) {
-      console.log(`  ✅ Processed tweet ${tweet.id || tweet.tweet_id}: "${(tweet.content || tweet.text)?.substring(0, 50)}..."`);
-      return result;
-    } else {
-      throw new Error(`Parsing failed: ${result.error || 'Unknown API error'}`);
+    if (payload && typeof payload === 'object' && 'error' in payload) {
+      throw new Error(String(payload.error));
     }
+
+    console.log('✅ FAISS search endpoint responded successfully.');
   } catch (error) {
-    console.error(`  ❌ Error in processTweet for ${tweet.id || tweet.tweet_id}:`, error.message);
-
-    // Extract specific failure reason from error message
-    let failureReason = 'unknown_error';
-    if (error.message.includes('PARSING_FAILED:')) {
-      const match = error.message.match(/PARSING_FAILED:\s*(.+)/);
-      if (match) {
-        failureReason = match[1].split(';')[0].trim(); // Take first error code
-      }
-    } else if (error.message.includes('API call failed')) {
-      failureReason = 'api_error';
-    }
-
-    // Log failed tweet with reason code
-    const failedTweetData = {
-      ...tweet,
-      failure_reason: failureReason,
-      failure_timestamp: new Date().toISOString(),
-      error_message: error.message
-    };
-
-    fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(failedTweetData) + '\n');
-
-    // Re-queue the tweet for later retry (append to a retry file)
-    const retryFile = path.join(__dirname, '..', 'data', 'retry_tweets.jsonl');
-    fs.appendFileSync(retryFile, JSON.stringify({
-      ...tweet,
-      retry_count: (tweet.retry_count || 0) + 1,
-      last_failure: failureReason,
-      queued_at: new Date().toISOString()
-    }) + '\n');
-
-    return null; // Return null on failure
+    console.error('❌ Vector search dependency failed. Install Python deps via `pip install -r requirements.txt` and run `npm run labs:faiss:build`.');
+    throw error;
   }
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function resolveSourceFiles(explicitPath) {
+  if (explicitPath) {
+    const absolute = path.resolve(explicitPath);
+    if (!fs.existsSync(absolute)) {
+      console.error(`❌ Provided source file not found: ${explicitPath}`);
+      process.exit(1);
+    }
+    return [absolute];
+  }
+
+  const dataDir = path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(dataDir)) return [];
+
+  return fs
+    .readdirSync(dataDir)
+    .filter(name => (name.startsWith('parsed_tweets') || name.startsWith('parsed_events')) && (name.endsWith('.json') || name.endsWith('.jsonl')))
+    .sort()
+    .map(name => path.join(dataDir, name));
+}
+
+function loadTweetFile(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  if (filePath.endsWith('.jsonl')) {
+    return raw
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => JSON.parse(line));
+  }
+
+  const data = JSON.parse(raw);
+  return Array.isArray(data) ? data : Array.isArray(data.tweets) ? data.tweets : [];
+}
+
+function* chunk(items, size) {
+  for (let i = 0; i < items.length; i += size) {
+    yield items.slice(i, i + size);
+  }
+}
+
+function writeBatchBackup(batch, meta) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `batch-${String(meta.ordinal).padStart(4, '0')}-${timestamp}.json`;
+  const payload = {
+    meta,
+    createdAt: new Date().toISOString(),
+    count: batch.length,
+    tweets: batch,
+  };
+  fs.writeFileSync(path.join(BACKUP_DIR, fileName), JSON.stringify(payload, null, 2));
+}
+
+async function processBatch(batch, runtimeConfig) {
+  const stats = { processed: 0, skipped: 0, failed: 0, duplicates: 0 };
+  let cursor = 0;
+
+  const worker = async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= batch.length) break;
+
+      const tweet = batch[index];
+      const tweetId = tweet.id || tweet.tweet_id || `unknown-${index}`;
+
+      try {
+        const result = await ingestTweet(tweet, runtimeConfig);
+
+        switch (result.status) {
+          case 'processed':
+            stats.processed += 1;
+            break;
+          case 'duplicate':
+            stats.duplicates += 1;
+            break;
+          case 'skipped':
+            stats.skipped += 1;
+            break;
+          case 'failed':
+          default:
+            stats.failed += 1;
+            logFailedTweet(tweet, result.reason);
+            break;
+        }
+      } catch (error) {
+        stats.failed += 1;
+        logFailedTweet(tweet, error.message);
+        console.error(`❌ Tweet ${tweetId} failed: ${error.message}`);
+      }
+    }
+  };
+
+  const workers = Array.from(
+    { length: Math.min(runtimeConfig.concurrency, batch.length) },
+    () => worker()
+  );
+  await Promise.all(workers);
+
+  return stats;
+}
+
+async function ingestTweet(tweet, runtimeConfig) {
+  const tweetId = tweet.id || tweet.tweet_id;
+  if (!tweetId) {
+    return { status: 'failed', reason: 'missing_tweet_id' };
+  }
+
+  if (runtimeConfig.dryRun) {
+    console.log(`  🧪 Dry run accepted tweet ${tweetId}`);
+    return { status: 'processed' };
+  }
+
+  const duplicateCheck = await checkForDuplicates(tweetId, runtimeConfig.apiBase);
+  if (duplicateCheck.isDuplicate) {
+    console.log(`  ⏭️  Duplicate ${tweetId} (${duplicateCheck.reason})`);
+    return { status: 'duplicate', reason: duplicateCheck.reason };
+  }
+
+  const apiResult = await callParsingApi(tweet, runtimeConfig.apiBase);
+  if (!apiResult) {
+    return { status: 'failed', reason: 'api_error' };
+  }
+
+  if (apiResult.duplicate) {
+    return { status: 'duplicate', reason: 'api_conflict' };
+  }
+
+  return { status: 'processed' };
+}
+
+async function checkForDuplicates(tweetId, apiBase) {
+  const base = apiBase.replace(/\/$/, '');
+  const endpoints = [
+    `${base}/api/tweets/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`,
+    `${base}/api/parsed-events/check-duplicate?tweet_id=${encodeURIComponent(tweetId)}`,
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) continue;
+      const payload = await response.json();
+      if (payload.exists) {
+        return { isDuplicate: true, reason: endpoint.includes('tweets') ? 'raw_tweets' : 'parsed_events' };
+      }
+    } catch (error) {
+      console.warn(`⚠️  Duplicate check error for ${tweetId}: ${error.message}`);
+    }
+  }
+
+  return { isDuplicate: false };
+}
+
+async function callParsingApi(tweet, apiBase) {
+  const endpoint = `${apiBase.replace(/\/$/, '')}/api/parsing/three-layer-consensus`;
+  const payload = {
+    tweet_id: tweet.id || tweet.tweet_id,
+    tweet_text: tweet.content || tweet.text,
+    created_at: tweet.timestamp || tweet.created_at,
+    author_handle: tweet.author_handle || tweet.user?.screen_name,
+  };
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 409) {
+    const conflict = await response.json().catch(() => ({}));
+    return { duplicate: true, ...conflict };
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    logFailedTweet({ ...tweet, payload }, errorData.error || response.statusText);
+    queueRetry(tweet, errorData.error || 'api_error');
+    return null;
+  }
+
+  const result = await response.json();
+  if (result.success === false) {
+    logFailedTweet({ ...tweet, payload }, result.error || 'parser_error');
+    queueRetry(tweet, result.error || 'parser_error');
+    return null;
+  }
+
+  console.log(`  ✅ Parsed ${payload.tweet_id}: ${(payload.tweet_text || '').slice(0, 50)}…`);
+  return result;
+}
+
+function logFailedTweet(tweet, reason) {
+  const record = {
+    ...tweet,
+    failure_reason: reason,
+    failure_timestamp: new Date().toISOString(),
+  };
+  fs.appendFileSync(FAILED_TWEETS_LOG, JSON.stringify(record) + '\n');
+}
+
+function queueRetry(tweet, reason) {
+  const record = {
+    ...tweet,
+    retry_count: (tweet.retry_count || 0) + 1,
+    last_failure: reason,
+    queued_at: new Date().toISOString(),
+  };
+  fs.appendFileSync(RETRY_QUEUE_PATH, JSON.stringify(record) + '\n');
 }

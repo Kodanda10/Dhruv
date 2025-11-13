@@ -5,7 +5,8 @@ import sys
 import os
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+# Repository root (scripts/..)
+ROOT = Path(__file__).resolve().parent.parent
 API_SRC = ROOT / 'api' / 'src'
 sys.path.insert(0, str(API_SRC))
 
@@ -26,7 +27,9 @@ def main() -> None:
     kind = sys.argv[3] if len(sys.argv) > 3 else 'unknown'
 
     try:
-        linker = SemanticLocationLinker(vector_backend='milvus')
+        linker = SemanticLocationLinker(use_faiss_fallback=False)
+        if getattr(linker, 'backend', '') != 'milvus':
+            raise RuntimeError('Milvus backend unavailable')
         matches = linker.find_semantic_matches(query, limit=limit)
     except Exception as exc:
         print(json.dumps({"error": str(exc)}))
