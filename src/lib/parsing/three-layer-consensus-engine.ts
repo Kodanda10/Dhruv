@@ -5,6 +5,12 @@
 
 import { RateLimiter } from './rate-limiter';
 import { getEventTypeInHindi } from '../i18n/event-types-hi';
+import {
+  collectFaissCandidates,
+  formatHierarchyForContext,
+  NormalizedLocationHierarchy,
+} from './location-normalizer';
+import { searchMilvusLocations, MilvusSearchResult } from '@/labs/milvus/milvus_fallback';
 
 interface ConsensusConfig {
   rateLimiter: RateLimiter;
@@ -46,6 +52,14 @@ interface LayerResult {
   schemes_mentioned: string[];
   error?: string;
   geo_verified?: boolean;
+  geo_backend?: 'faiss' | 'milvus' | 'none';
+}
+
+type VectorBackend = 'faiss' | 'milvus';
+
+interface VectorMatch {
+  score: number;
+  match_type?: string;
 }
 
 export class ThreeLayerConsensusEngine {
@@ -113,17 +127,28 @@ export class ThreeLayerConsensusEngine {
         layerResults.push({ ...regexResult, layer: 'regex' });
 
         // Check if regex found locations - if so, FAISS validation is required
-        if (regexResult.locations.length > 0) {
-          console.log(`🔄 Executing FAISS geo validation for ${tweetId} (locations found: ${regexResult.locations.join(', ')})`);
-          const faissResult = await this.validateWithFAISS(regexResult.locations, tweetId);
+        const geminiLocations = layerResults.find(r => r.layer === 'gemini')?.locations ?? [];
+        const ollamaLocations = layerResults.find(r => r.layer === 'ollama')?.locations ?? [];
+        const faissCandidates = collectFaissCandidates([
+          ...regexResult.locations,
+          ...geminiLocations,
+          ...ollamaLocations,
+        ]);
+
+        if (faissCandidates.length > 0) {
+          console.log(`🔄 Executing FAISS geo validation for ${tweetId} with ${faissCandidates.length} candidate(s)`);
+          const faissResult = await this.validateWithFAISS(faissCandidates, tweetId);
           layerResults.push(faissResult);
 
           if (!faissResult.geo_verified) {
-            throw new Error(`faiss_no_match: No valid geospatial matches found for locations: ${regexResult.locations.join(', ')}`);
+            const contextStrings = faissCandidates.map(candidate =>
+              formatHierarchyForContext(candidate.originalTokens)
+            );
+            throw new Error(`faiss_no_match: No valid geospatial matches found for normalized hierarchies: ${contextStrings.join('; ')}`);
           }
           console.log(`✅ FAISS geo validation succeeded for ${tweetId}`);
         } else {
-          console.log(`⏭️ Skipping FAISS validation for ${tweetId} (no locations found)`);
+          console.log(`⏭️ Skipping FAISS validation for ${tweetId} (no normalized candidates found)`);
         }
 
         console.log(`✅ Regex layer succeeded for ${tweetId}`);
@@ -494,59 +519,103 @@ Be accurate and specific.`;
    * Validate locations using FAISS geo embeddings
    * Only called when regex layer finds locations
    */
-  private async validateWithFAISS(locations: string[], tweetId: string): Promise<LayerResult> {
+  private async validateWithFAISS(
+    candidates: NormalizedLocationHierarchy[],
+    tweetId: string
+  ): Promise<LayerResult> {
     try {
-      // Call FAISS search API for each location
-      const validatedLocations: string[] = [];
+      const faissResult = await this.validateCandidatesAgainstBackend('faiss', candidates, tweetId);
+      if (faissResult.locations.length > 0) {
+        return this.buildGeoValidationLayer(faissResult.locations, 'faiss');
+      }
 
-      for (const location of locations) {
-        try {
-          const searchResults = await this.searchFAISS(location);
+      const milvusEnabled = process.env.MILVUS_ENABLE === 'true';
+      if (milvusEnabled) {
+        const milvusResult = await this.validateCandidatesAgainstBackend('milvus', candidates, tweetId);
+        if (milvusResult.locations.length > 0) {
+          return this.buildGeoValidationLayer(milvusResult.locations, 'milvus');
+        }
 
-          // Check if we got valid matches with reasonable similarity scores
-          const validMatches = searchResults.filter(result =>
-            result.score > 0.7 && // Similarity threshold
-            result.match_type === 'exact' || result.match_type === 'fuzzy'
-          );
-
-          if (validMatches.length > 0) {
-            validatedLocations.push(location);
-            console.log(`  ✅ FAISS validated location "${location}" for tweet ${tweetId}`);
-          } else {
-            console.warn(`  ⚠️ FAISS found no valid matches for "${location}" in tweet ${tweetId}`);
-          }
-        } catch (searchError: any) {
-          console.warn(`  ⚠️ FAISS search failed for "${location}" in tweet ${tweetId}:`, searchError.message);
+        if (milvusResult.error) {
+          return this.buildGeoValidationLayer([], 'milvus', milvusResult.error);
         }
       }
 
-      const geoVerified = validatedLocations.length > 0;
-
-      return {
-        layer: 'faiss',
-        event_type: 'geo_validation', // Not used in consensus, just for tracking
-        confidence: geoVerified ? 0.9 : 0.1,
-        locations: validatedLocations,
-        people_mentioned: [],
-        organizations: [],
-        schemes_mentioned: [],
-        geo_verified: geoVerified
-      };
-
+      return this.buildGeoValidationLayer(faissResult.locations, 'none', faissResult.error);
     } catch (error: any) {
-      console.error(`FAISS validation failed for tweet ${tweetId}:`, error.message);
-      return {
-        layer: 'faiss',
-        event_type: 'geo_validation',
-        confidence: 0,
-        locations: [],
-        people_mentioned: [],
-        organizations: [],
-        schemes_mentioned: [],
-        geo_verified: false,
-        error: `FAISS validation error: ${error.message}`
-      };
+      console.error(`Vector validation failed for tweet ${tweetId}:`, error.message);
+      return this.buildGeoValidationLayer([], 'none', `vector_validation_error: ${error.message}`);
     }
+  }
+
+  private async validateCandidatesAgainstBackend(
+    backend: VectorBackend,
+    candidates: NormalizedLocationHierarchy[],
+    tweetId: string
+  ): Promise<{ locations: string[]; error?: string }> {
+    const validatedLocations: string[] = [];
+    let lastError: string | undefined;
+
+    for (const candidate of candidates) {
+      const contextString = formatHierarchyForContext(candidate.originalTokens);
+
+      try {
+        const resultLabel = backend.toUpperCase();
+        console.log(
+          `  🔍 ${resultLabel} search for ${tweetId} candidate "${contextString}" (query="${candidate.query}")`
+        );
+
+        const searchResults =
+          backend === 'faiss'
+            ? await this.searchFAISS(candidate.query)
+            : await this.searchMilvus(candidate.query);
+
+        const validMatches = this.filterVectorMatches(searchResults, backend);
+
+        if (validMatches.length > 0) {
+          validatedLocations.push(contextString);
+          console.log(`  ✅ ${resultLabel} validated hierarchy "${contextString}" for tweet ${tweetId}`);
+        } else {
+          console.warn(
+            `  ⚠️ ${resultLabel} found no valid matches for "${contextString}" in tweet ${tweetId}`
+          );
+        }
+      } catch (searchError: any) {
+        const message = searchError?.message || 'unknown_error';
+        lastError = message;
+        console.warn(
+          `  ⚠️ ${backend.toUpperCase()} search failed for "${contextString}" in tweet ${tweetId}:`,
+          message
+        );
+      }
+    }
+
+    return { locations: validatedLocations, error: lastError };
+  }
+
+  private buildGeoValidationLayer(
+    locations: string[],
+    backend: VectorBackend | 'none',
+    error?: string
+  ): LayerResult {
+    const geoVerified = locations.length > 0;
+    return {
+      layer: 'faiss',
+      event_type: 'geo_validation',
+      confidence: geoVerified ? 0.9 : 0.1,
+      locations,
+      people_mentioned: [],
+      organizations: [],
+      schemes_mentioned: [],
+      geo_verified: geoVerified,
+      geo_backend: backend,
+      ...(error ? { error } : {})
+    };
+  }
+
+  private filterVectorMatches(results: VectorMatch[], backend: VectorBackend): VectorMatch[] {
+    const threshold = backend === 'milvus' ? 0.65 : 0.7;
+    return results.filter(result => typeof result.score === 'number' && result.score >= threshold);
   }
 
   /**
@@ -561,6 +630,15 @@ Be accurate and specific.`;
     }
 
     return await response.json();
+  }
+
+  private async searchMilvus(query: string): Promise<VectorMatch[]> {
+    try {
+      const results: MilvusSearchResult[] = await searchMilvusLocations(query, 3);
+      return results;
+    } catch (error: any) {
+      throw new Error(error?.message || 'milvus_search_failed');
+    }
   }
 
   /**
@@ -593,19 +671,64 @@ Be accurate and specific.`;
    * Extract locations using regex
    */
   private extractLocations(tweetText: string): string[] {
-    const locationPatterns = [
-      /(रायपुर|दिल्ली|मुंबई|बिलासपुर|रायगढ़|छत्तीसगढ़|भारत)/gi
-    ];
+    const matches = new Set<string>();
+    const sanitizedText = tweetText.replace(/[“”"']/g, '').trim();
 
-    const locations: string[] = [];
-    locationPatterns.forEach(pattern => {
-      const matches = tweetText.match(pattern);
-      if (matches) {
-        locations.push(...matches);
+    const contextualPattern =
+      /(?:ग्राम|गांव|गाँव|ward|वार्ड|ब्लॉक|नगर पंचायत|नगर पालिका|नगर निगम|तहसील|जिला|काशी|village|block)\s*(?:number|\s*संख्या)?\s*[:\-]?\s*([A-Za-z\u0900-\u097F0-9\- ]{2,40})/gi;
+    let contextualMatch: RegExpExecArray | null;
+    while ((contextualMatch = contextualPattern.exec(sanitizedText)) !== null) {
+      const candidate = contextualMatch[1].trim();
+      const normalized = this.normalizeLocationCandidate(candidate);
+      if (normalized) {
+        matches.add(normalized);
+      }
+    }
+
+    const suffixPattern =
+      /([A-Za-z\u0900-\u097F]{3,}(?:\s+[A-Za-z\u0900-\u097F]{2,})?)\s*(?:जिला|नगर निगम|नगर पालिका|नगर पंचायत|नगर|city|district|block)/gi;
+    let suffixMatch: RegExpExecArray | null;
+    while ((suffixMatch = suffixPattern.exec(sanitizedText)) !== null) {
+      const candidate = suffixMatch[1].trim();
+      const normalized = this.normalizeLocationCandidate(candidate);
+      if (normalized) {
+        matches.add(normalized);
+      }
+    }
+
+    const coreLocations = ['रायपुर', 'रायगढ़', 'बिलासपुर', 'कोरबा', 'जांजगीर', 'chhattisgarh', 'raigarh', 'raipur'];
+    coreLocations.forEach(location => {
+      if (sanitizedText.toLowerCase().includes(location.toLowerCase())) {
+        matches.add(location);
       }
     });
 
-    return Array.from(new Set(locations));
+    return Array.from(matches);
+  }
+
+  private isMeaningfulLocation(candidate: string): boolean {
+    if (!candidate) return false;
+    if (candidate.length < 2) return false;
+    if (candidate.toLowerCase().includes('specific village ward names')) {
+      return false;
+    }
+    return true;
+  }
+
+  private normalizeLocationCandidate(candidate: string): string | null {
+    if (!this.isMeaningfulLocation(candidate)) {
+      return null;
+    }
+
+    const stopRegex = /(वार्ड|ward|जिला|district|नगर|city|ब्लॉक|block|nagar|nigam)/i;
+    const [primary] = candidate.split(stopRegex);
+    const normalized = primary.replace(/[\d\-]+$/, '').trim();
+
+    if (!this.isMeaningfulLocation(normalized)) {
+      return null;
+    }
+
+    return normalized;
   }
 
   /**

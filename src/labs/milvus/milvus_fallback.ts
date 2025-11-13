@@ -6,12 +6,19 @@
  */
 
 import { spawn } from 'child_process';
+import path from 'path';
 
 export interface MilvusHealth {
   status: 'healthy' | 'unhealthy' | 'degraded';
   latency_ms: number;
   error?: string;
   connected?: boolean;
+}
+
+export interface MilvusSearchResult {
+  name: string;
+  score: number;
+  match_type?: string;
 }
 
 /**
@@ -115,3 +122,54 @@ except Exception as e:
   });
 }
 
+export async function searchMilvusLocations(
+  query: string,
+  limit: number = 5
+): Promise<MilvusSearchResult[]> {
+  const scriptPath = path.resolve(process.cwd(), 'scripts/milvus_location_search.py');
+  const pythonPath = process.env.PYTHON_PATH || 'python3';
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(pythonPath, [scriptPath, query, String(limit)], {
+      cwd: process.cwd(),
+      env: { ...process.env },
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', data => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', data => {
+      stderr += data.toString();
+    });
+
+    child.on('close', code => {
+      if (code !== 0) {
+        return reject(
+          new Error(stderr.trim() || `Milvus search script exited with code ${code}`)
+        );
+      }
+
+      try {
+        const payload = JSON.parse(stdout);
+        if (payload.error) {
+          return reject(new Error(payload.error));
+        }
+
+        const results = Array.isArray(payload.results) ? payload.results : [];
+        resolve(
+          results.map((result: any) => ({
+            name: result.name,
+            score: Number(result.score ?? 0),
+            match_type: result.match_type ?? 'milvus',
+          }))
+        );
+      } catch (error) {
+        reject(new Error(`Failed to parse Milvus search response: ${(error as Error).message}`));
+      }
+    });
+  });
+}
