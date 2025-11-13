@@ -1,0 +1,204 @@
+name: Bulk Tweet Ingestion Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Batch size for processing'
+        required: false
+        default: '30'
+        type: number
+      concurrency:
+        description: 'Concurrent workers'
+        required: false
+        default: '2'
+        type: number
+      rpm_limit:
+        description: 'Gemini API requests per minute'
+        required: false
+        default: '60'
+        type: number
+      max_batches:
+        description: 'Maximum batches to process (0 = unlimited)'
+        required: false
+        default: '0'
+        type: number
+      dry_run:
+        description: 'Run in dry-run mode'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  bulk-ingestion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create backup directories
+        run: |
+          mkdir -p .taskmaster/backups/single-layer
+          mkdir -p .taskmaster/backups/tweets
+
+      - name: Health check - Database
+        run: |
+          npm run db:health-check || echo "Database health check failed, but continuing..."
+
+      - name: Health check - API
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 5; done' || echo "API health check failed"
+
+      - name: Pre-ingestion backup
+        run: |
+          echo "Creating pre-ingestion database backup..."
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          pg_dump "postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}" > .taskmaster/backups/pre_ingestion_$TIMESTAMP.sql
+
+      - name: Execute bulk ingestion
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_HOST: localhost
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: 5432
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          API_BASE: http://localhost:3000
+        run: |
+          # Build command with parameters
+          CMD="node scripts/single-layer-ingest.js"
+          CMD="$CMD --batch-size ${{ inputs.batch_size || 30 }}"
+          CMD="$CMD --concurrency ${{ inputs.concurrency || 2 }}"
+          CMD="$CMD --rpm ${{ inputs.rpm_limit || 60 }}"
+
+          if [ "${{ inputs.max_batches || 0 }}" != "0" ]; then
+            CMD="$CMD --max-batches ${{ inputs.max_batches }}"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            CMD="$CMD --dry-run"
+          fi
+
+          echo "🚀 Executing: $CMD"
+          echo "📊 Processing 2603 tweets with batch_size=${{ inputs.batch_size || 30 }}, concurrency=${{ inputs.concurrency || 2 }}"
+
+          # Execute with timeout and error handling
+          timeout 18000 $CMD  # 5 hours timeout
+
+      - name: Generate ingestion report
+        run: |
+          echo "## Bulk Tweet Ingestion Report" > ingestion_report.md
+          echo "- **Started:** $(date)" >> ingestion_report.md
+          echo "- **Batch Size:** ${{ inputs.batch_size || 30 }}" >> ingestion_report.md
+          echo "- **Concurrency:** ${{ inputs.concurrency || 2 }}" >> ingestion_report.md
+          echo "- **RPM Limit:** ${{ inputs.rpm_limit || 60 }}" >> ingestion_report.md
+          echo "- **Dry Run:** ${{ inputs.dry_run || false }}" >> ingestion_report.md
+          echo "" >> ingestion_report.md
+
+          if [ -f ".taskmaster/backups/single-layer/ingestion-summary.json" ]; then
+            echo "### Results Summary" >> ingestion_report.md
+            cat .taskmaster/backups/single-layer/ingestion-summary.json | jq -r '
+              "Total Processed: \(.totalProcessed)",
+              "Total Failed: \(.totalFailed)",
+              "Total Duplicates: \(.totalDuplicates)",
+              "Batches Processed: \(.batchesProcessed)",
+              "Vector Indexing - FAISS: \(.vectorization.faiss)",
+              "Vector Indexing - Milvus: \(.vectorization.milvus)",
+              "Vector Indexing Failures: \(.vectorization.failures)"
+            ' >> ingestion_report.md
+          fi
+
+          echo "" >> ingestion_report.md
+          echo "### Backup Files Generated" >> ingestion_report.md
+          find .taskmaster/backups -name "*.jsonl" -o -name "*.json" | wc -l | xargs echo "Backup files: " >> ingestion_report.md
+
+      - name: Upload ingestion summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-summary
+          path: |
+            .taskmaster/backups/single-layer/ingestion-summary.json
+            ingestion_report.md
+
+      - name: Upload backup files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ingestion-backups
+          path: .taskmaster/backups/
+
+      - name: Post-ingestion health check
+        run: |
+          echo "🔍 Running post-ingestion health checks..."
+          npm run db:health-check || echo "Database health check failed"
+
+      - name: Notify completion
+        if: always()
+        run: |
+          echo "📧 Workflow completed with status: ${{ job.status }}"
+          echo "Check artifacts for detailed results"
+
+  validate-results:
+    needs: bulk-ingestion
+    runs-on: ubuntu-latest
+    if: needs.bulk-ingestion.result == 'success'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download summary
+        uses: actions/download-artifact@v4
+        with:
+          name: ingestion-summary
+
+      - name: Validate results
+        run: |
+          if [ -f "ingestion-summary.json" ]; then
+            PROCESSED=$(cat ingestion-summary.json | jq '.totalProcessed')
+            FAILED=$(cat ingestion-summary.json | jq '.totalFailed')
+
+            echo "✅ Processed: $PROCESSED tweets"
+            echo "❌ Failed: $FAILED tweets"
+
+            if [ "$FAILED" -gt 0 ]; then
+              echo "⚠️ Some tweets failed processing. Check logs for details."
+              exit 1
+            fi
+
+            if [ "$PROCESSED" -gt 0 ]; then
+              echo "🎉 Bulk ingestion completed successfully!"
+            else
+              echo "⚠️ No tweets were processed. Check configuration."
+              exit 1
+            fi
+          else
+            echo "❌ No ingestion summary found"
+            exit 1
+          fi
