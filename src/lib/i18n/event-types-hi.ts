@@ -26,7 +26,11 @@ export const EVENT_TYPE_HINDI: Record<string, string> = {
   'festival_celebration': 'त्यौहार समारोह',
   'cultural_event': 'सांस्कृतिक कार्यक्रम',
   'sports_event': 'खेल कार्यक्रम',
+  'sports_match': 'खेल मैच',
+  'general': 'सामान्य',
   'educational_event': 'शैक्षिक कार्यक्रम',
+  'budget_session': 'बजट सत्र',
+  'counter-insurgency': 'विरोधी कार्रवाई',
   'health_camp': 'स्वास्थ्य शिविर',
   'blood_donation': 'रक्तदान शिविर',
   'tree_plantation': 'वृक्षारोपण',
@@ -78,7 +82,9 @@ export const EVENT_TYPE_HINDI: Record<string, string> = {
  */
 export function getEventTypeInHindi(eventType: string | null | undefined): string {
   if (!eventType) return 'अन्य';
-  return EVENT_TYPE_HINDI[eventType] || 'अन्य';
+  // Normalize to lowercase and replace underscores/dashes with underscores for consistent lookup
+  const normalizedKey = eventType.toLowerCase().replace(/[-\s]/g, '_');
+  return EVENT_TYPE_HINDI[normalizedKey] || 'अन्य';
 }
 
 /**

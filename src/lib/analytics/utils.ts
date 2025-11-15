@@ -55,7 +55,7 @@ function normalizeLocation(value?: string | null): string | undefined {
 }
 
 const APPROVED_EVENT_CONDITION =
-  `pe.needs_review = false AND (pe.review_status IS NULL OR pe.review_status = 'approved')`;
+  `pe.review_status = 'approved' AND pe.review_status != 'skipped'`;
 
 export function buildFilterClause(filters: AnalyticsFilters): FilterClause {
   const conditions: string[] = [APPROVED_EVENT_CONDITION];

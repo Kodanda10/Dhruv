@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
 
     try {
       // Build query with author information
-      // CRITICAL: Filter by OP Choudhary by default - only show tweets from OPChoudhary_Ind
+      // Show all parsed tweets
       let query = `
-        SELECT 
+        SELECT
           pe.id,
           pe.tweet_id,
           rt.text as tweet_text,
@@ -67,8 +67,9 @@ export async function GET(request: NextRequest) {
         params.push(`%${authorFilter}%`, `%${authorFilter.replace(/\s+/g, '')}%`);
         paramIndex += 2;
       } else {
-        // Default filter if no author is specified
-        whereClauses.push(`rt.author_handle = 'OPChoudhary_Ind'`);
+        // Default filter if no author is specified - show all processed tweets
+        // Remove restrictive filter to show all parsed events
+        console.log('[API] No author filter specified - showing all processed tweets');
       }
 
       if (whereClauses.length > 0) {
@@ -83,12 +84,11 @@ export async function GET(request: NextRequest) {
       let opChoudharyCount = 0;
       let totalParsedCount = 0;
       try {
-        // Count matching the exact filter used in main query
+        // Count all parsed events (no author filter)
         const countQuery = `
           SELECT COUNT(*) as count
           FROM parsed_events pe
           JOIN raw_tweets rt ON pe.tweet_id = rt.tweet_id
-          WHERE rt.author_handle = 'OPChoudhary_Ind'
         `;
         const countResult = await client.query(countQuery);
         opChoudharyCount = parseInt(countResult.rows[0]?.count || '0', 10);

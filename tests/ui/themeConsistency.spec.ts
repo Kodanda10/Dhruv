@@ -75,17 +75,18 @@ test('Background gradient consistency across all tabs', async ({ page }) => {
 });
 
 // Test card styling consistency
-test('Glassmorphic card styling consistency', async ({ page }) => {
+test('Glass section card styling consistency', async ({ page }) => {
   await page.goto('http://localhost:3000/analytics');
   await page.waitForTimeout(1500);
   
-  // Get computed styles from a glassmorphic card
+  // Get computed styles from a glass section card
   const cardStyles = await page.evaluate(() => {
-    const card = document.querySelector('.glassmorphic-card');
+    const card = document.querySelector('.glass-section-card');
     if (!card) return null;
     const styles = window.getComputedStyle(card);
     return {
       background: styles.backgroundColor,
+      backgroundImage: styles.backgroundImage,
       border: styles.border,
       borderRadius: styles.borderRadius,
       backdropFilter: styles.backdropFilter,
@@ -94,7 +95,8 @@ test('Glassmorphic card styling consistency', async ({ page }) => {
   });
   
   expect(cardStyles).toBeTruthy();
-  expect(cardStyles?.background).toContain('rgba(120, 90, 210, 0.25)');
-  expect(cardStyles?.border).toContain('rgba(200, 220, 255, 0.25)');
+  expect(cardStyles?.backgroundImage || cardStyles?.background).toContain('linear-gradient');
+  expect(cardStyles?.border).toContain('rgba(255, 255, 255, 0.2)');
   expect(cardStyles?.backdropFilter).toContain('blur');
+  expect(cardStyles?.boxShadow).toContain('rgba(0, 0, 0, 0.25)');
 });

@@ -336,6 +336,29 @@ cd ../project-auth && claude    # Terminal 1: Auth work
 cd ../project-api && claude     # Terminal 2: API work
 ```
 
+#### UI Component Demo with Isolated Worktrees
+
+For demonstrating UI components without affecting main codebase:
+
+```bash
+# Create detached worktree for component demo
+git worktree add --detach /tmp/component-demo HEAD
+
+# Develop and showcase component
+cd /tmp/component-demo
+npm install && npm run dev
+
+# Access demo at http://localhost:3000/demo-component
+# After demonstration, cleanup:
+git worktree remove /tmp/component-demo
+```
+
+**Example: GlassSectionCard Demo**
+- Worktree: `/tmp/project-dhruv-glass-demo`
+- Demo URL: `http://localhost:3000/demo-glass`
+- Features: Glassmorphic styling, hover effects, responsive design
+- Status: Active demonstration environment
+
 ## Troubleshooting
 
 ### AI Commands Failing

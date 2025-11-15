@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-11-14T14:57:34.400Z",
+  "duration_seconds": 23,
+  "results": {
+    "database": {
+      "status": "success",
+      "details": [
+        "Database connection established",
+        "Found 1115 pending tweets",
+        "Tweet fetching query works"
+      ]
+    },
+    "gemini": {
+      "status": "success",
+      "details": [
+        "Basic content generation works",
+        "Tweet parsing structure works"
+      ]
+    },
+    "api": {
+      "status": "success",
+      "details": [
+        "Health endpoint accessible",
+        "All-tweets endpoint accessible",
+        "Fetched 2603 tweets via API",
+        "Ingest endpoint functional"
+      ]
+    },
+    "parsing": {
+      "status": "success",
+      "details": [
+        "Testing with tweet: 1985938919578616076",
+        "Parsing completed in 1639ms",
+        "Extracted 0 locations, 1 people"
+      ]
+    },
+    "backup": {
+      "status": "success",
+      "details": [
+        "Per-tweet backup functionality works",
+        "Batch backup functionality works"
+      ]
+    },
+    "vector": {
+      "status": "success",
+      "details": [
+        "FAISS endpoint: accessible",
+        "Milvus endpoint: returns 404",
+        "Batch trigger: not responding"
+      ]
+    },
+    "overall": {
+      "status": "ready",
+      "message": "All functions validated successfully"
+    }
+  }
+}

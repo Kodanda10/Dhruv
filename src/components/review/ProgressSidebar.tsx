@@ -74,9 +74,9 @@ export default function ProgressSidebar({
   };
 
   return (
-    <div className="w-64 glassmorphic-card border-l border-white/10 p-4 space-y-4 sticky top-0 h-screen overflow-y-auto">
+    <div className="w-64 glass-section-card border-l border-white/10 p-4 space-y-4 sticky top-0 h-screen overflow-y-auto">
       {/* Progress Bar */}
-      <div className="glassmorphic-card p-4">
+      <div className="glass-section-card p-4">
         <h3 className="text-lg font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">समीक्षा प्रगति</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-secondary">
@@ -93,7 +93,7 @@ export default function ProgressSidebar({
       </div>
 
       {/* Statistics */}
-      <div className="glassmorphic-card p-4">
+      <div className="glass-section-card p-4">
         <h3 className="text-lg font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">आंकड़े</h3>
         <div className="space-y-3">
           <div 
@@ -147,7 +147,7 @@ export default function ProgressSidebar({
       </div>
 
       {/* Confidence Score */}
-      <div className="glassmorphic-card p-4">
+      <div className="glass-section-card p-4">
         <h3 className="text-lg font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">औसत विश्वास</h3>
         <div className="text-center">
           <div className="text-3xl font-bold text-[#8BF5E6]">
@@ -161,7 +161,7 @@ export default function ProgressSidebar({
 
       {/* Low Confidence Alert */}
       {stats.pending > 0 && (
-        <div className="glassmorphic-card p-4 border border-red-500/30 bg-red-500/10">
+        <div className="glass-section-card p-4 border border-red-500/30 bg-red-500/10">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             <h3 className="text-sm font-semibold text-red-300">Low Confidence</h3>
@@ -176,7 +176,7 @@ export default function ProgressSidebar({
       )}
 
       {/* Current Position */}
-      <div className="glassmorphic-card p-4">
+      <div className="glass-section-card p-4">
         <h3 className="text-lg font-bold text-white mb-2 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">Current Position</h3>
         <div className="text-center">
           <div className="text-2xl font-bold text-white">
@@ -189,7 +189,7 @@ export default function ProgressSidebar({
       </div>
 
       {/* Quick Actions */}
-      <div className="glassmorphic-card p-4">
+      <div className="glass-section-card p-4">
         <h3 className="text-lg font-bold text-white mb-3 drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]">Quick Actions</h3>
         <div className="space-y-2">
           <button 

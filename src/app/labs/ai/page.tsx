@@ -85,7 +85,7 @@ export default function AIPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <h1 className="text-3xl font-bold text-primary mb-2 flex items-center gap-3">
             <span role="img" aria-label="AI">🤖</span>
             <span>AI Assistant Demo</span>
@@ -95,7 +95,7 @@ export default function AIPage() {
           {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
         </div>
 
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <h2 className="text-xl font-semibold text-primary mb-4">ट्वीट</h2>
           <div className="glassmorphic rounded-lg p-4 mb-4">
             <p className="text-primary">{resolvedTweet.content}</p>
@@ -112,7 +112,7 @@ export default function AIPage() {
           </div>
         </div>
 
-        <div className="glassmorphic-card">
+        <div className="glass-section-card">
           <AIReviewAssistant tweet={resolvedTweet} onSuggestionAccept={handleSuggestionAccept} />
         </div>
       </div>

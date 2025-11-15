@@ -25,6 +25,10 @@ export async function POST(request: NextRequest) {
     const schemes = Array.isArray(categories.schemes) ? categories.schemes : [];
     const communities = Array.isArray(categories.communities) ? categories.communities : [];
 
+
+    // Helper function to format arrays for PostgreSQL JSONB columns
+    const formatJsonArray = (arr: any[]) => JSON.stringify(arr);
+
     // Determine event type from categories (simplified logic)
     let eventType = 'general';
     let confidence = 0.5;
@@ -75,13 +79,13 @@ export async function POST(request: NextRequest) {
         tweetId,
         eventType,
         confidence,
-        JSON.stringify(locations),
-        JSON.stringify(people),
-        JSON.stringify(organizations),
-        JSON.stringify(schemes),
+        formatJsonArray(locations), // locations is JSONB
+        people,     // people_mentioned is TEXT[] - pass actual array
+        organizations, // organizations is TEXT[] - pass actual array
+        schemes,   // schemes_mentioned is TEXT[] - pass actual array
         confidence,
-        false, // needs_review
-        'approved', // review_status
+        true, // needs_review - mark for human review
+        'pending', // review_status
         new Date().toISOString(),
         gemini_metadata?.model || 'unknown'
       ];

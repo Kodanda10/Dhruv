@@ -470,7 +470,7 @@ export default function DashboardDark() {
         </div>
       )}
 
-      <div className="mb-4 flex items-end gap-4 flex-wrap glassmorphic-card glassmorphic-hover rounded-xl p-4">
+      <div className="mb-4 flex items-end gap-4 flex-wrap glass-section-card glassmorphic-hover rounded-xl p-4">
         <label className="text-sm font-medium text-secondary">
           स्थान फ़िल्टर
           <input
@@ -555,7 +555,7 @@ export default function DashboardDark() {
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto glassmorphic-card rounded-xl p-2">
+      <div className="overflow-x-auto glass-section-card rounded-xl p-2">
         <table aria-label="गतिविधि सारणी" className="min-w-full text-sm border-collapse table-fixed text-primary">
           <colgroup>
             <col className="w-[16%]" />

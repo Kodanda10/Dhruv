@@ -1,6 +1,7 @@
 import json
 import re
 
+
 def normalize_key(text):
     """
     Converts text to lowercase, removes Zero Width Joiner characters,
@@ -8,11 +9,21 @@ def normalize_key(text):
     """
     if isinstance(text, str):
         text = text.replace('‍', '')
-        text = text.replace('_x000D_', '') # Remove the specific suffix
-        return re.sub(r'\s+', ' ', text).strip().lower() # Collapse multiple spaces to single, strip, then lowercase
-    elif isinstance(text, list):
+        text = text.replace('_x000D_', '')  # Remove the specific suffix
+        return re.sub(r'\s+', ' ', text).strip().lower()  # Collapse multiple spaces to single, strip, then lowercase
+    if isinstance(text, list):
         return [normalize_key(item) for item in text]
     return text
+
+
+def canonicalize(name, canon_map):
+    """
+    Normalizes the provided string and applies the district alias map so that
+    variants (e.g. 'सक्ती' vs 'सक्ति', 'रायगढ़' vs 'रायगढ़') resolve to the
+    same comparison key.
+    """
+    normalized = normalize_key(name)
+    return canon_map.get(normalized, normalized)
 
 def load_json_data(filepath):
     """Loads JSON data from a given filepath."""
@@ -44,10 +55,16 @@ def validate_all_constituencies(existing_data, aggregated_data, name_map_filepat
         print("Validation cannot proceed due to missing data.")
         return
 
-    district_name_map = load_json_data(name_map_filepath)
-    if not district_name_map:
+    district_name_map_raw = load_json_data(name_map_filepath)
+    if not district_name_map_raw:
         print("Warning: District name map not loaded. Proceeding without canonical mapping for validation.")
-        district_name_map = {}
+        district_name_map_raw = {}
+
+    # Normalize the alias map so lookups can be performed consistently.
+    district_name_map = {
+        normalize_key(alias): normalize_key(target)
+        for alias, target in district_name_map_raw.items()
+    }
 
     print("Starting comprehensive constituency data validation...")
     all_discrepancies = []
@@ -56,14 +73,14 @@ def validate_all_constituencies(existing_data, aggregated_data, name_map_filepat
     # Create a map for existing districts with normalized keys for easier lookup
     existing_districts_canonical_map = {}
     for k, v in existing_data.get('districts', {}).items():
-        canonical_k = district_name_map.get(normalize_key(k), normalize_key(k)) # Use map for existing keys
-        existing_districts_canonical_map[canonical_k] = (k, v) # Store original key and value
+        canonical_k = canonicalize(k, district_name_map)
+        existing_districts_canonical_map[canonical_k] = (k, v)  # Store original key and value
 
     for aggregated_district_name_raw, aggregated_district_details in aggregated_data.items():
-        # The aggregated_district_name_raw is already canonical Hindi name from aggregate_ndjson_data.py
+        # Aggregated data is also canonicalized to handle spelling variants.
         canonical_agg_district_name = aggregated_district_name_raw
-        normalized_agg_district_name = normalize_key(canonical_agg_district_name)
-        
+        normalized_agg_district_name = canonicalize(canonical_agg_district_name, district_name_map)
+
         discrepancies_for_district = []
         coverage_report_for_district = {"status": "covered", "details": []}
 
@@ -98,9 +115,9 @@ def validate_all_constituencies(existing_data, aggregated_data, name_map_filepat
             all_coverage_reports[original_existing_name] = {"status": "consistent", "details": ["No discrepancies found for blocks."]}
 
     # Check for districts in existing_data that are not in aggregated_data
-    agg_district_names_normalized = {normalize_key(k) for k in aggregated_data.keys()}
+    agg_district_names_normalized = {canonicalize(k, district_name_map) for k in aggregated_data.keys()}
     for existing_district_name_raw, existing_district_details in existing_data.get('districts', {}).items():
-        normalized_existing_district_name = normalize_key(existing_district_name_raw)
+        normalized_existing_district_name = canonicalize(existing_district_name_raw, district_name_map)
         if normalized_existing_district_name not in agg_district_names_normalized:
             all_discrepancies.append(f"District '{existing_district_name_raw}' in existing constituencies.json not found in aggregated data.")
             all_coverage_reports[existing_district_name_raw] = {"status": "missing_in_aggregated", "details": [f"District '{existing_district_name_raw}' not found in aggregated data."]}

@@ -112,7 +112,7 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
   }> = ({ title, status, metrics, details, testId }) => (
     <div
       className={cn(
-        "glassmorphic-card p-4 cursor-pointer border border-white/10",
+        "glass-section-card p-4 cursor-pointer border border-white/10",
         "hover:border-[#8BF5E6]/30 hover:shadow-[0_0_15px_rgba(139,245,230,0.2)] transition-all duration-200",
         "focus:outline-none focus:ring-2 focus:ring-[#8BF5E6]/50"
       )}
@@ -162,7 +162,7 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
     return (
       <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glassmorphic-card p-4 animate-pulse">
+          <div key={i} className="glass-section-card p-4 animate-pulse">
             <div className="h-4 bg-white/10 rounded mb-2"></div>
             <div className="h-3 bg-white/10 rounded mb-1"></div>
             <div className="h-3 bg-white/10 rounded"></div>
@@ -174,7 +174,7 @@ const SystemHealthCards: React.FC<SystemHealthCardsProps> = ({
 
   if (error) {
     return (
-      <div className={cn("glassmorphic-card border border-red-500/30 p-4", className)}>
+      <div className={cn("glass-section-card border border-red-500/30 p-4", className)}>
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium text-red-300">

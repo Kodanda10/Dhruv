@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import GlassSectionCard from '@/components/GlassSectionCard';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
@@ -68,10 +69,11 @@ export default function MapboxCard() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="glassmorphic-card rounded-lg p-6"
     >
-      <h3 className="text-xl font-bold mb-4 text-white">Event Location Map</h3>
-      <div ref={mapContainer} className="w-full h-96 rounded-lg" />
+      <GlassSectionCard className="p-6">
+        <h3 className="text-xl font-bold mb-4 text-white">Event Location Map</h3>
+        <div ref={mapContainer} className="w-full h-96 rounded-2xl bg-white/5" />
+      </GlassSectionCard>
     </motion.div>
   );
 }

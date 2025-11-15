@@ -33,7 +33,7 @@ export default function DynamicLearningCard() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="glassmorphic-card rounded-lg p-6"
+      className="glass-section-card rounded-lg p-6"
     >
       <h3 className="text-xl font-bold mb-4 text-white">Dynamic Learning</h3>
       <p className="text-sm text-white/80 mb-4">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 import { GraphData, GraphNode, GraphEdge } from '@/labs/mindmap/graph_builder';
+import GlassSectionCard from '@/components/GlassSectionCard';
 
 interface Node extends d3.SimulationNodeDatum {
   id: string;
@@ -136,15 +137,16 @@ export default function D3MindmapCard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="glassmorphic-card rounded-lg p-6"
       >
-        <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-white">Loading graph data...</p>
+        <GlassSectionCard className="p-6">
+          <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-white">Loading graph data...</p>
+            </div>
           </div>
-        </div>
+        </GlassSectionCard>
       </motion.div>
     );
   }
@@ -155,16 +157,17 @@ export default function D3MindmapCard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="glassmorphic-card rounded-lg p-6"
       >
-        <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="text-red-500 mb-2">⚠️</div>
-            <p className="text-red-600">Error loading graph data</p>
-            <p className="text-sm text-gray-400 mt-1">{error}</p>
+        <GlassSectionCard className="p-6">
+          <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="text-red-500 mb-2">⚠️</div>
+              <p className="text-red-600">Error loading graph data</p>
+              <p className="text-sm text-gray-400 mt-1">{error}</p>
+            </div>
           </div>
-        </div>
+        </GlassSectionCard>
       </motion.div>
     );
   }
@@ -175,15 +178,16 @@ export default function D3MindmapCard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="glassmorphic-card rounded-lg p-6"
       >
-        <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="text-gray-500 mb-2">📊</div>
-            <p className="text-white">No graph data available</p>
+        <GlassSectionCard className="p-6">
+          <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="text-gray-500 mb-2">📊</div>
+              <p className="text-white">No graph data available</p>
+            </div>
           </div>
-        </div>
+        </GlassSectionCard>
       </motion.div>
     );
   }
@@ -193,10 +197,11 @@ export default function D3MindmapCard() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="glassmorphic-card rounded-lg p-6"
     >
-      <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
-      <svg ref={svgRef}></svg>
+      <GlassSectionCard className="p-6">
+        <h3 className="text-xl font-bold mb-4 text-white">Entity Relationship Mindmap</h3>
+        <svg ref={svgRef}></svg>
+      </GlassSectionCard>
     </motion.div>
   );
 }

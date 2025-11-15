@@ -50,6 +50,57 @@
 - `perf-k6`: k6 `/api/health` + `scripts/assert-k6-p95.js` (≤300ms p95).
 - `e2e-smoke`: Playwright smoke suite.
 
+## UI Component Development & Demo
+
+### GlassSectionCard Demo Implementation
+**Status**: Active demonstration environment
+**Location**: `/tmp/project-dhruv-glass-demo` (isolated worktree)
+**Demo URL**: `http://localhost:3000/demo-glass`
+
+#### Demo Features
+- Glassmorphic styling with backdrop blur effects
+- Hover interactions and smooth transitions
+- Multiple content types: text, analytics, forms, notifications
+- Responsive design validation
+- Performance testing environment
+
+#### Development Approach
+- **Isolated Worktree**: Zero impact on main codebase
+- **Comprehensive Showcase**: Multiple use cases demonstrated
+- **Clean Separation**: Easy removal after demonstration
+- **Visual Testing**: Immediate feedback on component appearance
+
+#### Implementation Details
+```typescript
+// Component: GlassSectionCard
+- Semi-transparent background (rgba(255, 255, 255, 0.1))
+- Linear gradient overlays for depth
+- 24px backdrop blur effect
+- Smooth hover transitions
+- Flexible content support
+```
+
+#### Demo Content Structure
+1. Basic text content demonstration
+2. Dashboard analytics with metrics
+3. Interactive elements (buttons, forms)
+4. Data visualization mockups
+5. Notification and alert systems
+6. Large content areas with prose
+
+### Worktree Demo Workflow
+```bash
+# Create isolated demo environment
+git worktree add --detach /tmp/component-demo HEAD
+
+# Develop and showcase
+cd /tmp/component-demo && npm install && npm run dev
+
+# Access demo and verify functionality
+# Cleanup when done
+git worktree remove /tmp/component-demo
+```
+
 ## Live CI Monitoring
 - Use GitHub CLI to stream workflows: `gh run watch --exit-status`.
 - Inspect failures: `gh run list` and `gh run view <id> --log`.

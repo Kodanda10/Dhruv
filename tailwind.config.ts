@@ -40,14 +40,20 @@ const config: Config = {
         '.border-mint-green': {
           borderColor: '#8BF5E6',
         },
-        '.glassmorphic-card': {
-          background: 'rgba(120, 90, 210, 0.25)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(200, 220, 255, 0.25)',
-          borderRadius: '1rem',
-          padding: '1.5rem',
-          boxShadow: '0 0 25px rgba(180, 255, 250, 0.2)',
+        '.glass-section-card': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundImage: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '1.5rem',
+          color: '#FFFFFF',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+          transition: 'all 0.3s ease',
+        },
+        '.glass-section-card:hover': {
+          backgroundImage: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08))',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.35)',
         },
         '.tab-glassmorphic': {
           background: 'rgba(255, 255, 255, 0.1)',
@@ -68,4 +74,3 @@ const config: Config = {
 }
 
 export default config
-

@@ -77,7 +77,7 @@ export default function TraceHeatmap() {
 
   if (loading) {
     return (
-      <div className="glassmorphic-card p-6">
+      <div className="glass-section-card p-6">
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="inline-block w-8 h-8 border-4 border-[#8BF5E6] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -90,14 +90,14 @@ export default function TraceHeatmap() {
 
   if (error) {
     return (
-      <div className="glassmorphic-card border border-red-500/30 p-6">
+      <div className="glass-section-card border border-red-500/30 p-6">
         <p className="text-red-300">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="glassmorphic-card p-6">
+    <div className="glass-section-card p-6">
       <h3 className="text-xl font-bold text-white mb-6">
         🔥 Latency Heatmap (p95)
       </h3>

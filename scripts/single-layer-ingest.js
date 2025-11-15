@@ -48,9 +48,9 @@ export async function main() {
   const config = {
     batchSize: parseInt(cliOptions['batch-size'] ?? '10', 10),
     maxBatches: parseInt(cliOptions['max-batches'] ?? '0', 10),
-    concurrency: Math.max(1, parseInt(cliOptions['concurrency'] ?? '2', 10)),
-    requestsPerMinute: parseInt(cliOptions['rpm'] ?? '5', 10),
-    apiBase: cliOptions['api-base'] ?? process.env.API_BASE ?? 'http://localhost:3000',
+    concurrency: Math.max(1, parseInt(cliOptions['concurrency'] ?? '1', 10)),
+    requestsPerMinute: parseInt(cliOptions['rpm'] ?? '1', 10),
+    apiBase: cliOptions['api-base'] ?? process.env.API_BASE ?? 'http://127.0.0.1:3000',
     dryRun: parseBoolean(cliOptions['dry-run']),
     testMode: parseBoolean(cliOptions['test-mode']),
     geminiApiKey: process.env.GEMINI_API_KEY,
@@ -79,7 +79,9 @@ export async function main() {
   }
 
   const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-    const geminiClient = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });  try {
+  const geminiClient = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  try {
     const summary = await processAllBatches(dbClient, geminiClient, config);
 
     console.log('\n🎉 Ingestion complete.');
@@ -227,10 +229,11 @@ export async function processSingleTweet(tweet, db, gemini, config) {
         logToRetryQueue(tweet, error.message);
         if (!config.dryRun) {
             await updateTweetStatusInDB(db, tweet.id, 'pending_retry', config.testMode);
-        } else {
-            console.log(`\n[DRY RUN] ❌ Would update Tweet ${tweet.id} status to 'pending_retry'.\n`);
         }
-        error.isGeminiFailure = true; // Flag for circuit breaker
+        // Only mark Gemini failures if the error comes from Gemini
+        if (error.name === 'GeminiError' || error.source === 'gemini') {
+            error.isGeminiFailure = true;
+        }
         throw error;
     }
 }
@@ -253,11 +256,13 @@ export async function fetchTweets(db, limit, offset, config) {
 export async function parseTweetWithGemini(tweet, geminiClient, config) {
     console.log(`  [Gemini] Parsing tweet ${tweet.id} with Gemini 2.0 Flash...`);
     
-    const prompt = `Analyze this tweet and extract structured information. Return ONLY a JSON object with this exact structure:
+    const prompt = `Analyze this Chhattisgarh-focused social media post/tweet for political discourse and governance information. Extract structured information with high accuracy for Hindi-English mixed content.
+
+Return ONLY a JSON object with this exact structure:
 {
   "categories": {
     "locations": ["location1", "location2"],
-    "people": ["person1", "person2"], 
+    "people": ["person1", "person2"],
     "event": ["event_type"],
     "organisation": ["org1", "org2"],
     "schemes": ["scheme1", "scheme2"],
@@ -266,21 +271,60 @@ export async function parseTweetWithGemini(tweet, geminiClient, config) {
   "metadata": {
     "model": "gemini-2.0-flash",
     "confidence": 0.85,
-    "processing_time_ms": 1500
+    "processing_time_ms": 1500,
+    "discourse_type": "political_governance",
+    "language_mix": "hi_en"
   }
 }
 
-Tweet: "${tweet.text}"
+Tweet Content: "${tweet.text}"
 
-Instructions:
-- locations: Extract specific place names, cities, districts, villages mentioned
-- people: Extract names of individuals mentioned
-- event: Determine the main event type (e.g., "community_meeting", "protest", "festival", "aid_distribution")
-- organisation: Extract government bodies, NGOs, companies mentioned
-- schemes: Extract government schemes/programs mentioned (e.g., "MNREGA", "PM-KISAN")
-- communities: Extract community/caste groups mentioned
+Advanced Social Media Discourse Analysis Instructions:
 
-Return only valid JSON, no additional text.`;
+LOCATIONS (Chhattisgarh-specific):
+- Extract: Cities (रायपुर, बिलासपुर, रायगढ़, दुर्ग, अंबिकापुर), Districts, Blocks, Villages, Assembly constituencies
+- Include administrative divisions and geographical references
+- Handle common spelling variations (Raipur/Raypur, Bilaspur/Billaspur)
+
+PEOPLE (Political & Public Figures):
+- Extract: Politicians (CM, PM, MLAs, MPs), Government officials, Activists
+- Include honorifics (श्री, सुश्री, डॉ, प्रोफेसर) and titles
+- Common names: भूपेश बघेल, विष्णु देव साय, रमन सिंह, राहुल गांधी, नरेन्द्र मोदी
+
+EVENT TYPES (Governance-focused):
+- political_rally (सभा, रैली, जनसभा)
+- government_program (कार्यक्रम, योजना लॉन्च)
+- protest_demonstration (आंदोलन, विरोध, प्रदर्शन)
+- aid_distribution (वितरण, राहत, मदद)
+- community_meeting (बैठक, बैठक, सम्मेलन)
+- election_campaign (चुनाव प्रचार, अभियान)
+- policy_announcement (घोषणा, नीति, निर्णय)
+- infrastructure_inauguration (शिलान्यास, उद्घाटन, लोकार्पण)
+
+ORGANIZATIONS (Government & Civil Society):
+- Government: मुख्यमंत्री कार्यालय, राज्य सरकार, केंद्र सरकार, जिला प्रशासन
+- Political parties: कांग्रेस, भाजपा, बसपा, झामुमो
+- Government bodies: पंचायत, नगर निगम, विभाग (स्वास्थ्य, शिक्षा, कृषि)
+- NGOs and civil society organizations
+
+SCHEMES & PROGRAMS (Government Initiatives):
+- National: PM-KISAN (प्रधान मंत्री किसान सम्मान निधि), Ayushman Bharat, Ujjwala, MGNREGA (मनरेगा)
+- State: मुख्यमंत्री ग्रामीण विकास योजना, मुख्यमंत्री स्वास्थ्य योजना, मुख्यमंत्री शिक्षा योजना
+- Common abbreviations: PM-KISAN, PMAY, NRLM, NSAP
+
+COMMUNITIES (Social Groups):
+- Caste/community references: आदिवासी, दलित, ओबीसी, ब्राह्मण, वैश्य
+- Religious groups: हिंदू, मुस्लिम, सिख, ईसाई
+- Professional groups: किसान, मजदूर, व्यापारी, अध्यापक
+
+DISCOURSE ANALYSIS RULES:
+1. Prioritize explicit mentions over implicit references
+2. Handle Hindi-English code-switching (e.g., "PM Modi" vs "नरेन्द्र मोदी")
+3. Consider context: Political tweets often mention multiple entities
+4. Use confidence scoring: High confidence for direct mentions, lower for ambiguous references
+5. Empty arrays are acceptable when no relevant entities are found
+
+Return only valid JSON, no additional text or explanations.`;
 
     try {
         const result = await geminiClient.generateContent(prompt);
@@ -322,6 +366,7 @@ Return only valid JSON, no additional text.`;
 }
 
 export async function ingestParsedData(data, config) {
+    const endpoint = `${config.apiBase}/api/ingest-parsed-tweet`;
     if (config.dryRun) {
         console.log(`\n[DRY RUN] 📤 Ingesting Parsed Tweet ${data.tweet.id}:\n---`);
         console.log(JSON.stringify(data, null, 2));
@@ -329,11 +374,11 @@ export async function ingestParsedData(data, config) {
         return { status: 'ok' };
     }
     
-    const endpoint = `${config.apiBase}/api/ingest-parsed-tweet`;
+  try {
     const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
 
     if (response.status === 409) {
@@ -345,6 +390,14 @@ export async function ingestParsedData(data, config) {
         throw new Error(`Ingestion API failed with status ${response.status}: ${errorBody}`);
     }
     return { status: 'ok' };
+  } catch (err) {
+    console.error('[Ingest] Fetch to ingestion API failed:', {
+      endpoint,
+      message: err.message,
+      cause: err.cause,
+    });
+    throw err;
+  }
 }
 
 export async function triggerVectorIndexing(tweetIds, config) {

@@ -76,7 +76,7 @@ export default function AIAssistantCard() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="glassmorphic-card rounded-lg p-6"
+      className="glass-section-card rounded-lg p-6"
     >
       <h3 className="text-xl font-bold mb-4 text-white">AI Review Assistant</h3>
       <div className="flex flex-col gap-4">

@@ -59,6 +59,7 @@ export default function ReviewQueue() {
   const [sortBy, setSortBy] = useState<'confidence' | 'date'>('confidence');
   const [customEventTypes, setCustomEventTypes] = useState<string[]>([]);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [totalReviewed, setTotalReviewed] = useState(0);
   const allEventOptions = useMemo(() => {
     const custom = customEventTypes.map((s) => ({ value: s, label: s }));
     const merged = [...EVENT_TYPE_OPTIONS, ...custom];
@@ -69,11 +70,15 @@ export default function ReviewQueue() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      // Try server queue first
+      // Try server queue first - get all parsed tweets that need review or are pending
       try {
-        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events?needs_review=true`);
+        const res = await api.get<{ success: boolean; events: any[] }>(`/api/parsed-events`);
         if (mounted && res.success && res.events && res.events.length > 0) {
-          const mapped: ParsedTweet[] = res.events.map((e) => ({
+          // Filter to only show tweets that need review (pending or need review)
+          const reviewableEvents = res.events.filter(event =>
+            event.needs_review || event.review_status === 'pending' || !event.review_status
+          );
+          const mapped: ParsedTweet[] = reviewableEvents.map((e) => ({
             id: String(e.tweet_id),
             parsedEventId: e.id,
             timestamp: e.tweet_created_at,
@@ -141,12 +146,12 @@ export default function ReviewQueue() {
   const currentTweet = tweets[currentIndex];
   
   const stats = useMemo(() => {
-    const pending = tweets.filter(t => t.review_status !== 'approved').length;
-    const reviewed = tweets.filter(t => t.review_status === 'approved').length;
-    const avgConfidence = tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / tweets.length;
-    
+    const pending = tweets.length; // All remaining tweets are pending
+    const reviewed = totalReviewed;
+    const avgConfidence = tweets.length > 0 ? tweets.reduce((sum, t) => sum + (t.confidence || 0), 0) / tweets.length : 0;
+
     return { pending, reviewed, avgConfidence };
-  }, [tweets]);
+  }, [tweets, totalReviewed]);
 
   const handleEdit = () => {
     if (!currentTweet) return;
@@ -267,13 +272,16 @@ export default function ReviewQueue() {
 
   const handleApprove = async () => {
     if (!currentTweet) return;
-    
+
     const updatedTweets = [...tweets];
     updatedTweets[currentIndex] = {
       ...currentTweet,
       review_status: 'approved',
     };
     setTweets(updatedTweets);
+
+    // Increment total reviewed count
+    setTotalReviewed(prev => prev + 1);
 
     // Persist approval status to localStorage overlay
     try {
@@ -292,7 +300,7 @@ export default function ReviewQueue() {
       localStorage.setItem(idxKey, JSON.stringify(idx));
       localStorage.setItem('tweet_review_refresh_ts', String(Date.now()));
     } catch {}
-    
+
     await submitReviewUpdate({
       id: String(currentTweet.id),
       action: 'approve',
@@ -378,7 +386,7 @@ export default function ReviewQueue() {
   if (!currentTweet) {
     return (
       <div className="text-center py-12">
-        <div className="max-w-md mx-auto glassmorphic-card p-8">
+        <div className="max-w-md mx-auto glass-section-card p-8">
           <h3 className="text-lg font-semibold text-white mb-2">समीक्षा के लिए कोई ट्वीट नहीं</h3>
           <p className="text-secondary mb-4">
             {tweets.length === 0 
@@ -429,15 +437,15 @@ export default function ReviewQueue() {
         )}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 transition-all duration-500 ease-in-out">
-          <div className="glassmorphic-card p-4 text-center border border-amber-500/30 rounded-2xl">
+          <div className="glass-section-card p-4 text-center border border-amber-500/30 rounded-2xl">
             <div className="text-2xl sm:text-3xl font-bold text-amber-400">{stats.pending}</div>
             <div className="text-sm sm:text-base text-secondary">समीक्षा के लिए (Pending)</div>
           </div>
-          <div className="glassmorphic-card p-4 text-center border border-green-500/30 rounded-2xl">
+          <div className="glass-section-card p-4 text-center border border-green-500/30 rounded-2xl">
             <div className="text-2xl sm:text-3xl font-bold text-green-400">{stats.reviewed}</div>
             <div className="text-sm sm:text-base text-secondary">समीक्षित (Reviewed)</div>
           </div>
-          <div className="glassmorphic-card p-4 text-center border border-[#8BF5E6]/30 rounded-2xl">
+          <div className="glass-section-card p-4 text-center border border-[#8BF5E6]/30 rounded-2xl">
             <div className="text-2xl sm:text-3xl font-bold text-[#8BF5E6]">{Math.round(stats.avgConfidence * 100)}%</div>
             <div className="text-sm sm:text-base font-semibold text-white">औसत विश्वास <span className="text-xs sm:text-sm font-normal text-secondary">(Avg Confidence)</span></div>
           </div>
@@ -460,7 +468,7 @@ export default function ReviewQueue() {
         </div>
 
         {/* Review Card */}
-        <div className={`glassmorphic-card border-2 ${confidence <= 0.5 ? 'border-red-500/50' : confidence <= 0.8 ? 'border-yellow-500/50' : 'border-green-500/50'}`}>
+        <div className={`glass-section-card border-2 ${confidence <= 0.5 ? 'border-red-500/50' : confidence <= 0.8 ? 'border-yellow-500/50' : 'border-green-500/50'}`}>
           <div className="p-4 border-b border-white/10">
             <div className="flex justify-between items-start">
               <div>
@@ -481,7 +489,28 @@ export default function ReviewQueue() {
           <div className="space-y-4 pt-4 p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
             {/* Tweet Content */}
             <div className="bg-white/5 border border-white/10 p-4 rounded-lg max-h-[220px] overflow-y-auto">
-              <p className="text-sm sm:text-base text-white leading-relaxed whitespace-pre-wrap">{tweetText}</p>
+              <div className="text-sm sm:text-base text-white leading-relaxed whitespace-pre-wrap">
+                {(() => {
+                  const urlRegex = /(https?:\/\/[^\s]+)/g;
+                  const parts = tweetText.split(urlRegex);
+                  return parts.map((part: string, i: number) => {
+                    const isUrl = part.startsWith('http://') || part.startsWith('https://');
+                    return isUrl ? (
+                      <a
+                        key={i}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#8BF5E6] underline break-all hover:text-[#b8fff5] transition-colors"
+                      >
+                        {part}
+                      </a>
+                    ) : (
+                      <span key={i}>{part}</span>
+                    );
+                  });
+                })()}
+              </div>
             </div>
           </div>
 
@@ -741,7 +770,7 @@ export default function ReviewQueue() {
 
         {/* Correction Log (if any) */}
         {corrections[currentTweet.id] && (
-          <div className="glassmorphic-card p-4 border border-green-500/30">
+          <div className="glass-section-card p-4 border border-green-500/30">
             <h3 className="text-sm font-semibold text-white mb-2">✅ Corrections Applied:</h3>
             {corrections[currentTweet.id].map((corr, i) => (
               <div key={i} className="text-xs text-secondary mb-1">

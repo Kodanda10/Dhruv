@@ -29,6 +29,7 @@ import AIAssistantCard from './AIAssistantCard';
 import DynamicLearningCard from './DynamicLearningCard';
 import MapboxCard from './MapboxCard';
 import D3MindmapCard from './D3MindmapCard';
+import GlassSectionCard from '@/components/GlassSectionCard';
 
 interface AnalyticsData {
   total_tweets: number;
@@ -113,6 +114,14 @@ export default function AnalyticsDashboard() {
   const handleFilterChange = useCallback((newFilters: Partial<FilterState>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
+
+  const sectionMotionProps = {
+    initial: { opacity: 0, y: 18 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.15 },
+    transition: { duration: 0.45, ease: 'easeOut' },
+    whileHover: { y: -6, scale: 1.01 },
+  };
 
   const clearFilters = useCallback(() => {
     setFilters({
@@ -304,7 +313,7 @@ export default function AnalyticsDashboard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="glassmorphic-card rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 ease-in-out"
+        className="glass-section-card rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 ease-in-out"
       >
         <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 text-white drop-shadow-[0_0_6px_#12005E] transition-all duration-500 ease-in-out">
           <span className="text-xl sm:text-2xl">🔍</span> फ़िल्टर सेक्शन
@@ -379,7 +388,7 @@ export default function AnalyticsDashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="glassmorphic-card rounded-lg p-8 mb-10"
+          className="glass-section-card rounded-lg p-8 mb-10"
         >
           <h2 className="text-2xl font-bold mb-3 text-white">🧩 A. इवेंट प्रकार विश्लेषण (Event Type Analysis)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
@@ -459,7 +468,7 @@ export default function AnalyticsDashboard() {
         </motion.div>
 
         {/* B. भू-मानचित्रण और माइंडमैप */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <GlassSectionCard className="p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🗺️ B. भू-मानचित्रण और माइंडमैप (Geo-Mapping & Mindmap)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             छत्तीसगढ़ → जिला → ब्लॉक → ग्राम पंचायत / वार्ड
@@ -551,10 +560,10 @@ export default function AnalyticsDashboard() {
                 ))}
             </div>
           </div>
-        </div>
+        </GlassSectionCard>
 
         {/* C. टूर कवरेज विश्लेषण */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🧭 C. टूर कवरेज विश्लेषण (Tour Coverage Analysis)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             कुल जिलों / ग्रामों का कवरेज %
@@ -626,7 +635,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* D. विकास कार्य और लोकार्पण विश्लेषण */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🏗️ D. विकास कार्य और लोकार्पण विश्लेषण</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             कार्य प्रकार / स्थान / योजना नाम
@@ -665,7 +674,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* E. समाज आधारित पहुँच */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🫱 E. समाज आधारित पहुँच (Caste Equation / Community Outreach)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             साहू / तेली / मुस्लिम / यादव / अन्य समाज
@@ -738,7 +747,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* F. योजनाएँ / स्कीम विश्लेषण */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🪔 F. योजनाएँ / स्कीम विश्लेषण (Scheme / Yojana)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             पीएमएवाई / जल जीवन मिशन / युवा स्वरोजगार आदि
@@ -763,7 +772,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* G. वर्ग-आधारित विश्लेषण */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🧠 G. वर्ग-आधारित विश्लेषण (Varg-wise)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             महिला / युवा / किसान / वरिष्ठ नागरिक
@@ -788,7 +797,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* H. विषयगत विश्लेषण */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">📊 H. विषयगत विश्लेषण (Subject / Thematic Analysis)</h2>
           <p className="text-base text-white/90 mb-6 font-medium">
             रोज़गार / शिक्षा / स्वास्थ्य / आधारभूत संरचना
@@ -827,7 +836,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* I. रायगढ़ विधानसभा अनुभाग */}
-        <div className="glassmorphic-card rounded-lg p-8 mb-10">
+        <div className="glass-section-card rounded-lg p-8 mb-10">
           <h2 className="text-2xl font-bold mb-3 text-white">🏛️ I. रायगढ़ विधानसभा अनुभाग (Dedicated Raigarh Section)</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -939,7 +948,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Export Section */}
-      <div className="glassmorphic-card rounded-lg p-8 text-center shadow-lg">
+      <div className="glass-section-card rounded-lg p-8 text-center shadow-lg">
         <h3 className="text-2xl font-bold mb-6 text-white">📄 रिपोर्ट / निर्यात</h3>
         <div className="flex justify-center gap-6">
           <button

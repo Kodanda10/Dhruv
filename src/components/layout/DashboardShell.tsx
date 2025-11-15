@@ -56,7 +56,7 @@ export default function DashboardShell({
         </header>
 
         <nav
-          className={`flex flex-wrap sm:flex-nowrap justify-center mb-4 sm:mb-6 lg:mb-8 gap-2 sm:gap-4 glassmorphic-card rounded-lg p-1 sm:p-2 transition-all duration-500 ease-in-out ${
+          className={`flex flex-wrap sm:flex-nowrap justify-center mb-4 sm:mb-6 lg:mb-8 gap-2 sm:gap-4 glass-section-card rounded-lg p-1 sm:p-2 transition-all duration-500 ease-in-out ${
             visibleTabs.length === 1 ? 'max-w-md' : 'max-w-full sm:max-w-2xl'
           } mx-auto`}
         >
@@ -75,7 +75,7 @@ export default function DashboardShell({
           ))}
         </nav>
 
-        <div className="min-h-[600px] glassmorphic-card shadow-lg p-4 sm:p-6 lg:p-8 relative overflow-hidden transition-all duration-500 ease-in-out transform-gpu">
+        <div className="min-h-[600px] glass-section-card shadow-lg p-4 sm:p-6 lg:p-8 relative overflow-hidden transition-all duration-500 ease-in-out transform-gpu">
           <AnimatePresence mode="wait">
             {loading && requireAuth ? (
               <motion.div

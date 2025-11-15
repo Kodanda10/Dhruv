@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { getDbPool } from '@/lib/db/pool';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
+  const pool = getDbPool();
   try {
     const { searchParams } = new URL(request.url);
     const start = parseInt(searchParams.get('start') || '0', 10);

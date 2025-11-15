@@ -135,16 +135,6 @@ textarea::placeholder {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
 }
 
-/* Glassmorphic Card - Unified cool purple-lavender theme */
-.glassmorphic-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
-}
 
 /* Glassmorphic Hover Effect */
 .glassmorphic-hover {

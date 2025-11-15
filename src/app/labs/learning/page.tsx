@@ -62,7 +62,7 @@ export default function LearningPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <h1 className="text-3xl font-bold text-primary mb-2">🧠 Dynamic Learning</h1>
           <p className="text-secondary mb-4">मानव समीक्षा से सीखने वाला सिस्टम</p>
 
@@ -84,7 +84,7 @@ export default function LearningPage() {
           )}
         </div>
 
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <button
             onClick={handleRunLearning}
             disabled={isRunning}
@@ -95,13 +95,13 @@ export default function LearningPage() {
         </div>
 
         {error && (
-          <div className="glassmorphic-card border border-red-500/50 mb-6">
+          <div className="glass-section-card border border-red-500/50 mb-6">
             <p className="text-red-200">{error}</p>
           </div>
         )}
 
         {result && (
-          <div className="glassmorphic-card">
+          <div className="glass-section-card">
             <h2 className="text-xl font-semibold text-primary mb-4">परिणाम</h2>
             <div className="space-y-3">
               <div>

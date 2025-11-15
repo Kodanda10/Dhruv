@@ -10,6 +10,7 @@ import { getEventTypeInHindi } from '@/lib/i18n/event-types-hi';
 import type { Route } from 'next';
 import SoftButton from './SoftButton';
 import Chip from './Chip';
+import GlassSectionCard from '@/components/GlassSectionCard';
 
 type Post = { id: string | number; timestamp: string; content: string; parsed?: any; confidence?: number; needs_review?: boolean; review_status?: string };
 
@@ -293,7 +294,7 @@ export default function Dashboard() {
     <section>
       {/* Simple summaries for tests and quick insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 transition-all duration-500 ease-in-out">
-        <div className="glassmorphic-card p-4 rounded-2xl">
+        <div className="glass-section-card p-4 rounded-2xl">
           <h2 className="text-xl sm:text-2xl font-bold tracking-wide text-white drop-shadow-[0_0_6px_#12005E] mb-2 mt-4 transition-all duration-500 ease-in-out">📍 स्थान सारांश</h2>
           <div className="text-sm sm:text-base text-secondary mt-1">
             {(() => {
@@ -309,7 +310,7 @@ export default function Dashboard() {
             })()}
           </div>
         </div>
-        <div className="glassmorphic-card p-4 rounded-2xl">
+        <div className="glass-section-card p-4 rounded-2xl">
           <h2 className="text-xl sm:text-2xl font-bold tracking-wide text-white drop-shadow-[0_0_6px_#12005E] mb-2 mt-4 transition-all duration-500 ease-in-out">🎯 गतिविधि सारांश</h2>
           <div className="text-sm sm:text-base text-secondary mt-1">
             {(() => {
@@ -326,7 +327,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      <div className="mb-4 flex items-end gap-4 flex-wrap glassmorphic-card p-4 rounded-2xl transition-all duration-500 ease-in-out">
+      <div className="mb-4 flex items-end gap-4 flex-wrap glass-section-card p-4 rounded-2xl transition-all duration-500 ease-in-out">
         <label className="text-sm sm:text-base font-medium text-white">
           स्थान फ़िल्टर
           <input
@@ -391,7 +392,7 @@ export default function Dashboard() {
           </SoftButton>
         </div>
       </div>
-      <div className="overflow-x-auto glassmorphic-card p-2 rounded-2xl transition-all duration-500 ease-in-out">
+      <GlassSectionCard className="overflow-x-auto p-2 transition-all duration-500 ease-in-out">
         <table aria-label="गतिविधि सारणी" className="min-w-full text-sm sm:text-base border-collapse table-fixed text-white">
           <colgroup>
             <col className="w-[16%]" />
@@ -435,7 +436,7 @@ export default function Dashboard() {
                   <td className="p-2 border-b border-l border-white/10">{row.where.join(', ') || '—'}</td>
                   <td className="p-2 border-b border-l border-white/10">
                     {row.what.length ? (
-                      row.what.map((w:any) => getEventTypeInHindi(w)).join(', ')
+                      row.what.join(', ')
                     ) : (
                       isParsed ? '—' : <span className="text-yellow-300 text-xs">⚠️ अपार्स - समीक्षा आवश्यक</span>
                     )}
@@ -512,7 +513,7 @@ export default function Dashboard() {
             })}
           </tbody>
         </table>
-      </div>
+      </GlassSectionCard>
     </section>
   );
 }

@@ -146,7 +146,7 @@ export default function TraceExplorerModal({
       onClick={onClose}
     >
       <div
-        className="glassmorphic-card p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className="glass-section-card p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

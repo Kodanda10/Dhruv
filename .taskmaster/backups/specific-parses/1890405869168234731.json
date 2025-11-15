@@ -1,0 +1,23 @@
+{
+  "tweet": {
+    "id": "1890405869168234731",
+    "text": "दाई-दीदी अऊ संगवारी मन के मया-दुलार, मोर ताकत",
+    "created_at": "2025-11-13T20:12:51.567Z",
+    "author_handle": "opchoudhary"
+  },
+  "categories": {
+    "locations": [],
+    "people": [],
+    "event": [],
+    "organisation": [],
+    "schemes": [],
+    "communities": []
+  },
+  "gemini_metadata": {
+    "model": "gemini-2.0-flash",
+    "confidence": 0.85,
+    "processing_time_ms": 1500,
+    "discourse_type": "political_governance",
+    "language_mix": "hi_en"
+  }
+}

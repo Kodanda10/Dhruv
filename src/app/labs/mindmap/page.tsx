@@ -39,7 +39,7 @@ export default function MindmapPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <h1 className="text-3xl font-bold text-primary mb-2">🧠 D3 Mindmap</h1>
           <p className="text-secondary mb-4">वास्तविक एनालिटिक्स डेटा से ग्राफ विज़ुअलाइज़ेशन</p>
 
@@ -80,7 +80,7 @@ export default function MindmapPage() {
           </div>
         </div>
 
-        <div className="glassmorphic-card">
+        <div className="glass-section-card">
           {error ? (
             <div className="glassmorphic border border-red-500/50 rounded-lg p-4">
               <p className="text-red-200">{error}</p>

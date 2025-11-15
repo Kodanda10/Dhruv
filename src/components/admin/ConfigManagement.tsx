@@ -81,7 +81,7 @@ export default function ConfigManagement() {
   };
 
   return (
-    <div className="glassmorphic-card p-6">
+    <div className="glass-section-card p-6">
       <h3 className="text-xl font-bold text-white mb-4">कॉन्फ़िग निर्यात/आयात</h3>
 
       {message && (

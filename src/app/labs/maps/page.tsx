@@ -40,7 +40,7 @@ export default function MapsPage() {
   if (error) {
     return (
       <div className="min-h-screen p-8 flex items-center justify-center">
-        <div className="glassmorphic-card border border-red-500/50">
+        <div className="glass-section-card border border-red-500/50">
           <p className="text-red-200">{error}</p>
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function MapsPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="glassmorphic-card mb-6">
+        <div className="glass-section-card mb-6">
           <h1 className="text-3xl font-bold text-primary mb-2">🗺️ Mapbox Maps</h1>
           <p className="text-secondary mb-4">वास्तविक घटना स्थानों का मानचित्र</p>
 
@@ -72,7 +72,7 @@ export default function MapsPage() {
           )}
         </div>
 
-        <div className="glassmorphic-card">
+        <div className="glass-section-card">
           {isLoading ? (
             <div className="flex items-center justify-center h-[600px]">
               <div className="text-center">

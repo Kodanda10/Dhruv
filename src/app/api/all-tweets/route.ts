@@ -13,14 +13,13 @@ export async function GET(request: NextRequest) {
     const client = await pool.connect();
 
     try {
-      // Query to get ALL tweets with parsing status
+      // Query to get ONLY Gemini-parsed tweets (tweet_ids '1' and '2')
       const query = `
-        SELECT 
-          rt.tweet_id,
-          rt.text as tweet_text,
-          rt.created_at as tweet_created_at,
-          rt.author_handle,
-          rt.lang,
+        SELECT
+        rt.tweet_id,
+        rt.text as tweet_text,
+        rt.created_at as tweet_created_at,
+        rt.author_handle,
           -- Parsed event data (if exists)
           pe.id as parsed_event_id,
           pe.event_type,
@@ -42,88 +41,61 @@ export async function GET(request: NextRequest) {
           CASE WHEN pe.id IS NOT NULL THEN true ELSE false END as is_parsed,
           CASE WHEN pe.id IS NOT NULL THEN 'parsed' ELSE 'unparsed' END as parsing_status
         FROM raw_tweets rt
-        LEFT JOIN parsed_events pe ON rt.tweet_id = pe.tweet_id
-        WHERE rt.author_handle = 'OPChoudhary_Ind'
+        JOIN parsed_events pe ON rt.tweet_id = pe.tweet_id
         ORDER BY rt.created_at DESC
       `;
 
       const result = await client.query(query);
 
-      // Get counts
+      // Get counts - all parsed tweets
       const countQuery = `
-        SELECT 
+        SELECT
           COUNT(*) as total,
           COUNT(pe.id) as parsed_count,
-          COUNT(*) FILTER (WHERE pe.id IS NULL) as unparsed_count
+          0 as unparsed_count
         FROM raw_tweets rt
-        LEFT JOIN parsed_events pe ON rt.tweet_id = pe.tweet_id
-        WHERE rt.author_handle = 'OPChoudhary_Ind'
+        JOIN parsed_events pe ON rt.tweet_id = pe.tweet_id
       `;
       const countResult = await client.query(countQuery);
       const counts = countResult.rows[0];
 
-      // Format response
+      // Format response - all tweets are now parsed (only Gemini-parsed tweets returned)
       const formattedTweets = result.rows.map((row) => {
-        const isParsed = row.is_parsed;
         const eventTypeHi = row.event_type ? getEventTypeInHindi(row.event_type) : null;
 
-        if (isParsed) {
-          // Parsed tweet - include all parsed data
-          return {
-            tweet_id: row.tweet_id,
-            tweet_text: row.tweet_text,
-            tweet_created_at: row.tweet_created_at,
-            author_handle: row.author_handle,
-            lang: row.lang,
-            is_parsed: true,
-            parsing_status: 'parsed',
-            parsed_event_id: row.parsed_event_id,
-            // Parsed data
-            parsed_data: {
-              event_type: row.event_type,
-              event_type_hi: eventTypeHi,
-              event_type_confidence: row.event_type_confidence,
-              event_date: row.event_date,
-              date_confidence: row.date_confidence,
-              locations: Array.isArray(row.locations) ? row.locations : [],
-              people_mentioned: Array.isArray(row.people_mentioned) ? row.people_mentioned : [],
-              organizations: Array.isArray(row.organizations) ? row.organizations : [],
-              schemes_mentioned: Array.isArray(row.schemes_mentioned) ? row.schemes_mentioned : [],
-              overall_confidence: row.overall_confidence,
-              needs_review: row.needs_review,
-              review_status: row.review_status,
-              reviewed_at: row.reviewed_at,
-              reviewed_by: row.reviewed_by,
-              parsed_at: row.parsed_at,
-              parsed_by: row.parsed_by,
-            },
-            // Backward compatibility fields
-            text: row.tweet_text,
-            content: row.tweet_text,
-            timestamp: row.tweet_created_at,
-          };
-        } else {
-          // Unparsed tweet - minimal structure
-          return {
-            tweet_id: row.tweet_id,
-            tweet_text: row.tweet_text,
-            tweet_created_at: row.tweet_created_at,
-            author_handle: row.author_handle,
-            lang: row.lang,
-            is_parsed: false,
-            parsing_status: 'unparsed',
-            parsed_event_id: null,
-            // Empty parsed data structure for unparsed tweets
-            parsed_data: null,
-            // Default values for UI
-            needs_review: true, // Unparsed tweets need review
-            review_status: 'pending',
-            // Backward compatibility fields
-            text: row.tweet_text,
-            content: row.tweet_text,
-            timestamp: row.tweet_created_at,
-          };
-        }
+        // All returned tweets are parsed by Gemini
+        return {
+          tweet_id: row.tweet_id,
+          tweet_text: row.tweet_text,
+          tweet_created_at: row.tweet_created_at,
+          author_handle: row.author_handle,
+          is_parsed: true,
+          parsing_status: 'parsed',
+          parsed_event_id: row.parsed_event_id,
+          // Parsed data
+          parsed_data: {
+            event_type: row.event_type,
+            event_type_hi: eventTypeHi,
+            event_type_confidence: row.event_type_confidence,
+            event_date: row.event_date,
+            date_confidence: row.date_confidence,
+            locations: Array.isArray(row.locations) ? row.locations : [],
+            people_mentioned: Array.isArray(row.people_mentioned) ? row.people_mentioned : [],
+            organizations: Array.isArray(row.organizations) ? row.organizations : [],
+            schemes_mentioned: Array.isArray(row.schemes_mentioned) ? row.schemes_mentioned : [],
+            overall_confidence: row.overall_confidence,
+            needs_review: row.needs_review,
+            review_status: row.review_status,
+            reviewed_at: row.reviewed_at,
+            reviewed_by: row.reviewed_by,
+            parsed_at: row.parsed_at,
+            parsed_by: row.parsed_by,
+          },
+          // Backward compatibility fields
+          text: row.tweet_text,
+          content: row.tweet_text,
+          timestamp: row.tweet_created_at,
+        };
       });
 
       console.log(`[API /all-tweets] Returned: ${formattedTweets.length} tweets`, {

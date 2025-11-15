@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -35,9 +36,11 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 
 
 def load_linker() -> MultilingualFAISSLocationLinker:
+    linker: MultilingualFAISSLocationLinker | None = None
     try:
-        linker = MultilingualFAISSLocationLinker()
-        linker.load_multilingual_data()
+        with contextlib.redirect_stdout(sys.stderr):
+            linker = MultilingualFAISSLocationLinker()
+            linker.load_multilingual_data()
     except ModuleNotFoundError as exc:  # pragma: no cover
         exit_with_error(
             "missing_python_dependency",
@@ -50,7 +53,7 @@ def load_linker() -> MultilingualFAISSLocationLinker:
     except Exception as exc:  # pragma: no cover
         exit_with_error("faiss_initialization_failed", 2, {"detail": str(exc)})
 
-    if not getattr(linker, "data_loaded", False):
+    if not linker or not getattr(linker, "data_loaded", False):
         exit_with_error("faiss_index_not_loaded", 2, {"hint": "Run labs:faiss:build to generate embeddings."})
 
     return linker
