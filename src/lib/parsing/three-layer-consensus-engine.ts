@@ -66,6 +66,10 @@ export class ThreeLayerConsensusEngine {
   private config: ConsensusConfig;
   private geminiApiKey?: string;
   private ollamaBaseUrl: string;
+  private readonly textEventKeywordMap: Record<string, string[]> = {
+    congratulation: ['बधाई', 'शुभकामन', 'congratulation', 'congrats'],
+    jayanti: ['जयंती', 'जयन्ती', 'jayanti'],
+  };
 
   constructor(config: ConsensusConfig) {
     this.config = config;
@@ -279,6 +283,17 @@ export class ThreeLayerConsensusEngine {
     };
   }
 
+  private deriveTextEventType(tweetText: string): string | null {
+    if (!tweetText) return null;
+    const normalized = tweetText.toLowerCase();
+    for (const [eventType, keywords] of Object.entries(this.textEventKeywordMap)) {
+      if (keywords.some(keyword => normalized.includes(keyword.toLowerCase()))) {
+        return eventType;
+      }
+    }
+    return null;
+  }
+
   /**
    * Apply consensus voting algorithm
    */
@@ -368,10 +383,22 @@ export class ThreeLayerConsensusEngine {
                        eventTypeAgreement < this.config.consensusThreshold ||
                        winningEventType === 'other';
 
+    const heuristicEventType = this.deriveTextEventType(tweetText);
+    let finalEventType = winningEventType;
+    let finalEventConfidence = avgConfidence;
+    let finalReasoning = `${eventTypeAgreement}/${workingLayers} layers agreed, confidence: ${(overallConfidence * 100).toFixed(1)}%`;
+
+    if (heuristicEventType && heuristicEventType !== finalEventType) {
+      finalEventType = heuristicEventType;
+      finalEventConfidence = Math.min(1.0, Math.max(0.75, finalEventConfidence));
+      finalReasoning += `; keyword heuristics matched '${heuristicEventType}'`;
+      console.log(`[Heuristic] ${heuristicEventType} detected via text keywords`);
+    }
+
     return {
-      event_type: winningEventType,
-      event_type_hi: getEventTypeInHindi(winningEventType), // Hindi translation
-      event_type_confidence: avgConfidence,
+      event_type: finalEventType,
+      event_type_hi: getEventTypeInHindi(finalEventType),
+      event_type_confidence: finalEventConfidence,
       event_date: this.extractEventDate(tweetText, tweetDate),
       date_confidence: 0.8,
       locations: winningLocations,
@@ -381,7 +408,7 @@ export class ThreeLayerConsensusEngine {
       overall_confidence: overallConfidence,
       needs_review: needsReview,
       consensus_score: eventTypeAgreement,
-      reasoning: `${eventTypeAgreement}/${workingLayers} layers agreed, confidence: ${(overallConfidence * 100).toFixed(1)}%`
+      reasoning: finalReasoning
     };
   }
 

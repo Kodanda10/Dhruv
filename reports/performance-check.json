@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-11-15T16:25:19.505Z",
+  "url": "http://localhost:3000/dashboard",
+  "navigationTime": 1518,
+  "metrics": {
+    "loadTime": 803,
+    "domContentLoaded": 486,
+    "firstPaint": 639.2999999970198,
+    "firstContentfulPaint": 639.2999999970198
+  },
+  "pageInfo": {
+    "title": "Project Dhruv Dashboard",
+    "url": "http://localhost:3000/analytics",
+    "glassCards": 0,
+    "legacyCards": 15,
+    "hasContent": true
+  },
+  "checks": {
+    "hasGlassCards": false,
+    "noLegacyCards": false,
+    "hasContent": true,
+    "loadTimeUnderLimit": true,
+    "navigationUnderLimit": true
+  }
+}

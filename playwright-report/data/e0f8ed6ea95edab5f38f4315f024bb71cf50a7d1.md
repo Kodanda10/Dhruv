@@ -1,0 +1,113 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Project Dhruv" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - link "Analytics Dashboard" [ref=e6] [cursor=pointer]:
+        - /url: /dashboard/analytics
+  - main [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Labs v2 Preview
+          - heading "Dhruv Dashboard Experiments" [level=1] [ref=e12]
+        - generic [ref=e13]:
+          - link "📊 Analytics Preview" [ref=e14] [cursor=pointer]:
+            - /url: /labs-v2/analytics
+          - link "✍️ Review + AI Preview" [ref=e15] [cursor=pointer]:
+            - /url: /labs-v2/review
+      - main [ref=e16]:
+        - generic [ref=e17]:
+          - alert [ref=e18]:
+            - generic [ref=e19]:
+              - generic [ref=e20]:
+                - paragraph [ref=e21]: Dynamic Learning Active
+                - paragraph [ref=e22]: Your reviews are used to improve the AI model.
+              - generic [ref=e23]:
+                - generic [ref=e24]: "OFF"
+                - checkbox [active] [ref=e27]
+          - heading "Labs V2 Review" [level=1] [ref=e30]
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - heading "Tweet Content" [level=2] [ref=e33]
+              - paragraph [ref=e35]: This is a tweet fetched from the API.
+              - generic [ref=e36]:
+                - heading "Parsed Entities" [level=3] [ref=e37]
+                - generic [ref=e38]:
+                  - paragraph [ref=e39]:
+                    - strong [ref=e40]: "Location:"
+                    - text: Raigarh
+                  - paragraph [ref=e41]:
+                    - strong [ref=e42]: "Event Type:"
+                    - text: Political Rally
+                  - paragraph [ref=e43]:
+                    - strong [ref=e44]: "People:"
+                    - text: API Person
+                  - paragraph [ref=e45]:
+                    - strong [ref=e46]: "Schemes:"
+                    - text: API Scheme
+            - generic [ref=e47]:
+              - generic [ref=e48]:
+                - heading "Pinned Summary" [level=3] [ref=e49]
+                - generic [ref=e50]:
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: "Location:"
+                    - generic "Raigarh" [ref=e53]
+                  - generic [ref=e54]:
+                    - generic [ref=e55]: "Event Type:"
+                    - generic "Political Rally" [ref=e56]
+                  - generic [ref=e57]:
+                    - generic [ref=e58]: "People:"
+                    - generic [ref=e59]: "1"
+                  - generic [ref=e60]:
+                    - generic [ref=e61]: "Schemes:"
+                    - generic [ref=e62]: "1"
+              - generic [ref=e63]:
+                - heading "Location Resolver" [level=3] [ref=e64]
+                - generic [ref=e65]:
+                  - 'heading "Parsed Location: Raigarh" [level=4] [ref=e66]'
+                  - generic [ref=e67]:
+                    - button "Suggestions" [ref=e68] [cursor=pointer]
+                    - button "Manual" [ref=e69] [cursor=pointer]
+                  - generic [ref=e70]:
+                    - list [ref=e71]:
+                      - listitem [ref=e72]:
+                        - 'radio "(Score: 0.95)" [checked] [ref=e73]'
+                        - generic [ref=e74]: "(Score: 0.95)"
+                      - listitem [ref=e75]:
+                        - 'radio "(Score: 0.88)" [ref=e76]'
+                        - generic [ref=e77]: "(Score: 0.88)"
+                    - button "None of these" [ref=e78] [cursor=pointer]
+                  - button "Confirm Location" [ref=e80] [cursor=pointer]
+              - generic [ref=e81]:
+                - heading "Event Resolver" [level=3] [ref=e82]
+                - generic [ref=e83]: "Error: Failed to suggest event types."
+              - generic [ref=e84]:
+                - heading "People Resolver" [level=3] [ref=e85]
+                - generic [ref=e86]:
+                  - heading "Parsed People" [level=4] [ref=e87]
+                  - list [ref=e88]:
+                    - listitem [ref=e89]:
+                      - generic [ref=e90]: API Person
+                      - button "Remove API Person" [ref=e91] [cursor=pointer]: ×
+                  - generic [ref=e92]:
+                    - textbox "Add a person" [ref=e93]
+                    - button "Add" [ref=e94] [cursor=pointer]
+                  - button "Confirm People" [ref=e96] [cursor=pointer]
+              - generic [ref=e97]:
+                - heading "Scheme Resolver" [level=3] [ref=e98]
+                - generic [ref=e99]:
+                  - heading "Parsed Schemes" [level=4] [ref=e100]
+                  - list [ref=e101]:
+                    - listitem [ref=e102]:
+                      - generic [ref=e103]: API Scheme
+                      - button "Remove API Scheme" [ref=e104] [cursor=pointer]: ×
+                  - generic [ref=e105]:
+                    - textbox "Add a scheme" [ref=e106]
+                    - button "Add" [ref=e107] [cursor=pointer]
+                  - button "Confirm Schemes" [ref=e109] [cursor=pointer]
+  - alert [ref=e110]
+```

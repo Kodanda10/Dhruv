@@ -109,9 +109,11 @@ export default function Dashboard() {
         
         if (isParsed && parsedData) {
           // Parsed tweet - use parsed data
+          const resolvedEventDate = parsedData.event_date || e.event_date || null;
           return {
             id: e.tweet_id,
             timestamp: e.tweet_created_at || e.timestamp,
+            event_date: resolvedEventDate,
             content: e.tweet_text || e.text || e.content,
             is_parsed: true,
             parsing_status: 'parsed',
@@ -131,6 +133,7 @@ export default function Dashboard() {
           return {
             id: e.tweet_id,
             timestamp: e.tweet_created_at || e.timestamp,
+            event_date: e.event_date || null,
             content: e.tweet_text || e.text || e.content,
             is_parsed: false,
             parsing_status: 'unparsed',
@@ -153,6 +156,7 @@ export default function Dashboard() {
   }, [serverRows]);
 
   const parsed = useMemo(() => baseRows.map((p: any) => {
+    const whenTimestamp = p.event_date || p.timestamp;
     if (p.parsed && p.parsed.event_type) {
       // Use parsed data from database
       const schemes = p.parsed.schemes_mentioned || p.parsed.schemes || [];
@@ -177,10 +181,10 @@ export default function Dashboard() {
       const orgs = ovOrgs.length ? ovOrgs : (p.parsed.organizations || []);
       const schemesEff = ovSchemes.length ? ovSchemes : schemes;
       const reviewStatus = overlay?.review_status || p.review_status;
-      return {
+        return {
         id: p.id,
         ts: p.timestamp,
-        when: formatHindiDate(p.timestamp),
+          when: formatHindiDate(whenTimestamp),
         where: locations,
         what: [eventTypeDisplay],
         which: {
@@ -201,7 +205,7 @@ export default function Dashboard() {
     return {
       id: p.id,
       ts: p.timestamp,
-      when: formatHindiDate(p.timestamp),
+      when: formatHindiDate(whenTimestamp),
       where: [] as string[],
       what: [] as string[],
       which: { mentions: [] as string[], hashtags: [] as string[] },
